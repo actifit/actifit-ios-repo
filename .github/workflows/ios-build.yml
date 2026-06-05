@@ -1,0 +1,59 @@
+name: iOS Build
+
+# Builds the Actifit app for the iOS Simulator on a macOS runner.
+# Triggered on push to main and manually via the Actions tab.
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**/*.md'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (iOS Simulator)
+    runs-on: macos-14
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show toolchain versions
+        run: |
+          xcodebuild -version
+          xcode-select -p
+          ruby --version
+          pod --version || true
+
+      # The real Secrets.swift / GoogleService-Info.plist are gitignored.
+      # For a compile check, placeholder values from the committed templates
+      # are sufficient (real values are only needed at runtime).
+      - name: Materialize secret files from templates (placeholders)
+        run: |
+          cp "Actifit/Structs/Secrets.example.swift" "Actifit/Structs/Secrets.swift"
+          cp "Actifit/GoogleService-Info.sample.plist" "Actifit/GoogleService-Info.plist"
+          echo "Created placeholder Secrets.swift and GoogleService-Info.plist"
+
+      - name: Install CocoaPods 1.15.2 (matches Podfile.lock)
+        run: |
+          sudo gem install cocoapods -v 1.15.2 --no-document
+          pod _1.15.2_ --version
+
+      - name: pod install
+        run: |
+          pod _1.15.2_ install --repo-update
+
+      - name: Build for iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace Actifit.xcworkspace \
+            -scheme Actifit \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            clean build
