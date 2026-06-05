@@ -1,0 +1,236 @@
+/* 
+ Localizable.strings
+ Actifit
+ 
+ Created by Imran Balouch on 23/09/2019.
+ 
+ */
+
+//Settings Screen
+
+"settings_title"                             = "Definições";
+"activity_source_lbl"                        = "Fonte de Dados de Atividade";
+"device_sensors_option_lbl"                  = "Sensores do Telefone";
+"fitbit_option_lbl"                          = "Fitbit";
+"fitbit_settings_lbl"                        = "Definições do Fitbit";
+"fitbit_measurements_lbl"                    = "Buscar Medições";
+"fitbit_fetch_steps"                         = "Buscar Passos";
+"steem_post_payout"                          = "Pagamento da Publicação STEEM";
+"pay_option_50_50"  = "50% HBD - 50% HP";
+"pay_option_full_sp"  = "100% HP";
+"Language"                                   = "Language";
+"measure_system_lbl"                         = "Sistema de Medição";
+"metric_system_option_lbl"                   = "Métrico";
+"us_system_option_lbl"                       = "Sistema Americano";
+"donate_charity_lbl"                         = "Doar para a Caridade";
+"donate_charity_checkbox"                    = "Doar Recompensas à Caridade";
+"charity_options_lbl"                        = "Caridades Disponíveis";
+"charity_info_lbl"                           = "Informações da Caridade";
+"daily_post_reminder_lbl"                    = "Lembrete de Publicação Diária";
+"post_reminder_checkbox"                     = "Lembrar-me de Publicar";
+"app_version_string"                         = "Versão da aplicação Actifit";
+"save_settings_btn_lbl"                      = "Guardar Definições";
+
+
+//Wallet Screen
+
+"your_wallet_title"  = "Sua Carteira";
+"steem_username_lbl"  = "Nome de utilizador da Steem";
+"get_balance_btn_lbl"  = "Verificar Saldo";
+"afit_token_balance"  = "Tokens AFIT";
+"unable_fetch_balance"  = "Não foi possível buscar o saldo";
+"actifit_transactions_lbl"  = "AFIT Transações";
+"actifit_transactions_error"  = "Não foi possível Buscar Transações";
+"activity_type_lbl"  = "Tipo de Atividade";
+"token_count_lbl"  = "Contagem de Tokens";
+"date_added_lbl"  = "Data de adição";
+"note_lbl"  = "Nota";
+
+
+//ActivityTracking Screen
+
+"fitbit_tracking_mode_active"  = "Modo de Rastreamento Fitbit Ativado";
+"post_to_steem_btn_txt"  = "Publicar no Steem";
+"snap_picture_btn_txt"  = "Tirar uma Acti Foto";
+"view_history_btn_txt"  = "Visualizar Histórico de Rastreamento";
+"daily_leaderboard_btn_txt"  = "Ver o Quadro de Classificações Diário";
+"view_wallet_btn_txt"  = "Ver Carteira";
+"settings_btn_txt"  = "Definições";
+
+//TrackingHistory Screen
+
+"activity_step_history_title"  = "Histórico de Atividade";
+"view_chart_btn_lbl"  = "Ver Gráfico";
+
+//DailyLeaderBoard Screen
+
+"activity_leaderboard_title"  = "Quadro de Classificações Diário";
+
+//PostToSteem Screen
+
+"steem_pvt_posting_key"  = "Chave de Publicações Privada da Steem (NÃO a palavra-passe)";
+"report_title"  = "Título do Relatório";
+"full_report_AFIT_pay"  = "Relatório Completo do Pagamento em AFIT";
+"full_AFIT_checkbox"  = "Maximizar Ganhos de Tokens AFIT";
+"activity_count_lbl"  = "Contagem de Atividades";
+"track_measurements_lbl"  = "Rastrear Medições";
+"height_lbl"  = "Altura";
+"weight_lbl"  = "Peso";
+"body_fat_lbl"  = "Gordura Corporal";
+"waist_size_lbl"  = "Cintura";
+"thighs_size_lbl"  = "Coxas";
+"chest_size_lbl"  = "Peito";
+"unit_lbl"  = "Unidade";
+"report_tags_lbl"  = "Tags do Relatório";
+"report_images_lbl"  = "Reportar Imagens";
+"insert_img_btn_lbl"  = "Inserir Imagem";
+"report_content_lbl"  = "Reportar Conteúdo (Descreva a atividade do seu dia)";
+"markdown_content_note"  = "Conteúdo Markdown Aceite";
+"report_preview_lbl"  = "Pré-visualização do Relatório";
+"fitbit_sync_btn_lbl"  = "FITBIT SYNC";
+"percent_lbl"  = "%";
+
+
+
+
+
+"app_name"  = "Actifit Fitness Tracker";
+"sending_post"  = "Enviando a sua publicação para o blockchain Steem...";
+"success_post"  = "A sua publicação foi submetida com sucesso no blockchain do Steem";
+"failed_post"  = "Ocorreu um erro ao submeter a sua publicação no blockchain do Steem";
+"connection_timeout"  = "A conexão ao nó da Steem demorou muito. Por favor, tente novamente.";
+"default_post_title"  = "Meu Cartão de Relatório de Actifit:";
+"error_need_select_one_activity"  = "Precisa selecionar pelo menos um Tipo de Atividade para proceder";
+"fetching_leaderboard"  = "Atualizando a tabela de classificação...";
+"leader_no_results"  = "Não existem utilizadores na tabela de classificação neste momento";
+"leader_error"  = "Ocorreu um erro ao tentar buscar o quadro de classificações. Por favor, tente novamente mais tarde.";
+"username_missing"  = "Por favor, forneça um nome de utilizador existente no Steem";
+"fetching_user_balance"  = "Obtendo o saldo do utilizador...";
+"metric_system"  = "Sistema Métrico";
+"us_system"  = "Sistema Americano";
+"back_exit_confirmation"  = "Clique no botão VOLTAR se quiser sair";
+"actifit_service_desc"  = "Serviço Actifit para acompanhar a atividade do utilizador";
+"actifit_reminder_service_desc"  = "Serviço Actifit para lembrar o utilizador de publicar relatórios diários";
+"activity_today_string"  = "Atividade Total Hoje:";
+"actifit_notif_title"  = "Relatório Actifit";
+"actifit_notif_channel"  = "Canal de Notificação Actifit";
+"actifit_notif_description"  = "Canal usado para enviar notificações da Actifit App";
+"actifit_channel_ID"  = "Actifit_Notif_Channel_1";
+"actifit_channel_remind_ID"  = "Actifit_Notif_Channel_2";
+"actifit_fcm_msg_channel_id"  = "Actifit_FCM_Msg_Chan_1";
+"aggr_back_tracking_on"  = "Ativado";
+"aggr_back_tracking_off"  = "";
+"aggr_mode_note"  = "*Ative esta definição se estiver a enfrentar problemas com a aplicação ao rastrear o seu movimento enquanto o ecrã estiver bloqueado. A definição pode drenar a sua bateria mais rápido.";
+"one_post_per_day_error"  = "Só pode publicar uma vez por dia";
+"min_char_count_error"  = "Você precisa descrever sua atividade em pelo menos";
+"characters_plural_label"  = "caracteres";
+"current_workout_going_charity"  = "Suas recompensas de atividade atuais irão para a caridade";
+"current_workout_settings_based"  = "baseado na escolha de definições. Tem certeza que deseja continuar?";
+"steemit_url"  = "https://www.steemit.com/";
+"actifit_usermedia_url"  = "https://usermedia.actifit.io/";
+//"actifit_find_posting_key_vid"  = <a href="https://d.tube/#!/v/raserrano/h7rze7he">Ajude-me a encontrar minha Chave de Publicações Privada</a>
+"welcome_user"  = "Bem-vindo USER_NAME USER_RANK";
+"daily_post_reminder_title"  = "Lembrete Actifit!";
+"daily_post_reminder"  = "Não publicou o relatório de atividades hoje!";
+"update_google_play"  = "Por favor, atualize a aplicação Google Play services no seu dispositivo.";
+"device_rooted"  = "Seu dispositivo está rooted. O Actifit só pode ser executado em dispositivos não-rooted.";
+"emulator_device"  = "Aparentemente está a executar o Actifit num emulador. O Actifit só pode ser executado em dispositivos telefónicos autênticos.";
+"no_valid_sim"  = "Não conseguimos detetar um cartão SIM válido. Se tiver um DUAL SIM certifique-se que o SIM está no primeiro slot e definido com padrão.";
+"need_sync_fitbit_again"  = "Um dia passou desde a última vez que você sincronizou seus dados de fitbit. Precisa sincronizar novamente.";
+
+"activity_history_chart_title"  = "Gráfico do Histórico de Atividades";
+
+
+
+
+
+
+
+
+
+
+
+"background_move_track_lbl"  = "Rastreamento de Movimento em Segundo Plano";
+"enable_agg_mode_checkbox"  = "Ativar Rastreamento Agressivo em Segundo Plano*";
+
+
+
+
+
+
+"setting_shareNetworkAgreement"  = "Partilhar recursos de rede";
+"setting_shareNetworkAgreementDesc"  = "Apenas ativo quando o dispositivo estiver ligado e conectado à rede WiFi";
+"tot_activity_string"  = "Atividade Total:";
+"min_reward_level_chart"  = "Recompensa Mínima - 5K Atividade";
+"dismiss_button"  = "Dispensar";
+"device_has_no_cam"  = "O seu dispositivo não tem uma câmera";
+"start_upload"  = "Carregando...0%";
+"upload_complete"  = "Carregamento Completo!";
+"upload_failed"  = "Falha no Carregamento!";
+"uploading"  = "Carregando...";
+"select_img_title"  = "Selecionar Imagem";
+"Walking"  = "Andando";
+"Jogging"  = "Jogging";
+"Running"  = "Correndo";
+"Cycling"  = "Ciclismo";
+"RopeSkipping"  = "Saltar à Corda";
+"Dancing"  = "Dançar";
+"Basketball"  = "Basquetebol";
+"Football"  = "Futebol";
+"Boxing"  = "Boxing";
+"Tennis"  = "Ténis";
+"TableTennis"  = "Ténis de Mesa";
+"MartialArts"  = "Artes Marciais";
+"HouseChores"  = "Atividades Caseiras";
+"MovingAroundOffice"  = "Movendo-se no Escritório";
+"Shopping"  = "Compras";
+"DailyActivity"  = "Atividade Diária";
+"Aerobics"  = "Aeróbica";
+"WeightLifting"  = "Levantamento de Pesos";
+"Treadmill"  = "Passadeira";
+"StairMill"  = "Escada";
+"Elliptical"  = "Elíptico";
+"Hiking"  = "Caminhada";
+"Gardening"  = "Jardinagem";
+"Rollerblading"  = "Patins";
+"Cricket"  = "Cricket";
+"Golf"  = "Golfe";
+"Geocaching"  = "Geocaching";
+"Shoveling"  = "Escavando";
+"Skiing"  = "Esqui";
+"Scootering"  = "Trotinete";
+"Photowalking"  = "Photowalking";
+"KettlebellTraining"  = "Treino de Kettlebell";
+"Bootcamp"  = "Bootcamp";
+"Gym"  = "Ginásio";
+"Skating"  = "Skate";
+"Hockey"  = "Hóquei";
+"Swimming"  = "Natação";
+"ChasingPokemons"  = "Caça de Pokemons";
+"Badminton"  = "Badminton";
+"PickleBall"  = "Pickle Ball";
+"Snowshoeing"  = "Caminhada na Neve";
+"Sailing"  = "Navegação à vela";
+"Kayaking"  = "Caiaque";
+"Volleyball"  = "Voleibol";
+"kg_unit"  = "kg";
+"cm_unit"  = "cm";
+"lb_unit"  = "lb";
+"ft_unit"  = "ft";
+"in_unit"  = "in";
+"min_activity_not_reached"  = "Você ainda não atingiu o mínimo";
+"not_yet"  = "atividade ainda";
+"yes_button"  = "Sim";
+"no_button"  = "Não";
+
+
+
+
+"actifit_notification"  = "Notificação Actifit";
+
+
+
+"Activity Type: " = "Tipo de atividade: ";
+"Token Count: "   = "Contagem de tokens: ";
+"Date Added: "    = "Data adicionada: ";
+"Note: "          = "Nota: ";

@@ -1,0 +1,192 @@
+//
+//  Activity.swift
+//  Actifit
+//
+//  Created by Hitender kumar on 07/08/18.
+//  Copyright © 2018 actifit.io. All rights reserved.
+//
+
+import UIKit
+import RealmSwift
+import Realm
+
+let CurrentRealmSchemaVersion : UInt64 = 10
+
+class Activity : Object {
+    
+    @objc dynamic var id: Int = 0
+    @objc dynamic var date: Date = Date()
+    @objc dynamic var steps: Int = 0
+    // @objc dynamic var minutes: Int = 0
+    
+    override static func primaryKey() -> String? { //primary key needs to be a string or int
+        return "id"
+    }
+    
+    class func saveWith(info : [String : Any]) {
+        DispatchQueue.global().async {
+            // Get new realm and table since we are in a new thread
+            autoreleasepool {
+                if let realm = AppDelegate.defaultRealm() {
+                    realm.beginWrite()
+                    //realm.create(Activity.self, value: info)
+                    realm.create(Activity.self, value: info, update: .error) //false //1122
+                    try! realm.commitWrite()
+                }
+            }
+        }
+    }
+    
+    func upadteWith(info : [String : Any]) {
+        DispatchQueue.global().async {
+            // Get new realm and table since we are in a new thread
+            autoreleasepool {
+                if let realm = AppDelegate.defaultRealm() {
+                    realm.beginWrite()
+                    realm.create(Activity.self, value: info, update: .all) //true //1122
+                    try! realm.commitWrite()
+                }
+            }
+        }
+    }
+    
+    //update the activity(steps count)
+    /* func update(date :Date, steps : Int) {
+     autoreleasepool {
+     if let realm = AppDelegate.defaultRealm() {
+     realm.beginWrite()
+     self.date = date
+     self.steps = steps
+     try! realm.commitWrite()
+     }
+     }
+     }*/
+    
+    //get all saved activities
+    class func all() -> [Activity] {
+        var contents = [Activity]()
+        if let realm = AppDelegate.defaultRealm() {
+            contents = realm.objects(Activity.self).map({$0})
+           // contents = self.removeDuplicates(activities: contents)
+        }
+        return contents
+    }
+    
+    class func allWithoutCountZero() -> [Activity] {
+      if let realm = AppDelegate.defaultRealm() {
+        let activities = realm.objects(Activity.self).filter("steps != 0")
+        let uniqueActivities = self.removeDuplicates(activities: Array(activities))
+        return uniqueActivities.sorted(by: {$0.date > $1.date})
+      }
+//        var contents = [Activity]()
+//        if let realm = AppDelegate.defaultRealm() {
+//            contents = realm.objects(Activity.self).filter({$0.steps != 0})
+//            contents = self.removeDuplicates(activities: contents)
+//            contents.sort(by: ({ (activity1, activity2) -> Bool in
+//                return activity1.date > activity2.date
+//            }))
+//        }
+//        return contents
+      return []
+    }
+    
+    class func removeDuplicates(activities : [Activity]) -> [Activity] {
+        /*example
+         let activities = [[date : 15/08/2018, steps : 100],
+         [date : 15/08/2018, steps : 103],
+         [date : 16/08/2018, steps : 345],
+         [date : 16/08/2018, steps : 163],
+         [date : 17/08/2018, steps : 2345],
+         [date : 18/08/2018, steps : 4567],
+         [date : 15/08/2018, steps : 2546]]
+         
+         filtered result will be
+         filtered = [[date : 15/08/2018, steps : 2546],
+         [date : 16/08/2018, steps : 345],
+         [date : 17/08/2018, steps : 2345],
+         [date : 18/08/2018, steps : 4567]]
+         */
+        var filtered = [Activity]()
+        
+        var uniquePairs = [String : Activity]()
+        activities.forEach { (activity) in
+            let activityDateStr = AppDelegate.stringFromDate(date: activity.date)
+            
+            if let activity1 = uniquePairs[activityDateStr] {
+                if activity.steps > activity1.steps {
+                    uniquePairs[activityDateStr] = activity
+                }
+            } else {
+                uniquePairs[activityDateStr] = activity
+            }
+            
+        }
+        uniquePairs.forEach { (arg0) in
+            let (_, value) = arg0
+            filtered.append(value)
+        }
+        return filtered
+    }
+    
+    //clear activity history
+    class func deleteAll() {
+        var config = Realm.Configuration.defaultConfiguration
+        config.schemaVersion = CurrentRealmSchemaVersion //increase schemaversion if properties changed
+        config.migrationBlock = { (migration, oldSchemaVersion) in
+            // nothing to do
+        }
+        do {
+            let realm =  try Realm.init(configuration: config)
+            let objs = realm.objects(Activity.self)
+            realm.beginWrite()
+            realm.delete(objs)
+            try! realm.commitWrite()
+        } catch {
+            
+        }
+    }
+    
+    func toDictionary() -> [String : Any] {
+        return ["date" : self.date, "steps" : self.steps]
+    }
+}
+
+/*class everyFifteenMinuteEntity: Object {
+    
+    @objc dynamic var id: Int = 0
+    @objc dynamic var date: Date = Date()
+    @objc dynamic var steps: Int = 0
+    //@objc dynamic var interval : String = ""
+    
+    
+    override static func primaryKey() -> String? { //primary key needs to be a string or int
+        return "id"
+    }
+    
+    class func saveStepFifteenMinuteInterval(info : [String : Any]) {
+        DispatchQueue.global().async {
+            // Get new realm and table since we are in a new thread
+            autoreleasepool {
+                if let realm = AppDelegate.defaultRealm() {
+                    realm.beginWrite()
+                    //realm.create(Activity.self, value: info)
+                    realm.create(everyFifteenMinuteEntity.self, value: info, update: false)
+                    try! realm.commitWrite()
+                }
+            }
+        }
+    }
+    
+    //get all saved activities
+    class func all() -> [everyFifteenMinuteEntity] {
+        var contents = [everyFifteenMinuteEntity]()
+        if let realm = AppDelegate.defaultRealm() {
+            contents = realm.objects(everyFifteenMinuteEntity.self).map({$0})
+            // contents = self.removeDuplicates(activities: contents)
+        }
+        return contents
+    }
+    
+  
+}*/
+

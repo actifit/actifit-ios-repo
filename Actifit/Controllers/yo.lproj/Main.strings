@@ -1,0 +1,309 @@
+
+/* Class = "UILabel"; text = "STEEM Post Payout"; ObjectID = "0In-VG-UMM"; */
+"0In-VG-UMM.text" = "STEEM Post Payout";
+
+/* Class = "UILabel"; text = "Track Measurement"; ObjectID = "0M9-BM-Ir3"; */
+"0M9-BM-Ir3.text" = "Track Measurement";
+
+/* Class = "UILabel"; text = "Fetch Steps"; ObjectID = "1sk-03-8Vy"; */
+"1sk-03-8Vy.text" = "Fetch Steps";
+
+/* Class = "UIButton"; normalTitle = "SETTINGS"; ObjectID = "3zr-8Q-8Yp"; */
+"3zr-8Q-8Yp.normalTitle" = "SETTINGS";
+
+/* Class = "UILabel"; text = "Metric"; ObjectID = "4GM-ip-NH0"; */
+"4GM-ip-NH0.text" = "Metric";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "4Ht-Vf-Q7L"; */
+"4Ht-Vf-Q7L.text" = "Label";
+
+/* Class = "UILabel"; text = "Available Charities"; ObjectID = "4h4-O9-TDg"; */
+"4h4-O9-TDg.text" = "Available Charities";
+
+/* Class = "UIButton"; normalTitle = "CHECK BALANCE"; ObjectID = "679-oE-5Af"; */
+"679-oE-5Af.normalTitle" = "CHECK BALANCE";
+
+/* Class = "UILabel"; text = "Actifit Fitness Tracker"; ObjectID = "6gk-zc-tHI"; */
+"6gk-zc-tHI.text" = "Actifit Fitness Tracker";
+
+/* Class = "UILabel"; text = "Donate rewards to Charity"; ObjectID = "6oL-cM-3AH"; */
+"6oL-cM-3AH.text" = "Donate rewards to Charity";
+
+/* Class = "UILabel"; text = "Measurement System"; ObjectID = "6vo-gx-FUD"; */
+"6vo-gx-FUD.text" = "Measurement System";
+
+/* Class = "UILabel"; text = "Unable to fetch balance"; ObjectID = "7KU-El-l4D"; */
+"7KU-El-l4D.text" = "Unable to fetch balance";
+
+/* Class = "UILabel"; text = "Today"; ObjectID = "7Ra-nO-vua"; */
+"7Ra-nO-vua.text" = "Today";
+
+/* Class = "UILabel"; text = "Total Activity Today : 0"; ObjectID = "8kT-o3-JOa"; */
+"8kT-o3-JOa.text" = "Total Activity Today : 0";
+
+/* Class = "UILabel"; text = "0"; ObjectID = "9Wc-2g-REd"; */
+"9Wc-2g-REd.text" = "0";
+
+/* Class = "UILabel"; text = "cm"; ObjectID = "9yy-zF-bcu"; */
+"9yy-zF-bcu.text" = "cm";
+
+/* Class = "UILabel"; text = "%"; ObjectID = "BYV-YN-v4C"; */
+"BYV-YN-v4C.text" = "%";
+
+/* Class = "UILabel"; text = "Donate to Charity"; ObjectID = "Cjc-0J-NcN"; */
+"Cjc-0J-NcN.text" = "Donate to Charity";
+
+/* Class = "UIButton"; normalTitle = "TRACKING HISTORY"; ObjectID = "DXy-TB-qIL"; */
+"DXy-TB-qIL.normalTitle" = "TRACKING HISTORY";
+
+/* Class = "UILabel"; text = "100% SP"; ObjectID = "Ehd-x8-591"; */
+"Ehd-x8-591.text" = "100% SP";
+
+/* Class = "UIButton"; normalTitle = "VIEW WALLET"; ObjectID = "GdR-DB-7sJ"; */
+"GdR-DB-7sJ.normalTitle" = "VIEW WALLET";
+
+/* Class = "UILabel"; text = "Available Charities"; ObjectID = "HWI-EP-QVt"; */
+"HWI-EP-QVt.text" = "Available Charities";
+
+/* Class = "UIButton"; normalTitle = "Button"; ObjectID = "J6C-a4-cZy"; */
+"J6C-a4-cZy.normalTitle" = "Button";
+
+/* Class = "UILabel"; text = "Fitbit Settings"; ObjectID = "JKz-LS-tmv"; */
+"JKz-LS-tmv.text" = "Fitbit Settings";
+
+/* Class = "UILabel"; text = "Phone Sensor"; ObjectID = "K4m-gw-JVK"; */
+"K4m-gw-JVK.text" = "Phone Sensor";
+
+/* Class = "UILabel"; text = "Activity Count"; ObjectID = "KoS-rO-afv"; */
+"KoS-rO-afv.text" = "Activity Count";
+
+/* Class = "UILabel"; text = "Transactions"; ObjectID = "M79-ip-T0h"; */
+"M79-ip-T0h.text" = "Transactions";
+
+/* Class = "UIButton"; normalTitle = "POST TO STEEM"; ObjectID = "MAF-op-rIK"; */
+"MAF-op-rIK.normalTitle" = "POST TO STEEM";
+
+/* Class = "UILabel"; text = "Post Content (describe your days's activity)"; ObjectID = "NOo-6r-hFL"; */
+"NOo-6r-hFL.text" = "Post Content (describe your days's activity)";
+
+/* Class = "UILabel"; text = "Actifit Fitness Tracker"; ObjectID = "ODW-0A-ir5"; */
+"ODW-0A-ir5.text" = "Actifit Fitness Tracker";
+
+/* Class = "UILabel"; text = "Markdown Content Accepted"; ObjectID = "PeY-g3-C6e"; */
+"PeY-g3-C6e.text" = "Markdown Content Accepted";
+
+/* Class = "UILabel"; text = "Remind me to Post"; ObjectID = "QF9-rO-Je9"; */
+"QF9-rO-Je9.text" = "Remind me to Post";
+
+/* Class = "UILabel"; text = "Activity Date"; ObjectID = "QNS-Ut-OnA"; */
+"QNS-Ut-OnA.text" = "Activity Date";
+
+/* Class = "UILabel"; text = "Metric"; ObjectID = "RWy-mD-88m"; */
+"RWy-mD-88m.text" = "Metric";
+
+/* Class = "UILabel"; text = "#1 hitenkmr 10988"; ObjectID = "ScX-Ua-Zpc"; */
+"ScX-Ua-Zpc.text" = "#1 hitenkmr 10988";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "Sos-z9-8Uh"; */
+"Sos-z9-8Uh.text" = "Label";
+
+/* Class = "UILabel"; text = "Steemit Username (without the @)"; ObjectID = "SpG-AJ-kQd"; */
+"SpG-AJ-kQd.text" = "Steemit Username (without the @)";
+
+/* Class = "UILabel"; text = "Weight"; ObjectID = "Swc-P1-RCM"; */
+"Swc-P1-RCM.text" = "Weight";
+
+/* Class = "UIButton"; normalTitle = "SNAP AN ACTI PIC"; ObjectID = "TBQ-Dz-nhg"; */
+"TBQ-Dz-nhg.normalTitle" = "SNAP AN ACTI PIC";
+
+/* Class = "UILabel"; text = "Language"; ObjectID = "UCX-Nf-XSl"; */
+"UCX-Nf-XSl.text" = "Language";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "UMi-Ag-Ajn"; */
+"UMi-Ag-Ajn.text" = "Label";
+
+/* Class = "UILabel"; text = "Daily Reminder Post"; ObjectID = "UU2-1m-HIs"; */
+"UU2-1m-HIs.text" = "Daily Reminder Post";
+
+/* Class = "UILabel"; text = "Chest"; ObjectID = "Un2-oe-MzY"; */
+"Un2-oe-MzY.text" = "Chest";
+
+/* Class = "UILabel"; text = "Post Tags"; ObjectID = "VHU-pJ-Cnf"; */
+"VHU-pJ-Cnf.text" = "Post Tags";
+
+/* Class = "UILabel"; text = "US"; ObjectID = "VU3-tB-beQ"; */
+"VU3-tB-beQ.text" = "US";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "WGG-cT-yvO"; */
+"WGG-cT-yvO.text" = "Label";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "XlM-We-P2s"; */
+"XlM-We-P2s.text" = "Label";
+
+/* Class = "UIButton"; normalTitle = "Day Chart"; ObjectID = "XqX-Mk-gFZ"; */
+"XqX-Mk-gFZ.normalTitle" = "Day Chart";
+
+/* Class = "UIButton"; normalTitle = "FITBIT SYNC"; ObjectID = "Y92-fr-j9T"; */
+"Y92-fr-j9T.normalTitle" = "FITBIT SYNC";
+
+/* Class = "UILabel"; text = "Aerobics"; ObjectID = "YLs-CK-q1T"; */
+"YLs-CK-q1T.text" = "Aerobics";
+
+/* Class = "UIButton"; normalTitle = "Button"; ObjectID = "Z2C-BJ-WUj"; */
+"Z2C-BJ-WUj.normalTitle" = "Button";
+
+/* Class = "UILabel"; text = "US"; ObjectID = "ZFS-e7-yvb"; */
+"ZFS-e7-yvb.text" = "US";
+
+/* Class = "UILabel"; text = "Actifit tokens"; ObjectID = "a29-OB-TCR"; */
+"a29-OB-TCR.text" = "Actifit tokens";
+
+/* Class = "UITextField"; placeholder = "Steemit Username"; ObjectID = "aiE-gb-iCI"; */
+"aiE-gb-iCI.placeholder" = "Steemit Username";
+
+/* Class = "UILabel"; text = "cm"; ObjectID = "av0-PI-ZgN"; */
+"av0-PI-ZgN.text" = "cm";
+
+/* Class = "UILabel"; text = "Activity Data Source"; ObjectID = "bKp-zH-VsJ"; */
+"bKp-zH-VsJ.text" = "Activity Data Source";
+
+/* Class = "UIButton"; normalTitle = "SAVE SETTINGS"; ObjectID = "bRF-VR-o9G"; */
+"bRF-VR-o9G.normalTitle" = "SAVE SETTINGS";
+
+/* Class = "UILabel"; text = "Body Fat"; ObjectID = "be4-LZ-XgG"; */
+"be4-LZ-XgG.text" = "Body Fat";
+
+/* Class = "UILabel"; text = "Full Report Payout in AFIT"; ObjectID = "bpt-V2-5JR"; */
+"bpt-V2-5JR.text" = "Full Report Payout in AFIT";
+
+/* Class = "UIButton"; normalTitle = "CHOOSE IMAGE"; ObjectID = "bs3-RX-92z"; */
+"bs3-RX-92z.normalTitle" = "CHOOSE IMAGE";
+
+/* Class = "UILabel"; text = "Report Images"; ObjectID = "c5Y-6I-rpq"; */
+"c5Y-6I-rpq.text" = "Report Images";
+
+/* Class = "UILabel"; text = "Post Title"; ObjectID = "cIb-6V-sQJ"; */
+"cIb-6V-sQJ.text" = "Post Title";
+
+/* Class = "UIButton"; normalTitle = "POST DETAILS"; ObjectID = "cVg-2V-ssP"; */
+"cVg-2V-ssP.normalTitle" = "POST DETAILS";
+
+/* Class = "UIButton"; normalTitle = "SAVE SETTINGS"; ObjectID = "d3c-fm-ElD"; */
+"d3c-fm-ElD.normalTitle" = "SAVE SETTINGS";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "daU-Ve-OQz"; */
+"daU-Ve-OQz.text" = "Label";
+
+/* Class = "UILabel"; text = "Steem Username (without the @)"; ObjectID = "f1T-VW-vAM"; */
+"f1T-VW-vAM.text" = "Steem Username (without the @)";
+
+/* Class = "UILabel"; text = "Your Wallet"; ObjectID = "f3q-wp-y1F"; */
+"f3q-wp-y1F.text" = "Your Wallet";
+
+/* Class = "UIButton"; normalTitle = "Chart View"; ObjectID = "fcw-zq-fo1"; */
+"fcw-zq-fo1.normalTitle" = "Chart View";
+
+/* Class = "UIButton"; normalTitle = "POST TO STEEM"; ObjectID = "g6j-Oe-wac"; */
+"g6j-Oe-wac.normalTitle" = "POST TO STEEM";
+
+/* Class = "UILabel"; text = "Settings"; ObjectID = "gRR-tB-1f6"; */
+"gRR-tB-1f6.text" = "Settings";
+
+/* Class = "UILabel"; text = "Actifit Fitness Tracker"; ObjectID = "ghj-rW-2mA"; */
+"ghj-rW-2mA.text" = "Actifit Fitness Tracker";
+
+/* Class = "UILabel"; text = "Activity Type"; ObjectID = "h0N-ba-YDI"; */
+"h0N-ba-YDI.text" = "Activity Type";
+
+/* Class = "UITextView"; text = "My Actifit Report Card: August 12 2018 "; ObjectID = "iCw-oH-a8U"; */
+"iCw-oH-a8U.text" = "My Actifit Report Card: August 12 2018 ";
+
+/* Class = "UILabel"; text = "Remind me to Post"; ObjectID = "iJz-kf-Rs0"; */
+"iJz-kf-Rs0.text" = "Remind me to Post";
+
+/* Class = "UILabel"; text = "Actifit Fitness Tracker"; ObjectID = "jeh-NM-p7n"; */
+"jeh-NM-p7n.text" = "Actifit Fitness Tracker";
+
+/* Class = "UILabel"; text = "Actifit Fitness Tracker"; ObjectID = "jtl-yk-E1Q"; */
+"jtl-yk-E1Q.text" = "Actifit Fitness Tracker";
+
+/* Class = "UILabel"; text = "Fitbit"; ObjectID = "kjb-Dd-u7Y"; */
+"kjb-Dd-u7Y.text" = "Fitbit";
+
+/* Class = "UILabel"; text = "Settings"; ObjectID = "l5D-DM-o20"; */
+"l5D-DM-o20.text" = "Settings";
+
+/* Class = "UILabel"; text = "Donate to Charity"; ObjectID = "lD4-h4-SI6"; */
+"lD4-h4-SI6.text" = "Donate to Charity";
+
+/* Class = "UILabel"; text = "Steemit Private Posting Key (NOT the password)"; ObjectID = "lHB-sD-yJh"; */
+"lHB-sD-yJh.text" = "Steemit Private Posting Key (NOT the password)";
+
+/* Class = "UITextView"; text = "actifit"; ObjectID = "lXo-Mb-lD4"; */
+"lXo-Mb-lD4.text" = "actifit";
+
+/* Class = "UILabel"; text = "kg"; ObjectID = "mZf-Zw-JiA"; */
+"mZf-Zw-JiA.text" = "kg";
+
+/* Class = "UILabel"; text = "50% SBD - 50% SP"; ObjectID = "nhf-Mm-lGa"; */
+"nhf-Mm-lGa.text" = "50% SBD - 50% SP";
+
+/* Class = "UILabel"; text = "Charity Info"; ObjectID = "oU9-5e-dnm"; */
+"oU9-5e-dnm.text" = "Charity Info";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "oZo-RM-H6b"; */
+"oZo-RM-H6b.text" = "Label";
+
+/* Class = "UILabel"; text = "Yesterday"; ObjectID = "p6N-Po-zPC"; */
+"p6N-Po-zPC.text" = "Yesterday";
+
+/* Class = "UILabel"; text = "Daily Reminder Post"; ObjectID = "pCV-H1-HBM"; */
+"pCV-H1-HBM.text" = "Daily Reminder Post";
+
+/* Class = "UILabel"; text = "Charity Info"; ObjectID = "pCt-Zq-4nz"; */
+"pCt-Zq-4nz.text" = "Charity Info";
+
+/* Class = "UILabel"; text = "Fetch Measurements"; ObjectID = "pST-ob-yUu"; */
+"pST-ob-yUu.text" = "Fetch Measurements";
+
+/* Class = "UILabel"; text = "cm"; ObjectID = "qB5-UG-IWY"; */
+"qB5-UG-IWY.text" = "cm";
+
+/* Class = "UILabel"; text = "Actifit Fitness Tracker"; ObjectID = "rCW-aT-aOW"; */
+"rCW-aT-aOW.text" = "Actifit Fitness Tracker";
+
+/* Class = "UILabel"; text = "Thighs"; ObjectID = "sCI-jo-2E2"; */
+"sCI-jo-2E2.text" = "Thighs";
+
+/* Class = "UILabel"; text = "Maximize AFIT Token Earnings"; ObjectID = "tpP-Lo-fLF"; */
+"tpP-Lo-fLF.text" = "Maximize AFIT Token Earnings";
+
+/* Class = "UILabel"; text = "Donate rewards to Charity"; ObjectID = "uXn-64-Nyp"; */
+"uXn-64-Nyp.text" = "Donate rewards to Charity";
+
+/* Class = "UILabel"; text = "Actifit Fitness Tracker"; ObjectID = "w4d-8n-zwd"; */
+"w4d-8n-zwd.text" = "Actifit Fitness Tracker";
+
+/* Class = "UILabel"; text = "Measurement System"; ObjectID = "wYW-e9-6rg"; */
+"wYW-e9-6rg.text" = "Measurement System";
+
+/* Class = "UILabel"; text = "cm"; ObjectID = "whM-uf-pkW"; */
+"whM-uf-pkW.text" = "cm";
+
+/* Class = "UITextField"; placeholder = "Private Key"; ObjectID = "xCJ-tG-a1t"; */
+"xCJ-tG-a1t.placeholder" = "Private Key";
+
+/* Class = "UILabel"; text = "Waist"; ObjectID = "xdX-yi-0tq"; */
+"xdX-yi-0tq.text" = "Waist";
+
+/* Class = "UIButton"; normalTitle = "Help me find my Private Posting Key"; ObjectID = "xnQ-3k-Tf8"; */
+"xnQ-3k-Tf8.normalTitle" = "Help me find my Private Posting Key";
+
+/* Class = "UILabel"; text = "Actifit App Version: v0.5.4"; ObjectID = "yot-ml-32G"; */
+"yot-ml-32G.text" = "Actifit App Version: v0.5.4";
+
+/* Class = "UIButton"; normalTitle = "DAILY LEADERBOARD"; ObjectID = "ypm-hf-zKK"; */
+"ypm-hf-zKK.normalTitle" = "DAILY LEADERBOARD";
+
+/* Class = "UILabel"; text = "Height"; ObjectID = "zhM-PO-kqQ"; */
+"zhM-PO-kqQ.text" = "Height";

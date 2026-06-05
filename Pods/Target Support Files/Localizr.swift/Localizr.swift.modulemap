@@ -1,0 +1,6 @@
+framework module Localizr_swift {
+  umbrella header "Localizr.swift-umbrella.h"
+
+  export *
+  module * { export * }
+}

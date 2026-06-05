@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    TEMPLATE for Firebase configuration.
+    Copy this file to `GoogleService-Info.plist` (same folder) and replace the
+    placeholder values with the ones from your Firebase console
+    (Project settings > Your apps > iOS > GoogleService-Info.plist).
+    The real `GoogleService-Info.plist` is gitignored and must not be committed.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>YOUR_CLIENT_ID.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.YOUR_REVERSED_CLIENT_ID</string>
+	<key>API_KEY</key>
+	<string>YOUR_FIREBASE_API_KEY</string>
+	<key>GCM_SENDER_ID</key>
+	<string>YOUR_GCM_SENDER_ID</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.Actifit.fitnesstracker</string>
+	<key>PROJECT_ID</key>
+	<string>YOUR_PROJECT_ID</string>
+	<key>STORAGE_BUCKET</key>
+	<string>YOUR_PROJECT_ID.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>YOUR_GOOGLE_APP_ID</string>
+	<key>DATABASE_URL</key>
+	<string>https://YOUR_PROJECT_ID.firebaseio.com</string>
+</dict>
+</plist>

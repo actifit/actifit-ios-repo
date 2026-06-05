@@ -1,0 +1,274 @@
+/* 
+  Localizable.strings
+  Actifit
+
+  Created by Imran Balouch on 23/09/2019.
+  
+*/
+
+"app_name"  = "Actifit Fitness Tracker";
+"sending_post"  = "Sending your post";
+"success_post"  = "Your post has been successfully submitted";
+"failed_post"  = "There was an error submitting your post";
+"connection_timeout"  = "Connecting to the node took too long. Please try again.";
+"default_post_title"  = "My Actifit Report Card:";
+"error_need_select_one_activity"  = "You need to select at least one Activity Type to proceed";
+"fetching_leaderboard"  = "Updating the leaderboard...";
+"leader_no_results"  = "There are no users on the leaderboard now";
+"leader_error"  = "An error occurred trying to fetch leaderboard list. Please Try again later.";
+"username_missing"  = "Please provide a proper existing username";
+"fetching_user_balance"  = "Grabbing user balance...";
+"metric_system"  = "Metric System";
+"us_system"  = "US System";
+"back_exit_confirmation"  = "Click BACK button again if you want to exit";
+"actifit_service_desc"  = "Actifit Service to keep track of user activity";
+"actifit_reminder_service_desc"  = "Actifit Service to remind user of posting daily reports";
+"activity_today_string"  = "Total Activity Today: ";
+"actifit_notif_title"  = "Actifit Report";
+"activity_today_fivek_milestone"  = "Congrats On Reaching 5K Milestone. Keep Going!";
+"activity_today_tenk_milestone"  = "Congrats On Reaching 10K Milestone. Well Done!";
+"actifit_notif_channel"  = "Actifit Notification Channel";
+"actifit_notif_description"  = "Channel used for sending out notifications of Actifit App";
+//"actifit_channel_ID" translatable="false">Actifit_Notif_Channel_1"
+//"actifit_channel_remind_ID" translatable="false">Actifit_Notif_Channel_2"
+//"actifit_channel_5k_notice" translatable="false">Actifit_Notif_Channel_3"
+//"actifit_channel_10k_notice" translatable="false">Actifit_Notif_Channel_4"
+//"actifit_fcm_msg_channel_id" translatable="false">Actifit_FCM_Msg_Chan_1"
+"aggr_back_tracking_on"  = "On";
+"aggr_back_tracking_off"  = "";
+"aggr_mode_note"  = "*Enable this setting if you are facing issues with app tracking your movement while screen is locked. The setting may possibly drain your battery faster.";
+"one_post_per_day_error"  = "You can only post once per day";
+"min_char_count_error"  = "You need to describe your activity in at least ";
+"characters_plural_label"  = "characters";
+"current_workout_going_charity"  = "Your current activity rewards will go to charity ";
+"current_workout_settings_based"  = "based on your settings choice. Are you sure you want to proceed? ";
+"steemit_url"  = "https://www.steemit.com/";
+"actifit_usermedia_url"  = "https://usermedia.actifit.io/";
+//"actifit_find_posting_key_vid"  = "<a href="https://d.tube/#!/v/raserrano/h7rze7he">Help me find my Private Posting Key</a>""
+"welcome_user"  = "Welcome USER_NAME USER_RANK";
+"daily_post_reminder_title"  = "Actifit Reminder!";
+"daily_post_reminder"  = "You haven\'t posted today\'s activity report!";
+"update_google_play"  = "Please update Google Play services app on your device.";
+"device_rooted"  = "Your device is rooted. Actifit can only run on non-rooted devices.";
+"emulator_device"  = "You appear to be running Actifit on an emulator. Actifit can only run on authentic phone devices.";
+"no_valid_sim"  = "We could not detect a valid SIM card. If you have a DUAL SIM ensure SIM is in first slot and set as default.";
+"need_sync_fitbit_again"  = "A day has passed since you last synced your fitbit data. Need to sync again.";
+"fitbit_tracking_mode_active"  = "Fitbit Tracking Mode On";
+"activity_history_chart_title"  = "Activity History Chart";
+"activity_details_chart_title"  = "Activity Day Details";
+"activity_leaderboard_title"  = "Daily leaderboard";
+"post_to_steem_btn_txt"  = "Send Post";
+"snap_picture_btn_txt"  = "Snap an Acti Pic";
+"view_history_btn_txt"  = "View Tracking History";
+"daily_leaderboard_btn_txt"  = "View Daily Leaderboard";
+"view_wallet_btn_txt"  = "View Wallet";
+"settings_btn_txt"  = "Settings";
+"settings_title"  = "Settings";
+"steem_username_lbl"  = "Username";
+"steem_pvt_posting_key"  = "Private Posting Key (NOT the password)";
+"report_title"  = "Report Title";
+"full_report_AFIT_pay"  = "Full Report Payout in AFIT";
+"full_AFIT_checkbox"  = "Maximize AFIT Token Earnings";
+"activity_count_lbl"  = "Activity Count";
+"activity_details_lbl"  = "Activity Details";
+"activity_type_lbl"  = "Activity Type";
+"track_measurements_lbl"  = "Track Measurements";
+"height_lbl"  = "Height";
+"weight_lbl"  = "Weight";
+"body_fat_lbl"  = "Body Fat";
+"waist_size_lbl"  = "Waist";
+"thighs_size_lbl"  = "Thighs";
+"chest_size_lbl"  = "Chest";
+"unit_lbl"  = "Unit";
+"report_tags_lbl"  = "Report Tags";
+"report_images_lbl"  = "Report Images";
+"insert_img_btn_lbl"  = "Insert Image";
+"report_content_lbl"  = "Report Content (Describe your day\'s activity)";
+"markdown_content_note"  = "Markdown Content Accepted";
+"report_preview_lbl"  = "Report Preview";
+"fitbit_sync_btn_lbl"  = "SYNC DATA";
+"percent_lbl"  = "%";
+"activity_source_lbl"  = "Activity Data Source";
+"device_sensors_option_lbl"  = "Phone Sensors";
+"fitbit_option_lbl"  = "3rd Party";
+"background_move_track_lbl"  = "Background Movement Tracking";
+"enable_agg_mode_checkbox"  = "Enable Aggressive Background Tracking*";
+"fitbit_settings_lbl"  = "Fitbit Settings";
+"fitbit_measurements_lbl"  = "Fetch Measurements";
+"fitbit_fetch_steps"  = "Fetch Steps";
+"steem_post_payout"  = "Post Payout";
+"pay_option_50_50"  = "50% HBD - 50% HP";
+"pay_option_full_sp"  = "100% HP";
+"measure_system_lbl"  = "Measurement System";
+"metric_system_option_lbl"  = "Metric";
+"us_system_option_lbl"  = "US System";
+"donate_charity_lbl"  = "Donate to Charity";
+"donate_charity_checkbox"  = "Donate Rewards to Charity";
+"charity_options_lbl"  = "Available Charities";
+"charity_info_lbl"  = "Charity Info";
+"daily_post_reminder_lbl"  = "Daily Post Reminder";
+"post_reminder_checkbox"  = "Remind me to Post";
+"save_settings_btn_lbl"  = "Save Settings";
+"activity_step_history_title"  = "Activity History";
+"view_chart_btn_lbl"  = "History Chart";
+"your_wallet_title"  = "Your Wallet";
+"get_balance_btn_lbl"  = "Check Balance";
+"afit_token_balance"  = "AFIT Tokens";
+"actifit_transactions_lbl"  = "AFIT Transactions";
+"actifit_transactions_error"  = "Unable to Fetch Transactions";
+"setting_shareNetworkAgreement"  = "Share network resources";
+"setting_shareNetworkAgreementDesc"  = "Only active when device is plugged in and connected to WiFi network";
+"tot_activity_string"  = "Total Activity:";
+"min_reward_level_chart"  = "Min Reward - 5K Activity";
+"max_reward_level_chart"  = "Max Reward - 10K Activity";
+"dismiss_button"  = "Dismiss";
+"device_has_no_cam"  = "Your device does not have a camera";
+"start_upload"  = "Uploading...0%";
+"upload_complete"  = "Upload Completed!";
+"upload_failed"  = "Upload Failed!";
+"uploading"  = "Uploading...";
+"select_img_title"  = "Select Image";
+"Walking"  = "Walking";
+"Jogging"  = "Jogging";
+"Running"  = "Running";
+"Cycling"  = "Cycling";
+"RopeSkipping"  = "Rope Skipping";
+"Dancing"  = "Dancing";
+"Basketball"  = "Basketball";
+"Football"  = "Football";
+"Boxing"  = "Boxing";
+"Tennis"  = "Tennis";
+"TableTennis"  = "Table Tennis";
+"MartialArts"  = "Martial Arts";
+"HouseChores"  = "House Chores";
+"MovingAroundOffice"  = "Moving Around Office";
+"Shopping"  = "Shopping";
+"DailyActivity"  = "Daily Activity";
+"Aerobics"  = "Aerobics";
+"WeightLifting"  = "Weight Lifting";
+"Treadmill"  = "Treadmill";
+"StairMill"  = "Stair Mill";
+"Elliptical"  = "Elliptical";
+"Hiking"  = "Hiking";
+"Gardening"  = "Gardening";
+"Rollerblading"  = "Rollerblading";
+"Cricket"  = "Cricket";
+"Golf"  = "Golf";
+"Geocaching"  = "Geocaching";
+"Shoveling"  = "Shoveling";
+"Skiing"  = "Skiing";
+"Scootering"  = "Scootering";
+"Photowalking"  = "Photowalking";
+"KettlebellTraining"  = "Kettlebell Training";
+"Bootcamp"  = "Bootcamp";
+"Gym"  = "Gym";
+"Skating"  = "Skating";
+"Hockey"  = "Hockey";
+"Swimming"  = "Swimming";
+"ChasingPokemons"  = "Chasing Pokemons";
+"Badminton"  = "Badminton";
+"PickleBall"  = "Pickle Ball";
+"Snowshoeing"  = "Snowshoeing";
+"Sailing"  = "Sailing";
+"Kayaking"  = "Kayaking";
+"Volleyball"  = "Volleyball";
+"Kidplay"  = "Play with kids/grand kids";
+"HomeImprovement"  = "Home Improvement";
+"YardWork"  = "Yard Work";
+"kg_unit"  = "kg";
+"cm_unit"  = "cm";
+"lb_unit"  = "lb";
+"ft_unit"  = "ft";
+"in_unit"  = "in";
+"min_activity_not_reached"  = "You have not reached the minimum";
+"not_yet"  = "activity yet";
+"yes_button"  = "Yes";
+"no_button"  = "No";
+"app_version_string"  = "Actifit App Version";
+"unable_fetch_balance"  = "Unable to fetch balance";
+"token_count_lbl"  = "Token Count";
+"date_added_lbl"  = "Date Added";
+"note_lbl"  = "Note";
+"actifit_notification"  = "Actifit Notification";
+"activity_view_details_button"  = "Day Chart";
+"today_report_option"  = "Today";
+"yesterday_report_option"  = "Yesterday";
+"report_date_option_group_title"  = "Activity Date";
+"fitbit_sync_again_notice"  = "Please Re-Sync Your Fitbit Data";
+"actifit_crash_restarted"  = "Actifit restarted after crash";
+"entry_view_details_button"  = "Post Details";
+"language"  = "Language";
+
+//login Screen
+"login" = "Login";
+"create_account" = "Create an account";
+"private_posting_key" = "Private Posting Key";
+"help_me_find_posting_key" = "Help Me find my Private Posting Key";
+"skip" = "SKIP";
+"proceed" = "PROCEED";
+
+
+"resource_credit_title" = "Resource Credits";
+"resource_credits_desc" = "This value represents your account's
+RC (Resource Credits).
+RC credits allow you to transact on Hive chain, on which Actifit mainly runs.
+It is recommended to maintain a value above 50%.
+If your RC gets to a critical low level, you might not be able to create an actifit report, and will need to wait for a day or two till your RC replenishes.
+You can also power up more HIVE to replenish your RC";
+
+"user_rank_title" = "User Rank";
+
+"user_rand_desc" = "Your user rank plays a role in your daily actifit rewards, as well as provides extra access to gadgets and cool things around Actifit ecosystem.
+User Rank determines 25% of the total reward value. The ranking system is scaled from 0 (lowest) to 100+, and is affected by a multitude of factors, while making it a dynamic system, as follows:
+
+•Amount of Delegated Steem/HIVE
+Power (SP/HP)
+
+•Amount of Held AFIT Tokens
+
+•Total Activity Rewarded
+
+•Last 10 Days Activity Count
+
+•Amount of AFITX held on Hive-Engine, Steem-Engine and on BSC, whether liquid or locked as liquidity vs BB or BUSD";
+
+"close_upper" = "CLOSE";
+"user_rank_Details_upper" = "USER RANK DETAILS";
+"hourly" = "HOURLY";
+"daily" = "DAILY";
+"actifit_reward_cycle" = "Actifit Reward Cycle";
+"reward_cycle_details" = "Actifit distributes rewards via reward cycles. Normally cycles are run every 24 hours.\nThe timer represents the time till next cycle. If the status says \"processing\" this means reward cycle is running, and if you have any eligible entry for rewards, it will receive rewards prior to next cycle.";
+"potential_token_earnings" = "Your Potential Token Earnings";
+"low_afit_balance" = "\n⚠ You are currently NOT earning AFIT due to your balance being below 5000 AFIT.";
+"no_blurt_account" = "\n⚠ You are currently NOT earning BLURT due to not having a Blurt account. You can signup for one via our signup page";
+"low_blurt_balance" = "\n⚠ You are currently NOT earning BLURT due to your balance being below 5 BLURT.";
+"eligible_tokens_earn" = "You are currently eligible to earn tokens currently showing in the pane as you make your actifit post.";
+"minimum_actifity_start" = "\nYou need to reach minimum 5,000 activity to start earning.\nYour AFIT earnings come in within 48 hours of making your post.";
+"other_token_rewards" = "\nYour other token rewards come in after 7 days of your post.";
+"dont_show_again" = "DON'T SHOW AGAIN";
+"random_activit_tip" = "Random Actifit Tip";
+"virtual_gadgets" = "Virtual Gadgets";
+"virtual_gadgets_details" = "Gadgets allow you to increase your actifit report earnings. More than 40 gadgets are available increasing your earnings. Some increase your friend's earnings as well. You can explore and buy gadgets by visiting Actifit Market";
+"market" = "MARKET";
+"no_active_gadgets" = "No Active Gadgets";
+"earn_extra_prizes_title" = "Earn Extra Prizes Daily";
+"earn_extra_prizes_descript" = "You can earn daily extra rewards by clicking on the bonus buttons below.";
+"free_rewards" = "Free Reward";
+"free_rewards_Details" = "Free bonus can be claimed once daily. Earn extra random reward up to 3 AFIT";
+"5k_extra_reward" = "5K Extra Reward";
+"5k_reward_details" = "Unlocked when you reach 5,000 activity count. Earn extra random reward up to 5 AFIT";
+"7k_extra_reward" = "7K Extra Reward";
+"7k_reward_details" = "Unlocked when you reach 7,000 activity count. Earn extra random reward up to 7 AFIT";
+"10k_extra_reward" = "10K Extra Reward";
+"10_reward_details" = "Unlocked when you reach 10,000 activity count. Earn extra random reward up to 10 AFIT";
+"already_climed_reward" = "You have already claimed this reward today, You can do so again tomorrow";
+"claimed_reward" = "You have been successfully rewarded %@ AFIT Tokens";
+"not_eligible_for_reward" = "You are not yet eligible for this reward";
+"successful_referrals" = "Successful Referrals";
+"your_referral_link" = "Your Referral Link";
+"proceed_by_biometric" = "proceed using biometric id";
+"survey_poll_participation" = "Taking part in Actifit polls allows you to earn extra AFIT. There is a one time %@ for answering this poll. There is No correct or incorrect answer.";
+"chitchat" = "Chit Chat";
+"chat_with_other" = "Chat with other actifitters and other hive communities on the go. Have fun while walking or at your leisure.";
+"minimum_characters_required_title" = "Minimum Characters Requirement";
+"minimum_characters_required_description" = "A minimum of 100 characters is required in your post content. The more quality/lengthier content you provide, the better!";

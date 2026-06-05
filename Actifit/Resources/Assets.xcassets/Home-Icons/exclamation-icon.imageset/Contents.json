@@ -1,0 +1,22 @@
+{
+  "images" : [
+    {
+      "filename" : "circle-exclamation-solid-32x32.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "circle-exclamation-solid-64x64.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
