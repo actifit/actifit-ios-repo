@@ -40,13 +40,15 @@ jobs:
           sudo gem install cocoapods -v 1.15.2 --no-document
           pod _1.15.2_ --version
 
-      - name: pod install
+      # The committed Pods/ is incomplete (Realm's core xcframework binaries are
+      # gitignored) and was committed from Windows (no +x on scripts). Remove it
+      # so pod install does a clean, complete install on the macOS runner.
+      - name: Clean install CocoaPods dependencies
         run: |
+          rm -rf Pods
           pod _1.15.2_ install --repo-update
 
-      # The Pods directory was committed from Windows, which drops the Unix
-      # executable bit, so CocoaPods build-phase scripts fail with
-      # "Permission denied". Restore +x on all of them.
+      # Safety: ensure all CocoaPods build-phase scripts are executable.
       - name: Fix Pods script permissions
         run: |
           find Pods -name "*.sh" -exec chmod +x {} +
