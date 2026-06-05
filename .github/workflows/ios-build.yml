@@ -44,6 +44,13 @@ jobs:
         run: |
           pod _1.15.2_ install --repo-update
 
+      # The Pods directory was committed from Windows, which drops the Unix
+      # executable bit, so CocoaPods build-phase scripts fail with
+      # "Permission denied". Restore +x on all of them.
+      - name: Fix Pods script permissions
+        run: |
+          find Pods -name "*.sh" -exec chmod +x {} +
+
       - name: Build for iOS Simulator
         run: |
           set -o pipefail
