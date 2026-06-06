@@ -298,7 +298,8 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
     layout.scrollDirection = .horizontal
     collectionVIew.collectionViewLayout = layout
     print("History Count" + "\(viewModel.historyFifteenMinute.count)")
-    stepsCountLabel.format = "%d"
+    // EFCountingLabel 5.x removed the `format` String property (it only affected
+    // count animations, which this label never uses — text is set directly).
     let gesture = UITapGestureRecognizer(target: self, action: #selector(profileBtnAction))
     userImage.isUserInteractionEnabled = true
     userImage.addGestureRecognizer(gesture)
