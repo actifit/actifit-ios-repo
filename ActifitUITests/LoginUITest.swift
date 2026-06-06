@@ -68,26 +68,42 @@ final class LoginUITest: XCTestCase {
             goBack()
         }
 
-        // Dashboard icon buttons have no accessibility labels, so target them by
-        // coordinate. Offsets are fractions of the screen, read from 10-dashboard.png
-        // (the screenshot is the device at exact 393x852 scale).
-        let icons: [(name: String, x: Double, y: Double)] = [
+        // Top dashboard icons (no labels) — target by coordinate, as fractions of
+        // the screen read from the 393x852 dashboard screenshot.
+        let coordIcons: [(name: String, x: Double, y: Double)] = [
             ("40-profile",        0.076, 0.088),
             ("41-notifications",  0.737, 0.095),
             ("42-wallet",         0.895, 0.095),
             ("43-tracking-gauge", 0.737, 0.144),
-            ("44-waves",          0.924, 0.358),
-            ("45-store-gadgets",  0.570, 0.512),
-            ("46-referrals-gift", 0.601, 0.619),
-            ("47-add-friend",     0.755, 0.619),
-            ("48-stats-chart",    0.910, 0.619),
         ]
-        for icon in icons {
+        for icon in coordIcons {
             returnToDashboard()
             tapAt(icon.x, icon.y)
             sleep(3)
             dismissSpringboardAlert()
             screenshot(icon.name)
+        }
+
+        // Icon shortcuts that now carry accessibility identifiers (set in the app).
+        let idWidgets: [(name: String, id: String)] = [
+            ("44-waves",     "waves"),
+            ("45-store",     "store"),
+            ("46-gift",      "gift"),
+            ("47-referrals", "referrals"),
+            ("48-stats",     "stats"),
+        ]
+        for widget in idWidgets {
+            returnToDashboard()
+            let btn = app.buttons[widget.id]
+            if btn.waitForExistence(timeout: 5), btn.isHittable {
+                btn.tap()
+                sleep(3)
+                dismissSpringboardAlert()
+                screenshot(widget.name)
+            } else {
+                NSLog("ACTIFIT_WALK: widget '\(widget.id)' not found/hittable")
+                screenshot(widget.name + "-missing")
+            }
         }
 
         returnToDashboard()
@@ -133,13 +149,29 @@ final class LoginUITest: XCTestCase {
         app.coordinate(withNormalizedOffset: CGVector(dx: nx, dy: ny)).tap()
     }
 
-    /// Best-effort recovery to the Dashboard from any pushed screen or modal.
+    /// Reliable recovery to the Dashboard from any pushed screen or modal.
     private func returnToDashboard() {
         dismissModalIfPresent()
-        let back = app.navigationBars.buttons.firstMatch
-        if back.exists && back.isHittable { back.tap() }
-        _ = tapByLabel("Dashboard")
-        sleep(2)
+        // Pushed screens (Notifications, Wallet, etc.) hide the tab bar and use a
+        // custom back button at the top-left. Tap it until the dashboard is shown.
+        for _ in 0..<4 {
+            if onDashboard() { break }
+            let navBack = app.navigationBars.buttons.firstMatch
+            if navBack.exists && navBack.isHittable {
+                navBack.tap()
+            } else {
+                tapAt(0.06, 0.13)   // custom back button position
+            }
+            sleep(1)
+            dismissModalIfPresent()
+        }
+        _ = tapByLabel("Dashboard")   // in case the tab bar is visible
+        sleep(1)
+    }
+
+    /// True when the Dashboard is the visible screen (its POST & EARN button exists).
+    private func onDashboard() -> Bool {
+        app.buttons["POST & EARN"].exists || app.staticTexts["POST & EARN"].exists
     }
 
     /// Dismiss an in-app popup/modal/web-view by tapping its close-style button.

@@ -116,8 +116,19 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   override func viewDidLoad() {
     super.viewDidLoad()
     setUI()
+    setAccessibilityIdentifiers()
     checkForUpdates()
 
+  }
+
+  /// Stable identifiers for the icon-only dashboard shortcuts so UI tests can
+  /// target them reliably (they have no visible text label).
+  private func setAccessibilityIdentifiers() {
+    wavesBtn?.accessibilityIdentifier = "waves"
+    marketBtn?.accessibilityIdentifier = "store"
+    giftButton?.accessibilityIdentifier = "gift"
+    referralsBtn?.accessibilityIdentifier = "referrals"
+    swipeGraphsButton?.accessibilityIdentifier = "stats"
   }
 
   @IBAction func postAndEarnTapped(_ sender: Any) {
