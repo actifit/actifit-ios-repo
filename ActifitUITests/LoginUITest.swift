@@ -2,36 +2,35 @@
 //  LoginUITest.swift
 //  ActifitUITests
 //
-//  Drives the login screen with credentials supplied via the test runner's
-//  environment (ACTIFIT_USER / ACTIFIT_KEY, injected from GitHub secrets as
-//  TEST_RUNNER_ACTIFIT_*). Captures a screenshot of the resulting screen.
+//  Logs in with credentials from the test runner environment
+//  (ACTIFIT_USER / ACTIFIT_KEY, injected from GitHub secrets as TEST_RUNNER_*)
+//  then walks every main section of the app, capturing a screenshot of each
+//  and dumping the accessibility hierarchy to the test log for reference.
 //
 
 import XCTest
 
 final class LoginUITest: XCTestCase {
 
-    func testLoginFlow() {
+    let app = XCUIApplication()
+
+    func testFullWalkthrough() {
         continueAfterFailure = true
 
-        let app = XCUIApplication()
         app.launch()
-
-        // The app asks for Photo Library access at launch — dismiss it.
         dismissSpringboardAlert()
 
-        let username = ProcessInfo.processInfo.environment["ACTIFIT_USER"] ?? ""
-        let postingKey = ProcessInfo.processInfo.environment["ACTIFIT_KEY"] ?? ""
-        XCTAssertFalse(username.isEmpty, "ACTIFIT_USER was not provided to the test runner")
-        XCTAssertFalse(postingKey.isEmpty, "ACTIFIT_KEY was not provided to the test runner")
+        // ---- Login ----
+        let username = env("ACTIFIT_USER")
+        let postingKey = env("ACTIFIT_KEY")
+        XCTAssertFalse(username.isEmpty, "ACTIFIT_USER not provided to the test runner")
+        XCTAssertFalse(postingKey.isEmpty, "ACTIFIT_KEY not provided to the test runner")
 
-        // Username — the first (non-secure) text field on the login screen.
         let userField = app.textFields.firstMatch
         XCTAssertTrue(userField.waitForExistence(timeout: 30), "Username field not found")
         userField.tap()
         userField.typeText(username)
 
-        // Posting key — a secure field (it has a show/hide toggle).
         let keyField = app.secureTextFields.firstMatch.exists
             ? app.secureTextFields.firstMatch
             : app.textFields.element(boundBy: 1)
@@ -39,33 +38,91 @@ final class LoginUITest: XCTestCase {
         keyField.tap()
         keyField.typeText(postingKey)
 
-        // Capture the filled-in login screen (key field is masked, so safe).
-        attachScreenshot(named: "01-login-filled")
+        screenshot("01-login-filled")   // key field is masked -> safe
 
-        // Tap PROCEED (fall back to a fuzzy match if the label differs).
-        let proceed = app.buttons["PROCEED"]
-        if proceed.waitForExistence(timeout: 5) {
-            proceed.tap()
-        } else {
-            app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'proceed'")).firstMatch.tap()
+        tapByLabel("PROCEED")
+        dismissSpringboardAlert()
+        sleep(15)                        // backend auth + dashboard load
+        dismissSpringboardAlert()
+
+        screenshot("10-dashboard")
+        dumpHierarchy("dashboard")
+
+        // ---- Main tab sections ----
+        let tabs = ["History", "Social", "Leaderboard", "Settings", "Dashboard"]
+        for (i, tab) in tabs.enumerated() {
+            guard tapByLabel(tab) else {
+                NSLog("ACTIFIT_WALK: tab '\(tab)' not found")
+                continue
+            }
+            sleep(4)
+            dismissSpringboardAlert()
+            screenshot(String(format: "2%d-tab-%@", i, tab.lowercased()))
+            dumpHierarchy("tab-\(tab)")
         }
 
-        // A second permission prompt (e.g. notifications) may follow login.
-        dismissSpringboardAlert()
+        // ---- Key sub-screens (best effort) ----
+        // Post & Earn (from the Dashboard).
+        tapByLabel("Dashboard")
+        sleep(2)
+        if tapByLabel("POST & EARN") || tapByLabel("POST AND EARN") {
+            sleep(4)
+            dismissSpringboardAlert()
+            screenshot("30-post-and-earn")
+            dumpHierarchy("post-and-earn")
+            goBack()
+        }
 
-        // Allow the backend login call + UI transition to settle.
-        sleep(15)
-        dismissSpringboardAlert()
-
-        // Resulting screen: dashboard on success, or an error alert on failure.
-        attachScreenshot(named: "02-after-login")
+        // A few common icon actions if they expose labels.
+        for (idx, label) in ["Wallet", "Notifications", "Search", "Store"].enumerated() {
+            if tapByLabel(label) {
+                sleep(3)
+                dismissSpringboardAlert()
+                screenshot(String(format: "4%d-%@", idx, label.lowercased()))
+                dumpHierarchy(label)
+                goBack()
+            }
+        }
     }
 
     // MARK: - Helpers
 
+    private func env(_ key: String) -> String {
+        ProcessInfo.processInfo.environment[key] ?? ""
+    }
+
+    /// Taps the first hittable element matching `label`, trying tab bars,
+    /// buttons, then any descendant. Returns whether something was tapped.
+    @discardableResult
+    private func tapByLabel(_ label: String) -> Bool {
+        let candidates: [XCUIElement] = [
+            app.tabBars.buttons[label],
+            app.buttons[label],
+            app.staticTexts[label],
+            app.otherElements[label],
+            app.descendants(matching: .any)
+                .matching(NSPredicate(format: "label ==[c] %@", label)).firstMatch
+        ]
+        for el in candidates where el.exists && el.isHittable {
+            el.tap()
+            return true
+        }
+        return false
+    }
+
+    private func goBack() {
+        let back = app.navigationBars.buttons.firstMatch
+        if back.exists && back.isHittable {
+            back.tap()
+        } else {
+            _ = tapByLabel("Dashboard")
+        }
+        sleep(1)
+    }
+
     private func dismissSpringboardAlert() {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        guard springboard.alerts.firstMatch.waitForExistence(timeout: 8) else { return }
+        guard springboard.alerts.firstMatch.waitForExistence(timeout: 6) else { return }
         let preferred = ["Allow Full Access", "Allow While Using App", "Allow",
                          "OK", "Don’t Allow", "Don't Allow"]
         for label in preferred where springboard.alerts.buttons[label].exists {
@@ -75,10 +132,14 @@ final class LoginUITest: XCTestCase {
         springboard.alerts.buttons.firstMatch.tap()
     }
 
-    private func attachScreenshot(named name: String) {
+    private func screenshot(_ name: String) {
         let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
+    }
+
+    private func dumpHierarchy(_ tag: String) {
+        NSLog("ACTIFIT_WALK_HIERARCHY [\(tag)] BEGIN\n\(app.debugDescription)\nACTIFIT_WALK_HIERARCHY [\(tag)] END")
     }
 }
