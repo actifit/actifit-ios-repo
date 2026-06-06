@@ -46,7 +46,6 @@ final class LoginUITest: XCTestCase {
         dismissSpringboardAlert()
 
         screenshot("10-dashboard")
-        dumpHierarchy("dashboard")
 
         // ---- Main tab sections ----
         let tabs = ["History", "Social", "Leaderboard", "Settings", "Dashboard"]
@@ -55,10 +54,8 @@ final class LoginUITest: XCTestCase {
                 NSLog("ACTIFIT_WALK: tab '\(tab)' not found")
                 continue
             }
-            sleep(4)
-            dismissSpringboardAlert()
+            sleep(3)
             screenshot(String(format: "2%d-tab-%@", i, tab.lowercased()))
-            dumpHierarchy("tab-\(tab)")
         }
 
         // ---- Key sub-screens ----
@@ -138,20 +135,33 @@ final class LoginUITest: XCTestCase {
 
     /// Best-effort recovery to the Dashboard from any pushed screen or modal.
     private func returnToDashboard() {
-        dismissSpringboardAlert()
-        for label in ["Close", "Cancel", "Done", "SKIP", "Back", "OK", "✕", "X"] {
-            let b = app.buttons[label]
-            if b.exists && b.isHittable { b.tap(); break }
-        }
+        dismissModalIfPresent()
         let back = app.navigationBars.buttons.firstMatch
         if back.exists && back.isHittable { back.tap() }
         _ = tapByLabel("Dashboard")
         sleep(2)
     }
 
+    /// Dismiss an in-app popup/modal/web-view by tapping its close-style button.
+    /// Case-insensitive (handles "CLOSE", "GOT IT!", Safari's "Done", etc.).
+    private func dismissModalIfPresent() {
+        let labels: Set<String> = ["close", "cancel", "done", "ok", "dismiss",
+                                    "got it", "got it!", "skip", "no thanks"]
+        for el in app.buttons.allElementsBoundByIndex
+            where el.exists && el.isHittable && labels.contains(el.label.lowercased()) {
+            el.tap()
+            return
+        }
+        for el in app.staticTexts.allElementsBoundByIndex
+            where el.exists && el.isHittable && labels.contains(el.label.lowercased()) {
+            el.tap()
+            return
+        }
+    }
+
     private func dismissSpringboardAlert() {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        guard springboard.alerts.firstMatch.waitForExistence(timeout: 6) else { return }
+        guard springboard.alerts.firstMatch.waitForExistence(timeout: 3) else { return }
         let preferred = ["Allow Full Access", "Allow While Using App", "Allow",
                          "OK", "Don’t Allow", "Don't Allow"]
         for label in preferred where springboard.alerts.buttons[label].exists {
@@ -166,9 +176,5 @@ final class LoginUITest: XCTestCase {
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
-    }
-
-    private func dumpHierarchy(_ tag: String) {
-        NSLog("ACTIFIT_WALK_HIERARCHY [\(tag)] BEGIN\n\(app.debugDescription)\nACTIFIT_WALK_HIERARCHY [\(tag)] END")
     }
 }
