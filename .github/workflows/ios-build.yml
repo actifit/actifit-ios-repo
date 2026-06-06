@@ -69,3 +69,37 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             clean build
+
+      - name: Boot simulator, install and launch the app
+        run: |
+          set -x
+          APP="build/Build/Products/Debug-iphonesimulator/Actifit.app"
+          ls -la "$APP"
+          BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist")
+          echo "Bundle id: $BUNDLE_ID"
+
+          # Create and boot a clean simulator device.
+          RUNTIME=$(xcrun simctl list runtimes available | grep -oE "com.apple.CoreSimulator.SimRuntime.iOS[^ ]*" | tail -1)
+          echo "Runtime: $RUNTIME"
+          DEVICE=$(xcrun simctl create "ci-iphone" "iPhone 15" "$RUNTIME")
+          echo "Device UDID: $DEVICE"
+          xcrun simctl boot "$DEVICE"
+          xcrun simctl bootstatus "$DEVICE" -b
+
+          xcrun simctl install "$DEVICE" "$APP"
+          # Launch; tolerate a nonzero exit (e.g. crash from placeholder Firebase config).
+          xcrun simctl launch "$DEVICE" "$BUNDLE_ID" || echo "::warning::launch returned nonzero (app may have crashed at startup)"
+          sleep 10
+          xcrun simctl io "$DEVICE" screenshot screenshot.png || true
+          # Capture the most recent crash report, if any.
+          mkdir -p artifacts
+          cp screenshot.png artifacts/ 2>/dev/null || true
+          cp -R ~/Library/Logs/DiagnosticReports artifacts/CrashReports 2>/dev/null || true
+
+      - name: Upload run artifacts (screenshot + any crash logs)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-run
+          path: artifacts
+          if-no-files-found: ignore
