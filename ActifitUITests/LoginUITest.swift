@@ -61,28 +61,39 @@ final class LoginUITest: XCTestCase {
             dumpHierarchy("tab-\(tab)")
         }
 
-        // ---- Key sub-screens (best effort) ----
+        // ---- Key sub-screens ----
         // Post & Earn (from the Dashboard).
-        tapByLabel("Dashboard")
-        sleep(2)
+        returnToDashboard()
         if tapByLabel("POST & EARN") || tapByLabel("POST AND EARN") {
             sleep(4)
             dismissSpringboardAlert()
             screenshot("30-post-and-earn")
-            dumpHierarchy("post-and-earn")
             goBack()
         }
 
-        // A few common icon actions if they expose labels.
-        for (idx, label) in ["Wallet", "Notifications", "Search", "Store"].enumerated() {
-            if tapByLabel(label) {
-                sleep(3)
-                dismissSpringboardAlert()
-                screenshot(String(format: "4%d-%@", idx, label.lowercased()))
-                dumpHierarchy(label)
-                goBack()
-            }
+        // Dashboard icon buttons have no accessibility labels, so target them by
+        // coordinate. Offsets are fractions of the screen, read from 10-dashboard.png
+        // (the screenshot is the device at exact 393x852 scale).
+        let icons: [(name: String, x: Double, y: Double)] = [
+            ("40-profile",        0.076, 0.088),
+            ("41-notifications",  0.737, 0.095),
+            ("42-wallet",         0.895, 0.095),
+            ("43-tracking-gauge", 0.737, 0.144),
+            ("44-waves",          0.924, 0.358),
+            ("45-store-gadgets",  0.570, 0.512),
+            ("46-referrals-gift", 0.601, 0.619),
+            ("47-add-friend",     0.755, 0.619),
+            ("48-stats-chart",    0.910, 0.619),
+        ]
+        for icon in icons {
+            returnToDashboard()
+            tapAt(icon.x, icon.y)
+            sleep(3)
+            dismissSpringboardAlert()
+            screenshot(icon.name)
         }
+
+        returnToDashboard()
     }
 
     // MARK: - Helpers
@@ -118,6 +129,24 @@ final class LoginUITest: XCTestCase {
             _ = tapByLabel("Dashboard")
         }
         sleep(1)
+    }
+
+    /// Taps a point given as a fraction (0...1) of the screen.
+    private func tapAt(_ nx: Double, _ ny: Double) {
+        app.coordinate(withNormalizedOffset: CGVector(dx: nx, dy: ny)).tap()
+    }
+
+    /// Best-effort recovery to the Dashboard from any pushed screen or modal.
+    private func returnToDashboard() {
+        dismissSpringboardAlert()
+        for label in ["Close", "Cancel", "Done", "SKIP", "Back", "OK", "✕", "X"] {
+            let b = app.buttons[label]
+            if b.exists && b.isHittable { b.tap(); break }
+        }
+        let back = app.navigationBars.buttons.firstMatch
+        if back.exists && back.isHittable { back.tap() }
+        _ = tapByLabel("Dashboard")
+        sleep(2)
     }
 
     private func dismissSpringboardAlert() {
