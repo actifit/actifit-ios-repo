@@ -30,13 +30,49 @@ jobs:
           pod --version || true
 
       # The real Secrets.swift / GoogleService-Info.plist are gitignored.
-      # For a compile check, placeholder values from the committed templates
-      # are sufficient (real values are only needed at runtime).
-      - name: Materialize secret files from templates (placeholders)
+      # Secrets.swift placeholders compile fine. For GoogleService-Info.plist we
+      # write a *well-formed dummy* (valid GOOGLE_APP_ID format etc.) because
+      # FirebaseApp.configure() format-validates at launch and aborts the app on
+      # malformed values like "YOUR_GOOGLE_APP_ID". These dummies are not real and
+      # connect to nothing; Firebase network calls just fail silently at runtime.
+      - name: Materialize secret files (compile placeholders + launchable dummy Firebase)
         run: |
           cp "Actifit/Structs/Secrets.example.swift" "Actifit/Structs/Secrets.swift"
-          cp "Actifit/GoogleService-Info.sample.plist" "Actifit/GoogleService-Info.plist"
-          echo "Created placeholder Secrets.swift and GoogleService-Info.plist"
+          cat > "Actifit/GoogleService-Info.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>API_KEY</key>
+            <string>AIzaSyDUMMYDUMMYDUMMYDUMMYDUMMYDUMMY000</string>
+            <key>GCM_SENDER_ID</key>
+            <string>000000000000</string>
+            <key>PLIST_VERSION</key>
+            <string>1</string>
+            <key>BUNDLE_ID</key>
+            <string>com.Actifit.fitnesstracker</string>
+            <key>PROJECT_ID</key>
+            <string>actifit-ci-dummy</string>
+            <key>STORAGE_BUCKET</key>
+            <string>actifit-ci-dummy.appspot.com</string>
+            <key>IS_ADS_ENABLED</key>
+            <false></false>
+            <key>IS_ANALYTICS_ENABLED</key>
+            <false></false>
+            <key>IS_APPINVITE_ENABLED</key>
+            <false></false>
+            <key>IS_GCM_ENABLED</key>
+            <true></true>
+            <key>IS_SIGNIN_ENABLED</key>
+            <false></false>
+            <key>GOOGLE_APP_ID</key>
+            <string>1:000000000000:ios:0000000000000000</string>
+            <key>DATABASE_URL</key>
+            <string>https://actifit-ci-dummy.firebaseio.com</string>
+          </dict>
+          </plist>
+          PLIST
+          echo "Wrote Secrets.swift and a launchable dummy GoogleService-Info.plist"
 
       - name: Install CocoaPods 1.15.2 (matches Podfile.lock)
         run: |
@@ -89,7 +125,7 @@ jobs:
           xcrun simctl install "$DEVICE" "$APP"
           # Pre-grant privacy permissions so the app walks past the system dialogs
           # (photo library, motion/fitness, camera, etc.) to its first real screen.
-          for svc in photos photos-add camera microphone motion media-library location location-always; do
+          for svc in photos camera microphone motion media-library location location-always; do
             xcrun simctl privacy "$DEVICE" grant "$svc" "$BUNDLE_ID" || true
           done
           # Launch; tolerate a nonzero exit (e.g. crash from placeholder Firebase config).
