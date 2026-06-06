@@ -87,9 +87,14 @@ jobs:
           xcrun simctl bootstatus "$DEVICE" -b
 
           xcrun simctl install "$DEVICE" "$APP"
+          # Pre-grant privacy permissions so the app walks past the system dialogs
+          # (photo library, motion/fitness, camera, etc.) to its first real screen.
+          for svc in photos photos-add camera microphone motion media-library location location-always; do
+            xcrun simctl privacy "$DEVICE" grant "$svc" "$BUNDLE_ID" || true
+          done
           # Launch; tolerate a nonzero exit (e.g. crash from placeholder Firebase config).
           xcrun simctl launch "$DEVICE" "$BUNDLE_ID" || echo "::warning::launch returned nonzero (app may have crashed at startup)"
-          sleep 10
+          sleep 12
           xcrun simctl io "$DEVICE" screenshot screenshot.png || true
           # Capture the most recent crash report, if any.
           mkdir -p artifacts
