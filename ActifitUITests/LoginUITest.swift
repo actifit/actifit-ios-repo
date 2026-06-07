@@ -149,45 +149,32 @@ final class LoginUITest: XCTestCase {
         app.coordinate(withNormalizedOffset: CGVector(dx: nx, dy: ny)).tap()
     }
 
-    /// Reliable recovery to the Dashboard from any pushed screen or modal.
+    /// Reliable recovery to the Dashboard from any pushed screen, modal or popup.
     private func returnToDashboard() {
-        dismissModalIfPresent()
-        // Pushed screens (Notifications, Wallet, etc.) hide the tab bar and use a
-        // custom back button at the top-left. Tap it until the dashboard is shown.
-        for _ in 0..<4 {
+        for _ in 0..<5 {
             if onDashboard() { break }
-            let navBack = app.navigationBars.buttons.firstMatch
-            if navBack.exists && navBack.isHittable {
-                navBack.tap()
-            } else {
-                tapAt(0.07, 0.088)  // custom "<" back button (top-left, title height)
-            }
+            dismissModalIfPresent()                 // labelled close buttons (CLOSE/Done/...)
+            tapAt(0.865, 0.155)                     // top-right red "X" on custom popups
+            if !onDashboard() { tapAt(0.07, 0.088) } // top-left "<" back on pushed screens
             sleep(1)
-            dismissModalIfPresent()
         }
-        _ = tapByLabel("Dashboard")   // in case the tab bar is visible
+        _ = tapByLabel("Dashboard")                 // in case the tab bar is visible
         sleep(1)
     }
 
-    /// True when the Dashboard is the visible screen (its POST & EARN button exists).
+    /// True only when the Dashboard is actually interactive (POST & EARN hittable).
+    /// Using isHittable (not exists) means a modal covering the dashboard counts
+    /// as "not on dashboard", so recovery proceeds to dismiss it.
     private func onDashboard() -> Bool {
-        app.buttons["POST & EARN"].exists || app.staticTexts["POST & EARN"].exists
+        app.buttons["POST & EARN"].isHittable
     }
 
-    /// Dismiss an in-app popup/modal/web-view by tapping its close-style button.
-    /// Case-insensitive (handles "CLOSE", "GOT IT!", Safari's "Done", etc.).
+    /// Tap a labelled close button if one is present (cheap direct queries — no
+    /// full-hierarchy enumeration, which stalls on this never-idle app).
     private func dismissModalIfPresent() {
-        let labels: Set<String> = ["close", "cancel", "done", "ok", "dismiss",
-                                    "got it", "got it!", "skip", "no thanks"]
-        for el in app.buttons.allElementsBoundByIndex
-            where el.exists && el.isHittable && labels.contains(el.label.lowercased()) {
-            el.tap()
-            return
-        }
-        for el in app.staticTexts.allElementsBoundByIndex
-            where el.exists && el.isHittable && labels.contains(el.label.lowercased()) {
-            el.tap()
-            return
+        for label in ["CLOSE", "Close", "Done", "OK", "Cancel", "GOT IT!", "Got it", "Dismiss"] {
+            let b = app.buttons[label]
+            if b.exists && b.isHittable { b.tap(); return }
         }
     }
 
