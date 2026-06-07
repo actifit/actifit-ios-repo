@@ -160,7 +160,7 @@ final class LoginUITest: XCTestCase {
             if navBack.exists && navBack.isHittable {
                 navBack.tap()
             } else {
-                tapAt(0.06, 0.13)   // custom back button position
+                tapAt(0.07, 0.088)  // custom "<" back button (top-left, title height)
             }
             sleep(1)
             dismissModalIfPresent()
