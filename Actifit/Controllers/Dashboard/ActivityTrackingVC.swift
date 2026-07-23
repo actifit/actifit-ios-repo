@@ -108,6 +108,14 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var entriesFifteenMinuteIntervel = [BarChartDataEntry]()
   var timeSlot = [String]()
   var initialStepCount = 0
+  var revampGoalLabel: UILabel?
+  var revampPctLabel: UILabel?
+  var revampBigStepLabel: UILabel?
+  var auraView: AuraView?
+  var streakDayCircles: [UIView] = []
+  var streakDayLabels: [UILabel] = []
+  var streakCountLabel: UILabel?
+  var revampRewardHintLabel: UILabel?
   var activityDateToSave = Date()
   private var activityUpdateTimer: Timer?
   private var isQueryingActivity = false
@@ -118,7 +126,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
     setUI()
     setAccessibilityIdentifiers()
     checkForUpdates()
-
+    setupRevampedDashboard()
   }
 
   /// Stable identifiers for the icon-only dashboard shortcuts so UI tests can
@@ -1588,6 +1596,455 @@ extension ActivityTrackingVC: AuthenticationProtocol {
 
     }
   }
+}
+
+// MARK: - Dashboard revamp (Android redesign) — first pass: header + hero activity card
+// Adds an opaque programmatic overlay on top of the existing storyboard dashboard and
+// re-points the tracking outlets (pie chart, step label, avatar, rank, date) to the new
+// views, so CoreMotion step tracking keeps working while the layout is redesigned.
+extension ActivityTrackingVC {
+
+    private var revampRed: UIColor { UIColor(named: "primaryRed") ?? UIColor(red: 1.0, green: 0.067, blue: 0.176, alpha: 1) }
+
+    func setupRevampedDashboard() {
+        let scroll = UIScrollView()
+        scroll.translatesAutoresizingMaskIntoConstraints = false
+        scroll.backgroundColor = UIColor(white: 0.96, alpha: 1)
+        scroll.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 100, right: 0)
+        scroll.showsVerticalScrollIndicator = false
+        view.addSubview(scroll)
+        NSLayoutConstraint.activate([
+            scroll.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scroll.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scroll.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scroll.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+
+        let content = UIStackView()
+        content.axis = .vertical
+        content.spacing = 14
+        content.isLayoutMarginsRelativeArrangement = true
+        content.layoutMargins = UIEdgeInsets(top: 12, left: 16, bottom: 24, right: 16)
+        content.translatesAutoresizingMaskIntoConstraints = false
+        scroll.addSubview(content)
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor),
+            content.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor),
+            content.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor),
+            content.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor),
+            content.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor)
+        ])
+
+        content.addArrangedSubview(buildRevampHeader())
+        content.addArrangedSubview(buildRevampHeroCard())
+        content.addArrangedSubview(buildRevampNewsCarousel())
+        content.addArrangedSubview(buildRevampPostSection())
+
+        NotificationCenter.default.addObserver(self, selector: #selector(revampStepsUpdated(_:)), name: Notification.Name(StepsUpdatedNotification), object: nil)
+        let user = User.current()?.steemit_username.byTrimming(string: "@") ?? ""
+        auraView?.setCompanion(CompanionUtil.resolveCompanion(username: user, isSelf: true))
+        pieChart(stepsCount: initialStepCount)   // updates the hidden dummy pie harmlessly
+        updateAura(steps: initialStepCount)
+    }
+
+    private func buildRevampHeader() -> UIView {
+        let avatar = UIImageView()
+        avatar.translatesAutoresizingMaskIntoConstraints = false
+        avatar.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        avatar.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        avatar.layer.cornerRadius = 25
+        avatar.clipsToBounds = true
+        avatar.contentMode = .scaleAspectFill
+        avatar.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        avatar.isUserInteractionEnabled = true
+        avatar.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(openProfileFromRevamp)))
+        avatar.image = userImage?.image
+        userImage = avatar   // re-point
+
+        let name = User.current()?.steemit_username.byTrimming(string: "@") ?? ""
+        let nameLabel = UILabel()
+        nameLabel.text = "@\(name)"
+        nameLabel.font = .systemFont(ofSize: 20, weight: .bold)
+        nameLabel.textColor = revampRed
+
+        let trophy = UILabel()
+        trophy.text = "🏆"
+        trophy.font = .systemFont(ofSize: 15)
+        let rankLabel = UILabel()
+        rankLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        rankLabel.textColor = revampRed
+        rankLabel.text = rank?.text
+        rank = rankLabel   // re-point so rank binding updates it
+        let rankRow = UIStackView(arrangedSubviews: [trophy, rankLabel])
+        rankRow.axis = .horizontal
+        rankRow.spacing = 5
+        rankRow.alignment = .center
+
+        let nameStack = UIStackView(arrangedSubviews: [nameLabel, rankRow])
+        nameStack.axis = .vertical
+        nameStack.spacing = 3
+        nameStack.alignment = .leading
+        nameStack.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let bell = revampIconButton(system: "bell.fill", action: #selector(notificationsTapped(_:)))
+        let walletBtn = revampIconButton(system: "creditcard.fill", action: #selector(walletTapped(_:)))
+        let settingsBtn = revampIconButton(system: "gearshape.fill", action: #selector(settingstapped(_:)))
+
+        let header = UIStackView(arrangedSubviews: [avatar, nameStack, bell, walletBtn, settingsBtn])
+        header.axis = .horizontal
+        header.spacing = 12
+        header.alignment = .center
+        return header
+    }
+
+    private func buildRevampHeroCard() -> UIView {
+        let card = revampCard()
+        card.backgroundColor = UIColor(red: 0.99, green: 0.91, blue: 0.92, alpha: 1) // rose tint
+        card.layer.shadowOpacity = 0.06
+
+        let dateLabel = UILabel()
+        dateLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        dateLabel.textColor = revampRed
+        dateLabel.textAlignment = .center
+        dateLabel.text = todayDate?.text
+        todayDate = dateLabel   // re-point
+
+        // Hidden 1pt dummy pie keeps the existing tracking's pieChart() harmless.
+        let dummyPie = PieChartView()
+        dummyPie.isHidden = true
+        dummyPie.translatesAutoresizingMaskIntoConstraints = false
+        piechartView = dummyPie
+
+        let aura = AuraView()
+        aura.translatesAutoresizingMaskIntoConstraints = false
+        auraView = aura
+
+        let bigStep = UILabel()
+        bigStep.text = "0"
+        bigStep.font = .systemFont(ofSize: 32, weight: .bold)
+        bigStep.textColor = revampRed
+        bigStep.textAlignment = .center
+        revampBigStepLabel = bigStep
+
+        let goalLabel = UILabel()
+        goalLabel.font = .systemFont(ofSize: 13)
+        goalLabel.textColor = .darkGray
+        goalLabel.textAlignment = .center
+        goalLabel.text = "/ 10,000 steps"
+        revampGoalLabel = goalLabel
+
+        let pctLabel = UILabel()
+        pctLabel.font = .systemFont(ofSize: 12)
+        pctLabel.textColor = .gray
+        pctLabel.textAlignment = .center
+        pctLabel.text = "0% to goal"
+        revampPctLabel = pctLabel
+
+        let centerText = UIStackView(arrangedSubviews: [bigStep, goalLabel, pctLabel])
+        centerText.axis = .vertical
+        centerText.spacing = 0
+        centerText.alignment = .center
+        centerText.translatesAutoresizingMaskIntoConstraints = false
+
+        let auraContainer = UIView()
+        auraContainer.translatesAutoresizingMaskIntoConstraints = false
+        auraContainer.heightAnchor.constraint(equalToConstant: 236).isActive = true
+        auraContainer.addSubview(dummyPie)
+        auraContainer.addSubview(aura)
+        auraContainer.addSubview(centerText)
+        NSLayoutConstraint.activate([
+            aura.topAnchor.constraint(equalTo: auraContainer.topAnchor),
+            aura.bottomAnchor.constraint(equalTo: auraContainer.bottomAnchor),
+            aura.centerXAnchor.constraint(equalTo: auraContainer.centerXAnchor),
+            aura.widthAnchor.constraint(equalTo: aura.heightAnchor),
+            centerText.centerXAnchor.constraint(equalTo: aura.centerXAnchor),
+            centerText.centerYAnchor.constraint(equalTo: aura.centerYAnchor, constant: 18),
+            dummyPie.topAnchor.constraint(equalTo: auraContainer.topAnchor),
+            dummyPie.leadingAnchor.constraint(equalTo: auraContainer.leadingAnchor)
+        ])
+
+        // Corner icons around the ring, wired to the app's EXISTING sensor handlers — no tracking change.
+        let sensorTL = revampIconButton(system: "figure.walk.circle.fill", action: #selector(appleWatchTapped(_:)))
+        let cloudTR = revampIconButton(system: "icloud.and.arrow.down.fill", action: #selector(cloudBtnTapped(_:)))
+        let shareBL = revampIconButton(system: "square.and.arrow.up", action: #selector(revampShareTapped))
+        let swapBR = revampIconButton(system: "arrow.left.arrow.right", action: #selector(switchBtnTapped(_:)))
+        [sensorTL, cloudTR, shareBL, swapBR].forEach { auraContainer.addSubview($0) }
+        NSLayoutConstraint.activate([
+            sensorTL.leadingAnchor.constraint(equalTo: auraContainer.leadingAnchor),
+            sensorTL.topAnchor.constraint(equalTo: auraContainer.topAnchor, constant: 8),
+            cloudTR.trailingAnchor.constraint(equalTo: auraContainer.trailingAnchor),
+            cloudTR.topAnchor.constraint(equalTo: auraContainer.topAnchor, constant: 8),
+            shareBL.leadingAnchor.constraint(equalTo: auraContainer.leadingAnchor),
+            shareBL.bottomAnchor.constraint(equalTo: auraContainer.bottomAnchor, constant: -8),
+            swapBR.trailingAnchor.constraint(equalTo: auraContainer.trailingAnchor),
+            swapBR.bottomAnchor.constraint(equalTo: auraContainer.bottomAnchor, constant: -8)
+        ])
+
+        let consistency = buildConsistencyRow()
+
+        let vstack = UIStackView(arrangedSubviews: [dateLabel, auraContainer, consistency])
+        vstack.axis = .vertical
+        vstack.spacing = 12
+        vstack.alignment = .fill
+        vstack.isLayoutMarginsRelativeArrangement = true
+        vstack.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        vstack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(vstack)
+        NSLayoutConstraint.activate([
+            vstack.topAnchor.constraint(equalTo: card.topAnchor),
+            vstack.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+            vstack.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+            vstack.bottomAnchor.constraint(equalTo: card.bottomAnchor)
+        ])
+        return card
+    }
+
+    private func buildConsistencyRow() -> UIView {
+        let divider = UIView()
+        divider.backgroundColor = UIColor(white: 0.85, alpha: 1)
+        divider.translatesAutoresizingMaskIntoConstraints = false
+        divider.heightAnchor.constraint(equalToConstant: 1).isActive = true
+
+        let fire = UILabel(); fire.text = "🔥"; fire.font = .systemFont(ofSize: 16)
+        fire.setContentHuggingPriority(.required, for: .horizontal)
+        let title = UILabel(); title.text = "Consistency"; title.font = .systemFont(ofSize: 16, weight: .bold); title.textColor = UIColor(white: 0.13, alpha: 1)
+        let count = UILabel(); count.font = .systemFont(ofSize: 14, weight: .semibold); count.textColor = revampRed; count.textAlignment = .right; count.text = "No streak yet"
+        streakCountLabel = count
+        let header = UIStackView(arrangedSubviews: [fire, title, count])
+        header.axis = .horizontal; header.spacing = 6; header.alignment = .center
+
+        streakDayCircles.removeAll(); streakDayLabels.removeAll()
+        var cols: [UIView] = []
+        for _ in 0..<7 {
+            let circle = UIView()
+            circle.translatesAutoresizingMaskIntoConstraints = false
+            circle.widthAnchor.constraint(equalToConstant: 26).isActive = true
+            circle.heightAnchor.constraint(equalToConstant: 26).isActive = true
+            circle.layer.cornerRadius = 13
+            circle.layer.borderWidth = 1.5
+            circle.layer.borderColor = UIColor(white: 0.8, alpha: 1).cgColor
+            let check = UILabel(); check.text = "✓"; check.textColor = .white; check.font = .systemFont(ofSize: 13, weight: .bold); check.textAlignment = .center; check.isHidden = true
+            check.translatesAutoresizingMaskIntoConstraints = false
+            circle.addSubview(check)
+            NSLayoutConstraint.activate([check.centerXAnchor.constraint(equalTo: circle.centerXAnchor), check.centerYAnchor.constraint(equalTo: circle.centerYAnchor)])
+            let day = UILabel(); day.font = .systemFont(ofSize: 10); day.textColor = .gray; day.textAlignment = .center; day.text = "-"
+            let col = UIStackView(arrangedSubviews: [circle, day])
+            col.axis = .vertical; col.spacing = 3; col.alignment = .center
+            cols.append(col)
+            streakDayCircles.append(circle)
+            streakDayLabels.append(day)
+        }
+        let daysRow = UIStackView(arrangedSubviews: cols)
+        daysRow.axis = .horizontal; daysRow.distribution = .fillEqually
+
+        let stack = UIStackView(arrangedSubviews: [divider, header, daysRow])
+        stack.axis = .vertical; stack.spacing = 10
+        return stack
+    }
+
+    private func buildRevampNewsCarousel() -> UIView {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.minimumLineSpacing = 0
+        layout.minimumInteritemSpacing = 0
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.translatesAutoresizingMaskIntoConstraints = false
+        cv.isPagingEnabled = true
+        cv.showsHorizontalScrollIndicator = false
+        cv.backgroundColor = .clear
+        cv.register(UINib(nibName: "BannerImageCell", bundle: nil), forCellWithReuseIdentifier: "BannerImageCell")
+        cv.dataSource = self
+        cv.delegate = self
+        cv.layer.cornerRadius = 14
+        cv.clipsToBounds = true
+        cv.heightAnchor.constraint(equalToConstant: 150).isActive = true
+        collectionVIew = cv   // re-point
+
+        let pc = UIPageControl()
+        pc.translatesAutoresizingMaskIntoConstraints = false
+        pc.currentPageIndicatorTintColor = revampRed
+        pc.pageIndicatorTintColor = UIColor(white: 0.75, alpha: 1)
+        pc.numberOfPages = bannerImages.count
+        pc.hidesForSinglePage = true
+        pc.currentPage = 0
+        pageControl = pc   // re-point
+
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(cv)
+        container.addSubview(pc)
+        NSLayoutConstraint.activate([
+            cv.topAnchor.constraint(equalTo: container.topAnchor),
+            cv.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            cv.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            cv.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            pc.centerXAnchor.constraint(equalTo: cv.centerXAnchor),
+            pc.bottomAnchor.constraint(equalTo: cv.bottomAnchor, constant: -6)
+        ])
+        cv.reloadData()
+        return container
+    }
+
+    private func buildRevampPostSection() -> UIView {
+        let postBtn = UIButton(type: .system)
+        postBtn.setTitle("  Post & Earn", for: .normal)
+        postBtn.setImage(UIImage(systemName: "square.and.pencil"), for: .normal)
+        postBtn.tintColor = .white
+        postBtn.setTitleColor(.white, for: .normal)
+        postBtn.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
+        postBtn.backgroundColor = revampRed
+        postBtn.layer.cornerRadius = 24
+        postBtn.heightAnchor.constraint(equalToConstant: 52).isActive = true
+        postBtn.addTarget(self, action: #selector(postAndEarnTapped(_:)), for: .touchUpInside)
+
+        let hint = UILabel()
+        hint.font = .systemFont(ofSize: 13)
+        hint.textColor = .darkGray
+        hint.textAlignment = .center
+        hint.numberOfLines = 0
+        revampRewardHintLabel = hint
+
+        let stack = UIStackView(arrangedSubviews: [postBtn, hint])
+        stack.axis = .vertical
+        stack.spacing = 10
+        stack.isLayoutMarginsRelativeArrangement = true
+        stack.layoutMargins = UIEdgeInsets(top: 4, left: 8, bottom: 0, right: 8)
+        return stack
+    }
+
+    private func updateRewardHint(steps: Int) {
+        let text: String
+        if steps < 5000 {
+            text = "Keep going! You're \(5000 - steps) steps from your 5K reward."
+        } else if steps < 10000 {
+            text = "Great! You're \(10000 - steps) steps from your 10K reward."
+        } else {
+            text = "🎉 You've smashed your 10K goal today!"
+        }
+        revampRewardHintLabel?.text = text
+    }
+
+    private func revampCard() -> UIView {
+        let v = UIView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.backgroundColor = .white
+        v.layer.cornerRadius = 16
+        v.layer.shadowColor = UIColor.black.cgColor
+        v.layer.shadowOpacity = 0.08
+        v.layer.shadowRadius = 5
+        v.layer.shadowOffset = CGSize(width: 0, height: 2)
+        return v
+    }
+
+    private func revampIconButton(system: String, action: Selector) -> UIButton {
+        let b = UIButton(type: .system)
+        b.setImage(UIImage(systemName: system), for: .normal)
+        b.tintColor = revampRed
+        b.translatesAutoresizingMaskIntoConstraints = false
+        b.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        b.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        b.setContentHuggingPriority(.required, for: .horizontal)
+        b.addTarget(self, action: action, for: .touchUpInside)
+        return b
+    }
+
+    @objc func revampStepsUpdated(_ note: Notification) {
+        let steps = (note.userInfo?["steps"] as? Int) ?? initialStepCount
+        updateAura(steps: steps)
+    }
+
+    func updateRevampGoal(steps: Int) {
+        let pct = min(100, max(0, Int((Double(steps) / 10000.0) * 100)))
+        revampPctLabel?.text = "\(pct)% to goal"
+    }
+
+    // MARK: Aura + streak (Android CompanionUtil / streak parity)
+
+    func updateAura(steps: Int) {
+        revampBigStepLabel?.text = "\(steps)"
+        updateRevampGoal(steps: steps)
+        let streak = computeStreak()
+        let level = CompanionUtil.levelFromStreak(streak)
+        let hour = Calendar.current.component(.hour, from: Date())
+        let wilting = CompanionUtil.isWilting(streak: streak, todaySteps: steps, hourOfDay: hour)
+        let distKm = Double(steps) * 0.762 / 1000.0
+        let cal = Double(steps) * 0.04
+        auraView?.setActivityRings(steps: CGFloat(steps) / 10000.0,
+                                   distance: CGFloat(distKm) / 8.0,
+                                   calories: CGFloat(cal) / 500.0,
+                                   level: level, wilting: wilting)
+        updateStreakStrip(streak: streak)
+        updateRewardHint(steps: steps)
+    }
+
+    private func yyyymmdd(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyyMMdd"
+        return f.string(from: date)
+    }
+
+    /// Per-day steps: today = live count; past days = local Realm history. -1 if none (matches Android).
+    private func stepsForDate(_ date: Date) -> Int {
+        let key = yyyymmdd(date)
+        if key == yyyymmdd(Date()) { return initialStepCount }
+        for activity in viewModel.history where yyyymmdd(activity.date) == key {
+            return Int(activity.steps)
+        }
+        return -1
+    }
+
+    /// Consecutive days ending at today with >= 5000 steps (today grace-skipped if not yet met).
+    private func computeStreak() -> Int {
+        let todaySteps = stepsForDate(Date())
+        let startDaysBack = todaySteps >= CompanionUtil.ACTIVE_THRESHOLD ? 0 : 1
+        var streak = 0
+        var daysBack = startDaysBack
+        while daysBack <= 30 {
+            guard let day = Calendar.current.date(byAdding: .day, value: -daysBack, to: Date()) else { break }
+            if stepsForDate(day) >= CompanionUtil.ACTIVE_THRESHOLD { streak += 1 } else { break }
+            daysBack += 1
+        }
+        return streak
+    }
+
+    private func updateStreakStrip(streak: Int) {
+        streakCountLabel?.text = streak == 0 ? "No streak yet" : "\(streak) day streak"
+        let abbr = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
+        let green = UIColor(red: 0x4C / 255.0, green: 0xAF / 255.0, blue: 0x50 / 255.0, alpha: 1)
+        let cal = Calendar.current
+        for i in 0..<min(7, streakDayCircles.count) {
+            guard let day = cal.date(byAdding: .day, value: -(6 - i), to: Date()) else { continue }
+            let active = stepsForDate(day) >= CompanionUtil.ACTIVE_THRESHOLD
+            let circle = streakDayCircles[i]
+            let check = circle.subviews.compactMap { $0 as? UILabel }.first
+            if active {
+                circle.backgroundColor = green
+                circle.layer.borderColor = green.cgColor
+                check?.isHidden = false
+            } else {
+                circle.backgroundColor = .clear
+                circle.layer.borderColor = UIColor(white: 0.8, alpha: 1).cgColor
+                check?.isHidden = true
+            }
+            let wd = cal.component(.weekday, from: day) // 1=Sun..7=Sat
+            streakDayLabels[i].text = abbr[wd - 1]
+        }
+    }
+
+    @objc func revampShareTapped() {
+        let text = "I've done \(initialStepCount) steps today on Actifit! 🏃"
+        let vc = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        vc.popoverPresentationController?.sourceView = view
+        present(vc, animated: true)
+    }
+
+    @objc func openProfileFromRevamp() {
+        guard let username = User.current()?.steemit_username else { return }
+        if let url = URL(string: "https://actifit.io/" + username.byTrimming(string: "@")) {
+            UIApplication.shared.open(url)
+        }
+    }
 }
 
 
