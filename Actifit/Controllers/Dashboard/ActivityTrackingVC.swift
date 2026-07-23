@@ -440,9 +440,18 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
 
   @objc func handleTap(_ sender: UITapGestureRecognizer) {
     if sender.state == .ended {
-      openPopup(title: NSLocalizedString("virtual_gadgets", comment: ""), description: NSLocalizedString("virtual_gadgets_details", comment: ""), cancelTitle: NSLocalizedString("close_upper", comment: ""), actionTitle: NSLocalizedString("market", comment: ""), size: .medium)
-      // This method is called when a tap/select event occurs
-      // You can perform actions related to the tap/select here
+      present(TransparentPopupViewController.create(title: NSLocalizedString("virtual_gadgets", comment: ""), description: NSLocalizedString("virtual_gadgets_details", comment: ""), cancelButtonText: NSLocalizedString("close_upper", comment: ""), actionButtonText: NSLocalizedString("market", comment: ""), noteSize: .medium, onActionButtonTapped: { [weak self] in
+        self?.openGadgetMarket()
+      }), animated: true)
+    }
+  }
+
+  private func openGadgetMarket() {
+    dismiss(animated: true) { [weak self] in
+      guard let self = self else { return }
+      let nav = UINavigationController(rootViewController: MarketViewController.create())
+      nav.modalPresentationStyle = .fullScreen
+      self.present(nav, animated: true)
     }
   }
 

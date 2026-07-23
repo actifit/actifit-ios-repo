@@ -207,12 +207,14 @@
 		4EF591692CACA09A00C26FF8 /* GetPostRewardEndPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF591682CACA09A00C26FF8 /* GetPostRewardEndPoint.swift */; };
 		4EF5916B2CACA30F00C26FF8 /* PostReward.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF5916A2CACA30F00C26FF8 /* PostReward.swift */; };
 		4EF80ED32AEC602A005DDE98 /* AdsOptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF80ED22AEC602A005DDE98 /* AdsOptionsViewController.swift */; };
+		5C964A8E4077E57129A03F2E /* MarketViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53BD9E36D21E2B35165C6E67 /* MarketViewController.swift */; };
 		8A0D747122E99BED00D3C6B6 /* awsconfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = 8A0D747022E99BED00D3C6B6 /* awsconfiguration.json */; };
 		8A7EFB4B22E70CA000A4B32E /* ActivityFifteenMinutesInterval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A7EFB4A22E70CA000A4B32E /* ActivityFifteenMinutesInterval.swift */; };
 		8AAD14DE22E211D200A39934 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8AAD14DD22E211D200A39934 /* GoogleService-Info.plist */; };
 		8AC2C84322D3771100AA2F81 /* DayHistroyVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC2C84222D3771100AA2F81 /* DayHistroyVC.swift */; };
 		8ADF574922D788C5002D8C84 /* UIApplication+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ADF574822D788C5002D8C84 /* UIApplication+Extension.swift */; };
 		96ACD15D445A2C525D7A0582 /* Pods_Actifit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C201E6B3DB1C87A2C7C2E0B /* Pods_Actifit.framework */; };
+		AF5EC0DE0000000000000002 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5EC0DE0000000000000001 /* Secrets.swift */; };
 		BE0AB411211A29B1000E9AEA /* Activity.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB410211A29B1000E9AEA /* Activity.swift */; };
 		BE0AB413211A2C89000E9AEA /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB412211A2C89000E9AEA /* Constants.swift */; };
 		BE0AB423211BF45A000E9AEA /* TrackingHistoryVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB422211BF45A000E9AEA /* TrackingHistoryVC.swift */; };
@@ -220,7 +222,6 @@
 		BE0AB428211BF64D000E9AEA /* StoryboardInstantiation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB427211BF64D000E9AEA /* StoryboardInstantiation.swift */; };
 		BE0AB433211CE5EA000E9AEA /* UIDevice+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB432211CE5EA000E9AEA /* UIDevice+Extension.swift */; };
 		BE0AB435211EB22F000E9AEA /* Structs.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB434211EB22F000E9AEA /* Structs.swift */; };
-		AF5EC0DE0000000000000002 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5EC0DE0000000000000001 /* Secrets.swift */; };
 		BE222CE52120BAAB00AD025F /* AFTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE222CE42120BAAB00AD025F /* AFTextField.swift */; };
 		BE222CE72120BC2E00AD025F /* ConstaintMaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE222CE62120BC2E00AD025F /* ConstaintMaker.swift */; };
 		BE222CE92120C17A00AD025F /* AFTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE222CE82120C17A00AD025F /* AFTextView.swift */; };
@@ -455,6 +456,7 @@
 		4EF591682CACA09A00C26FF8 /* GetPostRewardEndPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetPostRewardEndPoint.swift; sourceTree = "<group>"; };
 		4EF5916A2CACA30F00C26FF8 /* PostReward.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostReward.swift; sourceTree = "<group>"; };
 		4EF80ED22AEC602A005DDE98 /* AdsOptionsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdsOptionsViewController.swift; sourceTree = "<group>"; };
+		53BD9E36D21E2B35165C6E67 /* MarketViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MarketViewController.swift; path = Actifit/Controllers/Market/MarketViewController.swift; sourceTree = "<group>"; };
 		5B0B410D0FC44AFD5AB83382 /* Pods-Actifit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Actifit.debug.xcconfig"; path = "Target Support Files/Pods-Actifit/Pods-Actifit.debug.xcconfig"; sourceTree = "<group>"; };
 		5C201E6B3DB1C87A2C7C2E0B /* Pods_Actifit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Actifit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A0D747022E99BED00D3C6B6 /* awsconfiguration.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = awsconfiguration.json; sourceTree = "<group>"; };
@@ -481,6 +483,7 @@
 		A93CABE123390A9100136477 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
 		A93CABE223390A9100136477 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AAA7D6873C39FCB390EB0080 /* Pods-Actifit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Actifit.release.xcconfig"; path = "Target Support Files/Pods-Actifit/Pods-Actifit.release.xcconfig"; sourceTree = "<group>"; };
+		AF5EC0DE0000000000000001 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		BE0AB410211A29B1000E9AEA /* Activity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Activity.swift; sourceTree = "<group>"; };
 		BE0AB412211A2C89000E9AEA /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		BE0AB422211BF45A000E9AEA /* TrackingHistoryVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TrackingHistoryVC.swift; sourceTree = "<group>"; };
@@ -488,7 +491,6 @@
 		BE0AB427211BF64D000E9AEA /* StoryboardInstantiation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoryboardInstantiation.swift; sourceTree = "<group>"; };
 		BE0AB432211CE5EA000E9AEA /* UIDevice+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIDevice+Extension.swift"; sourceTree = "<group>"; };
 		BE0AB434211EB22F000E9AEA /* Structs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Structs.swift; sourceTree = "<group>"; };
-		AF5EC0DE0000000000000001 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		BE222CE42120BAAB00AD025F /* AFTextField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AFTextField.swift; sourceTree = "<group>"; };
 		BE222CE62120BC2E00AD025F /* ConstaintMaker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConstaintMaker.swift; sourceTree = "<group>"; };
 		BE222CE82120C17A00AD025F /* AFTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AFTextView.swift; sourceTree = "<group>"; };
@@ -1575,6 +1577,7 @@
 				BE27262F211452890020E32D /* Products */,
 				5AA13FC8C3C7E14596880E7C /* Frameworks */,
 				256322C66FC8EFE70166A313 /* Pods */,
+				53BD9E36D21E2B35165C6E67 /* MarketViewController.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -2043,6 +2046,7 @@
 				4E940C8D2A7BF62100F15CB5 /* CircularImage.swift in Sources */,
 				4E7C54CB2A6A4DDC00C023FF /* BannerImages.swift in Sources */,
 				4EA3FA742AC1DAB300B866F8 /* ColorsExtension.swift in Sources */,
+				5C964A8E4077E57129A03F2E /* MarketViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

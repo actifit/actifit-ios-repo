@@ -88,7 +88,22 @@ _Last updated: 2026-07-23. Source: dual deep-dive of both codebases._
 - Note: iOS already had the **AFIT reward** transactions list; on-chain Hive history (transfers, power up/down, reward claims) never existed — now added.
 - `HiveHistoryViewController` (a programmatic `UITableViewController` appended **inside `WalletVC.swift`** to avoid `.pbxproj` edits) fetches `condenser_api.get_account_history`, parses transfer / transfer_to_vesting / withdraw_vesting / claim_reward_balance, and lists them. Opened via a "Hive History" button on the wallet screen.
 
-**Phase 1 status: COMPLETE (pending build).** Next: Phase 2 (#7 gadget purchase, #3 Profile, #11 heatmap/streak, #12 achievements, #13 milestones).
+**Phase 1 status: COMPLETE (build-verified).** Merged via PR #1 (feature/android-parity-wallet → develop).
+
+### Phase 2 — Gadget marketplace (#7) (started 2026-07-23)
+
+Confirmed iOS had **no** gadget purchase — only owned-gadget display + an AFIT *exchanges* list. The dashboard "market" button did nothing (`openPopup` passed no action). Now built:
+
+- **`Actifit/Controllers/Market/MarketViewController.swift`** (new file, registered in the Xcode target via the `xcodeproj` gem on the build server) — a programmatic marketplace screen: lists active `ingame` gadgets sorted by level, with image, price (AFIT + HIVE), validity, boosts, and a **requirement engine** (User Rank ≥, AFIT balance ≥, prerequisite consumed gadgets) mirroring Android exactly. Buttons gate on eligibility + ownership state (none/bought/active).
+- **Four two-step flows** (relay broadcast → parse `trx.tx.{ref_block_num,id}` → confirmation call): buy-with-AFIT (`performTrx` custom_json id `actifit`, `buy-gadget`), buy-with-HIVE (`performTrxPost` transfer to `actifit.market`, memo `buy-gadget:<id>`), activate (with optional friend beneficiary), deactivate — each followed by `buyGadget`/`buyGadgetHive`/`activateGadget`/`deactivateGadget` confirms.
+- **`API.swift`** — `getMarketProducts`/`getNonConsumedGadgets`/`getConsumedGadgets`/`getExchangeAfitPrice`, `broadcastGadgetOperation`, `buyGadgetWithHive`, `confirmGadgetTransaction`. **`Structs.swift`** — marketplace endpoints + `actifit.market` + gadget image base.
+- **`ActivityTrackingVC.swift`** — dashboard gadget popup's "market" action now opens the marketplace.
+
+✅ **Build-verified** on Xcode 26.5 (BUILD SUCCEEDED, zero errors). Runtime testing pending.
+
+**Remaining Phase 2:** #3 Profile screen, #11 heatmap/streak, #12 achievements, #13 milestones.
+
+> ⚠️ **pbxproj note:** the `MarketViewController.swift` target registration was done on the build server. The local `Actifit.xcodeproj/project.pbxproj` must receive the same one-file addition before committing (see progress notes).
 
 > ✅ **Build verified (2026-07-23):** compiled on the MacinCloud server (Xcode 26.5) — `xcodebuild -workspace Actifit.xcworkspace -scheme Actifit -sdk iphonesimulator CODE_SIGNING_ALLOWED=NO build` → **BUILD SUCCEEDED**, zero compile errors in the Phase-1 code. One fix applied during the build: `UITableView.automaticDimension` → `UITableViewAutomaticDimension` (this codebase uses the old spelling via a rename shim). Notes: transferred the working tree via scp (repo is private); a clean `pod install` was required because the committed `Pods/` carried stale IQKeyboardManagerSwift files. Device/runtime testing of the new wallet flows still pending.
 
