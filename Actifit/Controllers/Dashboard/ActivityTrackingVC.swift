@@ -116,6 +116,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var streakDayLabels: [UILabel] = []
   var streakCountLabel: UILabel?
   var revampRewardHintLabel: UILabel?
+  var heatmapCells: [(day: Int, view: UIView)] = []
   var activityDateToSave = Date()
   private var activityUpdateTimer: Timer?
   private var isQueryingActivity = false
@@ -1638,6 +1639,9 @@ extension ActivityTrackingVC {
         content.addArrangedSubview(buildRevampHeader())
         content.addArrangedSubview(buildRevampHeroCard())
         content.addArrangedSubview(buildRevampNewsCarousel())
+        content.addArrangedSubview(buildRevampActionButtons())
+        content.addArrangedSubview(buildRevampChartCard())
+        content.addArrangedSubview(buildRevampHeatmapCard())
         content.addArrangedSubview(buildRevampPostSection())
 
         NotificationCenter.default.addObserver(self, selector: #selector(revampStepsUpdated(_:)), name: Notification.Name(StepsUpdatedNotification), object: nil)
@@ -1885,6 +1889,186 @@ extension ActivityTrackingVC {
         return container
     }
 
+    private func pinToEdges(_ inner: UIView, _ outer: UIView) {
+        NSLayoutConstraint.activate([
+            inner.topAnchor.constraint(equalTo: outer.topAnchor),
+            inner.leadingAnchor.constraint(equalTo: outer.leadingAnchor),
+            inner.trailingAnchor.constraint(equalTo: outer.trailingAnchor),
+            inner.bottomAnchor.constraint(equalTo: outer.bottomAnchor)
+        ])
+    }
+
+    private func revampColor(_ v: Int) -> UIColor {
+        UIColor(red: CGFloat((v >> 16) & 0xFF) / 255.0, green: CGFloat((v >> 8) & 0xFF) / 255.0, blue: CGFloat(v & 0xFF) / 255.0, alpha: 1)
+    }
+
+    // MARK: 4 red action buttons (existing handlers)
+
+    private func revampRedActionButton(system: String, action: Selector) -> UIButton {
+        let b = UIButton(type: .system)
+        b.setImage(UIImage(systemName: system), for: .normal)
+        b.tintColor = .white
+        b.backgroundColor = revampRed
+        b.layer.cornerRadius = 12
+        b.imageView?.contentMode = .scaleAspectFit
+        b.heightAnchor.constraint(equalToConstant: 54).isActive = true
+        b.addTarget(self, action: action, for: .touchUpInside)
+        return b
+    }
+
+    private func buildRevampActionButtons() -> UIView {
+        let gift = revampRedActionButton(system: "gift.fill", action: #selector(giftButtonTapped(_:)))
+        let refer = revampRedActionButton(system: "person.badge.plus.fill", action: #selector(referralsBtnTapped(_:)))
+        let buy = revampRedActionButton(system: "chart.line.uptrend.xyaxis", action: #selector(exchangeBtnTapped(_:)))
+        let waves = revampRedActionButton(system: "bubble.left.and.bubble.right.fill", action: #selector(wavesBtnTapped(_:)))
+        let row = UIStackView(arrangedSubviews: [gift, refer, buy, waves])
+        row.axis = .horizontal
+        row.distribution = .fillEqually
+        row.spacing = 12
+        return row
+    }
+
+    // MARK: Activity history chart (re-point existing BarChartViews)
+
+    private func buildRevampChartCard() -> UIView {
+        let card = revampCard()
+        let title = UILabel()
+        title.text = "Activity History"
+        title.font = .systemFont(ofSize: 16, weight: .bold)
+        title.textColor = UIColor(white: 0.13, alpha: 1)
+
+        let toggle = UIButton(type: .system)
+        toggle.setTitle("Hourly", for: .normal)
+        toggle.setTitleColor(.white, for: .normal)
+        toggle.titleLabel?.font = .systemFont(ofSize: 13, weight: .semibold)
+        toggle.backgroundColor = revampRed
+        toggle.layer.cornerRadius = 14
+        toggle.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
+        toggle.setContentHuggingPriority(.required, for: .horizontal)
+        toggle.addTarget(self, action: #selector(swipeGraphsTapped(_:)), for: .touchUpInside)
+        swipeGraphsButton = toggle
+
+        let headerRow = UIStackView(arrangedSubviews: [title, toggle])
+        headerRow.axis = .horizontal
+        headerRow.alignment = .center
+
+        let daily = BarChartView()   // hourly data
+        daily.translatesAutoresizingMaskIntoConstraints = false
+        daily.isHidden = true
+        dailybarChart = daily
+        let date = BarChartView()    // daily data
+        date.translatesAutoresizingMaskIntoConstraints = false
+        datebarChart = date
+
+        let chartContainer = UIView()
+        chartContainer.translatesAutoresizingMaskIntoConstraints = false
+        chartContainer.heightAnchor.constraint(equalToConstant: 200).isActive = true
+        [daily, date].forEach { chartContainer.addSubview($0); pinToEdges($0, chartContainer) }
+
+        let vstack = UIStackView(arrangedSubviews: [headerRow, chartContainer])
+        vstack.axis = .vertical
+        vstack.spacing = 10
+        vstack.isLayoutMarginsRelativeArrangement = true
+        vstack.layoutMargins = UIEdgeInsets(top: 14, left: 14, bottom: 14, right: 14)
+        vstack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(vstack)
+        pinToEdges(vstack, card)
+        everyDayChart()   // populate the (visible) daily chart from history
+        return card
+    }
+
+    // MARK: Month heatmap (net-new — Android tier parity)
+
+    private func buildRevampHeatmapCard() -> UIView {
+        let card = revampCard()
+        card.backgroundColor = UIColor(red: 0.99, green: 0.94, blue: 0.95, alpha: 1)
+        heatmapCells.removeAll()
+
+        let cal = Calendar.current
+        let now = Date()
+        let df = DateFormatter(); df.dateFormat = "MMMM yyyy"
+        let title = UILabel()
+        title.text = "📅  " + df.string(from: now)
+        title.font = .systemFont(ofSize: 16, weight: .bold)
+        title.textColor = UIColor(white: 0.13, alpha: 1)
+
+        let dayHeader = UIStackView(arrangedSubviews: ["M", "T", "W", "T", "F", "S", "S"].map { s -> UILabel in
+            let l = UILabel(); l.text = s; l.font = .systemFont(ofSize: 11); l.textColor = .gray; l.textAlignment = .center; return l
+        })
+        dayHeader.axis = .horizontal; dayHeader.distribution = .fillEqually
+
+        let comps = cal.dateComponents([.year, .month, .day], from: now)
+        let daysInMonth = cal.range(of: .day, in: .month, for: now)?.count ?? 30
+        let firstOfMonth = cal.date(from: DateComponents(year: comps.year, month: comps.month, day: 1)) ?? now
+        let firstDOW = cal.component(.weekday, from: firstOfMonth) // 1=Sun..7=Sat
+        let leadingBlanks = firstDOW == 1 ? 6 : firstDOW - 2
+
+        let grid = UIStackView(); grid.axis = .vertical; grid.spacing = 4
+        let totalSlots = leadingBlanks + daysInMonth
+        let rows = Int(ceil(Double(totalSlots) / 7.0))
+        var slot = 0
+        for _ in 0..<rows {
+            let r = UIStackView(); r.axis = .horizontal; r.distribution = .fillEqually; r.spacing = 4
+            for _ in 0..<7 {
+                let cell = UIView()
+                cell.heightAnchor.constraint(equalToConstant: 22).isActive = true
+                cell.layer.cornerRadius = 11
+                cell.backgroundColor = .clear
+                if slot >= leadingBlanks && slot < leadingBlanks + daysInMonth {
+                    heatmapCells.append((slot - leadingBlanks + 1, cell))
+                }
+                r.addArrangedSubview(cell)
+                slot += 1
+            }
+            grid.addArrangedSubview(r)
+        }
+
+        let vstack = UIStackView(arrangedSubviews: [title, dayHeader, grid, buildHeatmapLegend()])
+        vstack.axis = .vertical; vstack.spacing = 8
+        vstack.isLayoutMarginsRelativeArrangement = true
+        vstack.layoutMargins = UIEdgeInsets(top: 14, left: 14, bottom: 14, right: 14)
+        vstack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(vstack)
+        pinToEdges(vstack, card)
+        updateHeatmap()
+        return card
+    }
+
+    private func buildHeatmapLegend() -> UIView {
+        func item(_ hex: Int, _ text: String) -> UIView {
+            let dot = UIView(); dot.backgroundColor = revampColor(hex)
+            dot.translatesAutoresizingMaskIntoConstraints = false
+            dot.widthAnchor.constraint(equalToConstant: 12).isActive = true
+            dot.heightAnchor.constraint(equalToConstant: 12).isActive = true
+            dot.layer.cornerRadius = 6
+            let l = UILabel(); l.text = text; l.font = .systemFont(ofSize: 11); l.textColor = .gray
+            let s = UIStackView(arrangedSubviews: [dot, l]); s.axis = .horizontal; s.spacing = 4; s.alignment = .center
+            return s
+        }
+        let row = UIStackView(arrangedSubviews: [item(0xD0D0D0, "0"), item(0xFFCDD2, "< 5K"), item(0xEF9A9A, "5–7K"), item(0xFF112D, "7K+")])
+        row.axis = .horizontal; row.distribution = .equalSpacing
+        return row
+    }
+
+    func updateHeatmap() {
+        guard !heatmapCells.isEmpty else { return }
+        let cal = Calendar.current
+        let now = Date()
+        let comps = cal.dateComponents([.year, .month, .day], from: now)
+        let todayDay = comps.day ?? 1
+        for (day, cell) in heatmapCells {
+            let date = cal.date(from: DateComponents(year: comps.year, month: comps.month, day: day)) ?? now
+            let steps = stepsForDate(date)
+            let color: UIColor
+            if day > todayDay { color = revampColor(0xEEEEEE) }
+            else if steps <= 0 { color = revampColor(0xD0D0D0) }
+            else if steps < 5000 { color = revampColor(0xFFCDD2) }
+            else if steps < 7000 { color = revampColor(0xEF9A9A) }
+            else { color = revampColor(0xFF112D) }
+            cell.backgroundColor = color
+        }
+    }
+
     private func buildRevampPostSection() -> UIView {
         let postBtn = UIButton(type: .system)
         postBtn.setTitle("  Post & Earn", for: .normal)
@@ -1975,6 +2159,7 @@ extension ActivityTrackingVC {
                                    level: level, wilting: wilting)
         updateStreakStrip(streak: streak)
         updateRewardHint(steps: steps)
+        updateHeatmap()
     }
 
     private func yyyymmdd(_ date: Date) -> String {
