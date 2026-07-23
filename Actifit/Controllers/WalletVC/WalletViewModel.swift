@@ -18,6 +18,7 @@ class WalletViewModel {
     var cancellables = Set<AnyCancellable>()
     var hiveAmount: String?
     var hbdAmount: String?
+    var hivePowerAmount: String?
     private let showLoaderSubject =  PassthroughSubject<Bool, Never>()
     var showLoaderPublisher: AnyPublisher<Bool, Never> {
         return showLoaderSubject.receive(on: DispatchQueue.main).eraseToAnyPublisher()
@@ -199,6 +200,7 @@ class WalletViewModel {
         let ownedPower: CGFloat = hpBalance - delegated - unstaking
         
         let ownedPowerVal = "\(ownedPower.truncatedToThreeDigitsAfterDecimal())"
+        self.hivePowerAmount = ownedPowerVal
         let fullPower = vestsToPower(vestsValue: self.hiveObject?.hive.post_voting_power ?? "", powerType: .hive)
         var finalString =  "\(ownedPowerVal.formatToThousandSeparated())HP \(fullPower.formatToThreeDecimalPlacesWithSeparators())HP"
 
@@ -218,6 +220,88 @@ class WalletViewModel {
     
     }
     
+    // MARK: - Phase 1: Claim rewards
+
+    private let claimResultSubject = PassthroughSubject<(Bool, String), Never>()
+    var claimResultPublisher: AnyPublisher<(Bool, String), Never> {
+        return claimResultSubject.receive(on: DispatchQueue.main).eraseToAnyPublisher()
+    }
+
+    private let pendingRewardsSubject = PassthroughSubject<String, Never>()
+    var pendingRewardsPublisher: AnyPublisher<String, Never> {
+        return pendingRewardsSubject.receive(on: DispatchQueue.main).eraseToAnyPublisher()
+    }
+
+    /// Fetches pending author/curation rewards and emits a human-readable summary ("" if none).
+    func fetchPendingRewards() {
+        guard let username = User.current()?.steemit_username else { return }
+        API().getPendingRewards(username: username, completion: { info, _ in
+            guard let response = info as? String else { return }
+            let data = response.utf8Data()
+            guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+                  let rewards = json["pendingRewards"] as? [String: Any] else {
+                self.pendingRewardsSubject.send("")
+                return
+            }
+            self.pendingRewardsSubject.send(self.summarizePendingRewards(rewards))
+        }, failure: { error in
+            print(error.localizedDescription)
+        })
+    }
+
+    private func summarizePendingRewards(_ rewards: [String: Any]) -> String {
+        var parts: [String] = []
+        func add(_ value: Any?, _ label: String) {
+            if let s = value as? String, let d = Double(s.extractDouble() ?? "0"), d > 0 {
+                parts.append("\(d.truncatedToThreeDigitsAfterDecimal()) \(label)")
+            } else if let d = value as? Double, d > 0 {
+                parts.append("\(d.truncatedToThreeDigitsAfterDecimal()) \(label)")
+            }
+        }
+        add(rewards["reward_hive_balance"] ?? rewards["HIVE"], "HIVE")
+        add(rewards["reward_hbd_balance"] ?? rewards["HBD"], "HBD")
+        add(rewards["reward_vesting_hive"] ?? rewards["HP"], "HP")
+        return parts.joined(separator: ", ")
+    }
+
+    /// Claims all pending rewards. Emits (success, message).
+    func claimAllRewards() {
+        guard let username = User.current()?.steemit_username else { return }
+        showLoaderSubject.send(true)
+        API().claimRewards(username: username, completion: { info, _ in
+            self.showLoaderSubject.send(false)
+            guard let response = info as? String else {
+                self.claimResultSubject.send((false, "Unable to claim rewards, please try again"))
+                return
+            }
+            let data = response.utf8Data()
+            let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+            let hive = json?["hive"] as? [String: Any]
+            if hive?["success"] != nil {
+                self.claimResultSubject.send((true, "Rewards claimed successfully"))
+            } else if let err = hive?["error"] as? String, !err.isEmpty {
+                self.claimResultSubject.send((false, err))
+            } else {
+                self.claimResultSubject.send((false, "Unable to claim rewards, please try again"))
+            }
+        }, failure: { error in
+            self.showLoaderSubject.send(false)
+            self.claimResultSubject.send((false, error.localizedDescription))
+        })
+    }
+
+    /// Inverse of `vestsToPower` — converts an HP amount to VESTS (for power-down).
+    func powerToVests(hpValue: String, powerType: PowerType = .hive) -> String {
+        let vestingFund = powerType == .hive ? (self.chainInfo?.hive?.totalVestingFundHive ?? "") : (self.chainInfo?.blurt?.totalVestingFundHive ?? "")
+        let totalShares = powerType == .hive ? (self.chainInfo?.hive?.totalVestingShares ?? "") : (self.chainInfo?.blurt?.totalVestingShares ?? "")
+        let fund = Double(vestingFund.split(separator: " ").first.map(String.init) ?? "0") ?? 0
+        let shares = Double(totalShares.split(separator: " ").first.map(String.init) ?? "0") ?? 0
+        let hp = Double(hpValue.replacingOccurrences(of: ",", with: "")) ?? 0
+        guard fund > 0 else { return "0.000000" }
+        let vests = (hp * shares) / fund
+        return String(format: "%.6f", vests)
+    }
+
     func vestsToPower(vestsValue: String, powerType: PowerType) -> CGFloat {
         var powerVal: CGFloat = 0.0
         var totalVests: CGFloat = 1.0

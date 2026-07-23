@@ -205,4 +205,8 @@ enum ApiUrls {
     static let updateUserSetting = "https://api.actifit.io/updateSettings"
     static let notificationType = "https://api2.actifit.io/notificationTypes"
     static let hiveBlogURL = "https://api.syncad.com/"
+    // Phase 1 — Wallet parity (Android port)
+    static let pendingRewards = "https://api.actifit.io/pendingRewards"
+    static let claimRewards = "https://api.actifit.io/claimRewards"
+    static let hiveRPCNode = "https://hiveapi.actifit.io"
 }
