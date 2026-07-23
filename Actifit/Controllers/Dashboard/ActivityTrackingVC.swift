@@ -116,6 +116,9 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var streakDayLabels: [UILabel] = []
   var streakCountLabel: UILabel?
   var revampRewardHintLabel: UILabel?
+  var revampVotingLabel: UILabel?
+  var revampEstRewardLabel: UILabel?
+  var revampNudgeCard: UIView?
   var heatmapCells: [(day: Int, view: UIView)] = []
   var activityDateToSave = Date()
   private var activityUpdateTimer: Timer?
@@ -1639,6 +1642,8 @@ extension ActivityTrackingVC {
         content.addArrangedSubview(buildRevampHeader())
         content.addArrangedSubview(buildRevampHeroCard())
         content.addArrangedSubview(buildRevampNewsCarousel())
+        content.addArrangedSubview(buildRevampNudgeCard())
+        content.addArrangedSubview(buildRevampEarningsCard())
         content.addArrangedSubview(buildRevampActionButtons())
         content.addArrangedSubview(buildRevampChartCard())
         content.addArrangedSubview(buildRevampHeatmapCard())
@@ -1649,6 +1654,72 @@ extension ActivityTrackingVC {
         auraView?.setCompanion(CompanionUtil.resolveCompanion(username: user, isSelf: true))
         pieChart(stepsCount: initialStepCount)   // updates the hidden dummy pie harmlessly
         updateAura(steps: initialStepCount)
+
+        viewModel.votingStatusPublisher.receive(on: DispatchQueue.main).sink { [weak self] model in
+            self?.revampVotingLabel?.text = model.status?.isVoting == false ? (model.rewardStart ?? "") : "Rewards cycle in progress…"
+        }.store(in: &cancellables)
+        fetchEstimatedReward(steps: initialStepCount)
+    }
+
+    private func buildRevampEarningsCard() -> UIView {
+        let card = revampCard()
+        card.backgroundColor = UIColor(red: 0.99, green: 0.94, blue: 0.95, alpha: 1)
+        let green = UIColor(red: 0, green: 0.6, blue: 0.2, alpha: 1)
+
+        let title = UILabel()
+        title.text = "💰  Earnings & Gadgets"
+        title.font = .systemFont(ofSize: 16, weight: .bold)
+        title.textColor = UIColor(white: 0.13, alpha: 1)
+        let divider = UIView(); divider.backgroundColor = UIColor(white: 0.88, alpha: 1)
+        divider.heightAnchor.constraint(equalToConstant: 1).isActive = true
+
+        let clock = UILabel(); clock.text = "⏳"; clock.font = .systemFont(ofSize: 15)
+        clock.setContentHuggingPriority(.required, for: .horizontal)
+        let countdown = UILabel(); countdown.font = .systemFont(ofSize: 15); countdown.textColor = UIColor(white: 0.25, alpha: 1); countdown.numberOfLines = 0
+        revampVotingLabel = countdown
+        let countdownRow = UIStackView(arrangedSubviews: [clock, countdown]); countdownRow.axis = .horizontal; countdownRow.spacing = 8; countdownRow.alignment = .center
+
+        let estTitle = UILabel(); estTitle.text = "Estimated Reward"; estTitle.font = .systemFont(ofSize: 14, weight: .semibold); estTitle.textColor = green
+        let est = UILabel(); est.text = "—"; est.font = .systemFont(ofSize: 24, weight: .bold); est.textColor = revampRed; est.numberOfLines = 0
+        revampEstRewardLabel = est
+
+        let tokens = UILabel(); tokens.text = "HIVE · BLURT · SPORTS"; tokens.font = .systemFont(ofSize: 13, weight: .semibold); tokens.textColor = green
+
+        let market = UIButton(type: .system)
+        market.setTitle("🛒 Market  ›", for: .normal)
+        market.setTitleColor(revampRed, for: .normal)
+        market.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+        market.contentHorizontalAlignment = .left
+        market.addTarget(self, action: #selector(revampEarningsMarketTapped), for: .touchUpInside)
+
+        let vstack = UIStackView(arrangedSubviews: [title, divider, countdownRow, estTitle, est, tokens, market])
+        vstack.axis = .vertical; vstack.spacing = 8
+        vstack.setCustomSpacing(12, after: divider)
+        vstack.isLayoutMarginsRelativeArrangement = true
+        vstack.layoutMargins = UIEdgeInsets(top: 14, left: 16, bottom: 14, right: 16)
+        vstack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(vstack)
+        pinToEdges(vstack, card)
+        return card
+    }
+
+    @objc private func revampEarningsMarketTapped() {
+        let nav = UINavigationController(rootViewController: MarketViewController.create())
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
+    }
+
+    private func fetchEstimatedReward(steps: Int) {
+        guard let username = User.current()?.steemit_username.byTrimming(string: "@").lowercased() else { return }
+        API().getEstimatedReward(username: username, steps: steps, completion: { [weak self] info, _ in
+            guard let s = info as? String,
+                  let json = (try? JSONSerialization.jsonObject(with: s.utf8Data())) as? [String: Any] else { return }
+            let est = (json["estimated_afit"] as? Double) ?? Double("\(json["estimated_afit"] ?? "0")") ?? 0
+            let already = (json["already_rewarded"] as? Bool) ?? false
+            DispatchQueue.main.async {
+                self?.revampEstRewardLabel?.text = already ? String(format: "%.1f AFIT (last reward)", est) : String(format: "~%.1f AFIT (estimated)", est)
+            }
+        }, failure: { _ in })
     }
 
     private func buildRevampHeader() -> UIView {
@@ -2081,19 +2152,59 @@ extension ActivityTrackingVC {
         postBtn.heightAnchor.constraint(equalToConstant: 52).isActive = true
         postBtn.addTarget(self, action: #selector(postAndEarnTapped(_:)), for: .touchUpInside)
 
+        let stack = UIStackView(arrangedSubviews: [postBtn])
+        stack.axis = .vertical
+        stack.isLayoutMarginsRelativeArrangement = true
+        stack.layoutMargins = UIEdgeInsets(top: 4, left: 8, bottom: 8, right: 8)
+        return stack
+    }
+
+    private func buildRevampNudgeCard() -> UIView {
+        let card = revampCard()
+        card.backgroundColor = UIColor(red: 0.99, green: 0.94, blue: 0.95, alpha: 1)
+        revampNudgeCard = card
+
+        let accent = UIView()
+        accent.backgroundColor = UIColor(red: 1, green: 0.6, blue: 0, alpha: 1) // amber "in progress"
+        accent.translatesAutoresizingMaskIntoConstraints = false
+        accent.heightAnchor.constraint(equalToConstant: 4).isActive = true
+        card.addSubview(accent)
+        NSLayoutConstraint.activate([
+            accent.topAnchor.constraint(equalTo: card.topAnchor),
+            accent.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+            accent.trailingAnchor.constraint(equalTo: card.trailingAnchor)
+        ])
+
         let hint = UILabel()
-        hint.font = .systemFont(ofSize: 13)
-        hint.textColor = .darkGray
-        hint.textAlignment = .center
+        hint.font = .systemFont(ofSize: 15, weight: .medium)
+        hint.textColor = UIColor(white: 0.2, alpha: 1)
         hint.numberOfLines = 0
         revampRewardHintLabel = hint
 
-        let stack = UIStackView(arrangedSubviews: [postBtn, hint])
-        stack.axis = .vertical
-        stack.spacing = 10
-        stack.isLayoutMarginsRelativeArrangement = true
-        stack.layoutMargins = UIEdgeInsets(top: 4, left: 8, bottom: 0, right: 8)
-        return stack
+        let dismiss = UIButton(type: .system)
+        dismiss.setImage(UIImage(systemName: "xmark"), for: .normal)
+        dismiss.tintColor = revampRed
+        dismiss.setContentHuggingPriority(.required, for: .horizontal)
+        dismiss.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        dismiss.addTarget(self, action: #selector(revampDismissNudge), for: .touchUpInside)
+
+        let row = UIStackView(arrangedSubviews: [hint, dismiss])
+        row.axis = .horizontal; row.spacing = 10; row.alignment = .center
+        row.isLayoutMarginsRelativeArrangement = true
+        row.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 14, right: 14)
+        row.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(row)
+        NSLayoutConstraint.activate([
+            row.topAnchor.constraint(equalTo: accent.bottomAnchor),
+            row.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+            row.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+            row.bottomAnchor.constraint(equalTo: card.bottomAnchor)
+        ])
+        return card
+    }
+
+    @objc private func revampDismissNudge() {
+        UIView.animate(withDuration: 0.25) { self.revampNudgeCard?.isHidden = true }
     }
 
     private func updateRewardHint(steps: Int) {

@@ -220,4 +220,6 @@ enum ApiUrls {
     static let deactivateGadgetConfirm = "https://api.actifit.io/deactivateGadget/"
     static let actifitMarketAccount = "actifit.market"
     static let gadgetImageBase = "https://actifit.io/img/gadgets/"
+    // Dashboard revamp
+    static let estimatedReward = "https://api.actifit.io/getEstimatedReward"
 }

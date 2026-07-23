@@ -241,6 +241,13 @@ public class API : NSObject{
     simpleGet(urlString: ApiUrls.exchangeAfitPrice, completion: completion, failure: failure)
   }
 
+  /// Server-computed estimated AFIT reward for today's step count.
+  func getEstimatedReward(username: String, steps: Int, completion: APICompletionHandler, failure: APIFailureHandler) {
+    var urlStr = ApiUrls.estimatedReward + "?user=\(username)"
+    if steps > 0 { urlStr += "&steps=\(steps)" }
+    simpleGet(urlString: urlStr, completion: completion, failure: failure)
+  }
+
   /// Broadcasts an actifit gadget custom_json op (posting auth) via performTrx.
   /// `transaction` is one of "buy-gadget", "activate-gadget", "deactivate-gadget".
   func broadcastGadgetOperation(username: String, transaction: String, gadgetId: String, benefic: String?, completion: APICompletionHandler, failure: APIFailureHandler) {
