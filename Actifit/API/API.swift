@@ -134,6 +134,88 @@ public class API : NSObject{
   }
 
 
+  // MARK: - Phase 1: Wallet parity (Android port)
+
+  /// Shared active-key broadcast wrapper (mirrors Android `Utils.queryAPIPost` → performTrxPost).
+  /// `operation` is a single op array `[opName, params]`; it is wrapped as `[[opName, params]]`.
+  private func broadcastActiveOperation(user: String, operation: [Any], activeKey: String, completion: APICompletionHandler, failure: APIFailureHandler) {
+    do {
+      let jsonData = try JSONSerialization.data(withJSONObject: [operation], options: [])
+      guard let jsonString = String(data: jsonData, encoding: .utf8) else {
+        failure?(NSError(domain: "Actifit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode operation"]))
+        return
+      }
+      let cleanedJsonString = jsonString.replacingOccurrences(of: "\n", with: "")
+      let finalParams: [String: Any] = ["operation": cleanedJsonString, "active": activeKey]
+      let apiURL = ApiUrls.sendBalanceAndHive + "?user=\(user)&bchain=HIVE"
+      guard let url = URL(string: apiURL) else { return }
+      var request = URLRequest.init(url: url)
+      request.appendBodyWith(json: finalParams)
+      request.addBasicHeaderFieldsForUpdateSettings()
+      forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_POST, completion: completion, failure: failure)
+    } catch let error {
+      print(error.localizedDescription)
+      failure?(error as NSError)
+    }
+  }
+
+  /// Send an arbitrary Hive-Engine token (transfer / stake / unstake) via custom_json (active key).
+  /// `action` is one of "transfer", "stake", "unstake".
+  func hiveEngineTokenOperation(user: String, symbol: String, to: String, quantity: String, memo: String, action: String, activeKey: String, completion: APICompletionHandler, failure: APIFailureHandler) {
+    let json = "{\"contractName\": \"tokens\" , \"contractAction\": \"\(action)\" , \"contractPayload\": {\"symbol\": \"\(symbol)\", \"to\": \"\(to)\",\"quantity\": \"\(quantity)\",\"memo\": \"\(memo)\"}}"
+    let customParams: [String: Any] = [
+      "required_auths": [user],
+      "required_posting_auths": [],
+      "id": "ssc-mainnet-hive",
+      "json": json
+    ]
+    broadcastActiveOperation(user: user, operation: ["custom_json", customParams], activeKey: activeKey, completion: completion, failure: failure)
+  }
+
+  /// Power up HIVE → HP (transfer_to_vesting, active key). `amount` is a HIVE amount (3dp string).
+  func powerUpHive(user: String, to: String, amount: String, activeKey: String, completion: APICompletionHandler, failure: APIFailureHandler) {
+    let params: [String: Any] = ["from": user, "to": to, "amount": "\(amount) HIVE"]
+    broadcastActiveOperation(user: user, operation: ["transfer_to_vesting", params], activeKey: activeKey, completion: completion, failure: failure)
+  }
+
+  /// Power down HP → HIVE (withdraw_vesting, active key). `vests` is a VESTS amount (6dp string).
+  func powerDownHive(user: String, vests: String, activeKey: String, completion: APICompletionHandler, failure: APIFailureHandler) {
+    let params: [String: Any] = ["account": user, "vesting_shares": "\(vests) VESTS"]
+    broadcastActiveOperation(user: user, operation: ["withdraw_vesting", params], activeKey: activeKey, completion: completion, failure: failure)
+  }
+
+  /// Read pending author/curation rewards for display before claiming.
+  func getPendingRewards(username: String, completion: APICompletionHandler, failure: APIFailureHandler) {
+    guard let url = URL(string: ApiUrls.pendingRewards + "?user=\(username)") else { return }
+    var request = URLRequest.init(url: url)
+    request.addBasicHeaderFieldsForUpdateSettings()
+    forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure)
+  }
+
+  /// Claim pending rewards. Backend broadcasts with server-held authority; requires JWT (x-acti-token).
+  func claimRewards(username: String, completion: APICompletionHandler, failure: APIFailureHandler) {
+    guard let url = URL(string: ApiUrls.claimRewards + "?user=\(username)") else { return }
+    var request = URLRequest.init(url: url)
+    request.addBroadCastHeaderWhenAfitSent()
+    forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure)
+  }
+
+  /// Hive transaction history via condenser_api.get_account_history.
+  /// `start` = -1 for the most recent page, or (minSeq - 1) for older pages.
+  func getHiveAccountHistory(username: String, start: Int, limit: Int = 1000, completion: APICompletionHandler, failure: APIFailureHandler) {
+    guard let url = URL(string: ApiUrls.hiveRPCNode) else { return }
+    let body: [String: Any] = [
+      "jsonrpc": "2.0",
+      "method": "condenser_api.get_account_history",
+      "params": [username, start, limit],
+      "id": 1
+    ]
+    var request = URLRequest.init(url: url)
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    request.appendBodyWith(json: body)
+    forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_POST, completion: completion, failure: failure)
+  }
+
   func createWave(body: [String: Any], username: String, comment: String, completion: APICompletionHandler, failure: APIFailureHandler) {
    // let params: [String:Any] = ["id":1,"jsonrpc":"2.0","method": "comment", "params": body]
     let array: [Any] = [comment, body]

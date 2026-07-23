@@ -31,6 +31,33 @@ class WalletVC: UIViewController {
     var hiveEngineBalanceArray: [BalanceSections] = []
     var username = ""
     private var rotationAnimation: CABasicAnimation?
+    private var pendingRewardsSummary = ""
+    private lazy var claimRewardsButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitle("Claim Rewards", for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = UIColor(named: "AppThemeColor") ?? UIColor.systemBlue
+        button.layer.cornerRadius = 22
+        button.contentEdgeInsets = UIEdgeInsets(top: 10, left: 20, bottom: 10, right: 20)
+        button.isHidden = true
+        button.addTarget(self, action: #selector(claimRewardsTapped), for: .touchUpInside)
+        return button
+    }()
+    private lazy var hiveHistoryButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitle("Hive History", for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = UIColor(named: "AppThemeColor") ?? UIColor.systemBlue
+        button.layer.cornerRadius = 22
+        button.contentEdgeInsets = UIEdgeInsets(top: 10, left: 20, bottom: 10, right: 20)
+        button.addTarget(self, action: #selector(hiveHistoryTapped), for: .touchUpInside)
+        return button
+    }()
+    private enum HETokenAction { case transfer, stake, unstake }
     lazy var currentUser = {
         return User.current()
     }()
@@ -111,6 +138,22 @@ class WalletVC: UIViewController {
           self.stopRotation(button: self.hiveEngineBalanceHeader?.firstButton)
           //  self.showLoader(isShowing: showLoader)
         }.store(in: &viewModel.cancellables)
+
+        viewModel.pendingRewardsPublisher.receive(on: DispatchQueue.main).sink { [weak self] summary in
+            self?.pendingRewardsSummary = summary
+            self?.claimRewardsButton.isHidden = summary.isEmpty
+        }.store(in: &viewModel.cancellables)
+
+        viewModel.claimResultPublisher.receive(on: DispatchQueue.main).sink { [weak self] (success, message) in
+            self?.showAlertWith(title: success ? "Success" : "Error", message: message)
+            if success {
+                self?.pendingRewardsSummary = ""
+                self?.claimRewardsButton.isHidden = true
+                self?.viewModel.refresh()
+                self?.getWalletBalance()
+                self?.viewModel.fetchPendingRewards()
+            }
+        }.store(in: &viewModel.cancellables)
     }
     
     private func setUI() {
@@ -138,8 +181,178 @@ class WalletVC: UIViewController {
         coreBalanceView.addSubview(balanceCommonHeader!)
         hiveEngineBalanceView.addSubview(hiveEngineBalanceHeader!)
         setTableViews()
+        setupClaimRewardsButton()
         setBinding()
         setupInitials()
+        viewModel.fetchPendingRewards()
+    }
+
+    private func setupClaimRewardsButton() {
+        view.addSubview(claimRewardsButton)
+        view.addSubview(hiveHistoryButton)
+        NSLayoutConstraint.activate([
+            claimRewardsButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            claimRewardsButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            claimRewardsButton.heightAnchor.constraint(equalToConstant: 44),
+            hiveHistoryButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            hiveHistoryButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            hiveHistoryButton.heightAnchor.constraint(equalToConstant: 44)
+        ])
+    }
+
+    // MARK: - Phase 1: HE token send/stake/unstake + HIVE power up/down
+
+    private func broadcastResult(info: Any?, successMessage: String) {
+        DispatchQueue.main.async {
+            self.showLoader(isShowing: false)
+            var success = false
+            if let response = info as? String,
+               let json = (try? JSONSerialization.jsonObject(with: response.utf8Data())) as? [String: Any] {
+                success = json["success"] != nil
+            }
+            if success {
+                self.showAlertWith(title: "Success", message: successMessage)
+                self.viewModel.refresh()
+                self.getWalletBalance()
+                Task { await self.viewModel.getHiveEngineBalance() }
+            } else {
+                self.showAlertWith(title: "Error", message: "Transaction failed, please try again")
+            }
+        }
+    }
+
+    private func presentHETokenAction(row: Int, action: HETokenAction) {
+        guard let tokens = viewModel.hiveEngineBalanceToken?.result, row < tokens.count,
+              let symbol = tokens[row].symbol else { return }
+        let available = Double(tokens[row].balance ?? "0") ?? 0
+        let staked = Double(tokens[row].stake ?? "0") ?? 0
+        let activeKey = UserDefaults.standard.activeKey
+        guard !activeKey.isEmpty else {
+            self.showToast(message: "Please make sure to set your active key under settings"); return
+        }
+        guard let username = currentUser?.steemit_username.byTrimming(string: "@").lowercased() else { return }
+        let maxAmount = action == .unstake ? staked : available
+        let title: String
+        switch action {
+        case .transfer: title = "Send \(symbol)"
+        case .stake: title = "Stake \(symbol)"
+        case .unstake: title = "Unstake \(symbol)"
+        }
+        let alert = UIAlertController(title: title, message: "Available: \(maxAmount) \(symbol)", preferredStyle: .alert)
+        if action == .transfer {
+            alert.addTextField { $0.placeholder = "Recipient"; $0.autocapitalizationType = .none; $0.autocorrectionType = .no }
+        }
+        alert.addTextField { $0.placeholder = "Amount"; $0.keyboardType = .decimalPad }
+        if action == .transfer {
+            alert.addTextField { $0.placeholder = "Memo (optional)" }
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Confirm", style: .default, handler: { [weak self] _ in
+            guard let self = self else { return }
+            let fields = alert.textFields ?? []
+            var recipient = username
+            var amountText = ""
+            var memo = ""
+            if action == .transfer {
+                recipient = fields[0].text?.trimmingCharacters(in: .whitespaces).byTrimming(string: "@").lowercased() ?? ""
+                amountText = fields.count > 1 ? (fields[1].text ?? "") : ""
+                memo = fields.count > 2 ? (fields[2].text ?? "") : ""
+            } else {
+                amountText = fields.first?.text ?? ""
+            }
+            let amount = Double(amountText) ?? 0
+            if action == .transfer, recipient.isEmpty { self.showToast(message: "Recipient cannot be empty"); return }
+            if action == .transfer, recipient == username { self.showToast(message: "Cannot send funds to self"); return }
+            if amount <= 0 { self.showToast(message: "Please provide a proper positive amount"); return }
+            if amount > maxAmount { self.showToast(message: "Cannot exceed your available balance"); return }
+            let quantity = String(format: "%.3f", amount)
+            let actionName = action == .transfer ? "transfer" : (action == .stake ? "stake" : "unstake")
+            self.showLoader(isShowing: true)
+            API().hiveEngineTokenOperation(user: username, symbol: symbol, to: recipient, quantity: quantity, memo: memo, action: actionName, activeKey: activeKey, completion: { [weak self] info, _ in
+                self?.broadcastResult(info: info, successMessage: "\(title) completed successfully")
+            }, failure: { [weak self] error in
+                DispatchQueue.main.async {
+                    self?.showLoader(isShowing: false)
+                    self?.showToast(message: error.localizedDescription)
+                }
+            })
+        }))
+        present(alert, animated: true)
+    }
+
+    private func presentPowerUp() {
+        let activeKey = UserDefaults.standard.activeKey
+        guard !activeKey.isEmpty else {
+            self.showToast(message: "Please make sure to set your active key under settings"); return
+        }
+        guard let username = currentUser?.steemit_username.byTrimming(string: "@").lowercased() else { return }
+        let available = Double(viewModel.hiveAmount ?? "0") ?? 0
+        let alert = UIAlertController(title: "Power Up", message: "Available: \(available) HIVE", preferredStyle: .alert)
+        alert.addTextField { $0.placeholder = "Amount (HIVE)"; $0.keyboardType = .decimalPad }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Power Up", style: .default, handler: { [weak self] _ in
+            guard let self = self else { return }
+            let amount = Double(alert.textFields?.first?.text ?? "") ?? 0
+            if amount <= 0 { self.showToast(message: "Please provide a proper positive amount"); return }
+            if amount > available { self.showToast(message: "Cannot exceed your available balance"); return }
+            self.showLoader(isShowing: true)
+            API().powerUpHive(user: username, to: username, amount: String(format: "%.3f", amount), activeKey: activeKey, completion: { [weak self] info, _ in
+                self?.broadcastResult(info: info, successMessage: "Power up completed successfully")
+            }, failure: { [weak self] error in
+                DispatchQueue.main.async {
+                    self?.showLoader(isShowing: false)
+                    self?.showToast(message: error.localizedDescription)
+                }
+            })
+        }))
+        present(alert, animated: true)
+    }
+
+    private func presentPowerDown() {
+        let activeKey = UserDefaults.standard.activeKey
+        guard !activeKey.isEmpty else {
+            self.showToast(message: "Please make sure to set your active key under settings"); return
+        }
+        guard let username = currentUser?.steemit_username.byTrimming(string: "@").lowercased() else { return }
+        let available = Double(viewModel.hivePowerAmount ?? "0") ?? 0
+        let alert = UIAlertController(title: "Power Down", message: "Available: \(available) HP", preferredStyle: .alert)
+        alert.addTextField { $0.placeholder = "Amount (HP)"; $0.keyboardType = .decimalPad }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Power Down", style: .default, handler: { [weak self] _ in
+            guard let self = self else { return }
+            let amount = Double(alert.textFields?.first?.text ?? "") ?? 0
+            if amount <= 0 { self.showToast(message: "Please provide a proper positive amount"); return }
+            if amount > available { self.showToast(message: "Cannot exceed your available power"); return }
+            let vests = self.viewModel.powerToVests(hpValue: String(amount))
+            self.showLoader(isShowing: true)
+            API().powerDownHive(user: username, vests: vests, activeKey: activeKey, completion: { [weak self] info, _ in
+                self?.broadcastResult(info: info, successMessage: "Power down initiated successfully")
+            }, failure: { [weak self] error in
+                DispatchQueue.main.async {
+                    self?.showLoader(isShowing: false)
+                    self?.showToast(message: error.localizedDescription)
+                }
+            })
+        }))
+        present(alert, animated: true)
+    }
+
+    @objc private func hiveHistoryTapped() {
+        guard let username = currentUser?.steemit_username.byTrimming(string: "@").lowercased(), !username.isEmpty else { return }
+        let historyVC = HiveHistoryViewController(username: username)
+        let nav = UINavigationController(rootViewController: historyVC)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
+    }
+
+    @objc private func claimRewardsTapped() {
+        let detail = pendingRewardsSummary.isEmpty ? "" : "\n\nPending: \(pendingRewardsSummary)"
+        let alert = UIAlertController(title: "Claim Rewards", message: "Do you want to claim your pending rewards?\(detail)", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Claim", style: .default, handler: { [weak self] _ in
+            self?.viewModel.claimAllRewards()
+        }))
+        present(alert, animated: true)
     }
     
     private func setTableViews() {
@@ -310,7 +523,12 @@ extension WalletVC : UITableViewDataSource, UITableViewDelegate {
             
             cell?.onSendBtnTapped =  { [weak self] in
                 self?.openSendBalance()
-                
+
+            }
+            // HIVE row (only expandable core row) → power up / down
+            if item.allowExpanding == true {
+                cell?.onStakedBtnTapped = { [weak self] in self?.presentPowerUp() }
+                cell?.onUnstakeBtnTapped = { [weak self] in self?.presentPowerDown() }
             }
             return cell!
         case hiveEngineBalanceTableView:
@@ -320,6 +538,9 @@ extension WalletVC : UITableViewDataSource, UITableViewDelegate {
                 self?.hiveEngineBalanceArray[indexPath.row].updateExpansion(expand: expanded)
                 self?.hiveEngineBalanceTableView.reloadData()
             }
+            cell?.onSendBtnTapped = { [weak self] in self?.presentHETokenAction(row: indexPath.row, action: .transfer) }
+            cell?.onStakedBtnTapped = { [weak self] in self?.presentHETokenAction(row: indexPath.row, action: .stake) }
+            cell?.onUnstakeBtnTapped = { [weak self] in self?.presentHETokenAction(row: indexPath.row, action: .unstake) }
             return cell!
         default:
             let cell : TransactionTableViewCell = tableView.dequeueReusableCell(withIdentifier: "TransactionTableViewCell", for: indexPath) as! TransactionTableViewCell
@@ -392,5 +613,113 @@ extension String {
 
         // Ensure the string is formatted with separators
         return formatter.string(from: NSNumber(value: doubleValue)) ?? self
+    }
+}
+
+// MARK: - Phase 1: Hive on-chain transaction history
+
+struct HiveHistoryItem {
+    let title: String
+    let amount: String
+    let date: String
+    let memo: String
+}
+
+/// Programmatic (storyboard-free) list of the user's on-chain Hive history
+/// (transfers, power up/down, reward claims) via condenser_api.get_account_history.
+final class HiveHistoryViewController: UITableViewController {
+    private var items: [HiveHistoryItem] = []
+    private let username: String
+
+    init(username: String) {
+        self.username = username
+        super.init(style: .plain)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = "Hive History"
+        view.backgroundColor = .white
+        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(closeTapped))
+        tableView.rowHeight = UITableViewAutomaticDimension
+        tableView.estimatedRowHeight = 64
+        fetch()
+    }
+
+    @objc private func closeTapped() { dismiss(animated: true) }
+
+    private func fetch() {
+        ActifitLoader.show(title: "Loading...", animated: true)
+        API().getHiveAccountHistory(username: username, start: -1, completion: { [weak self] info, _ in
+            guard let self = self else { return }
+            let parsed = HiveHistoryViewController.parse(response: (info as? String)?.utf8Data() ?? Data(), username: self.username)
+            DispatchQueue.main.async {
+                ActifitLoader.hide()
+                self.items = parsed
+                self.tableView.reloadData()
+            }
+        }, failure: { _ in
+            DispatchQueue.main.async { ActifitLoader.hide() }
+        })
+    }
+
+    static func parse(response data: Data, username: String) -> [HiveHistoryItem] {
+        guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              let result = json["result"] as? [[Any]] else { return [] }
+        var out: [HiveHistoryItem] = []
+        for entry in result.reversed() {
+            guard entry.count >= 2,
+                  let op = entry[1] as? [String: Any],
+                  let opArr = op["op"] as? [Any], opArr.count >= 2,
+                  let type = opArr[0] as? String,
+                  let d = opArr[1] as? [String: Any] else { continue }
+            let ts = (op["timestamp"] as? String) ?? ""
+            switch type {
+            case "transfer":
+                let to = d["to"] as? String ?? ""
+                let from = d["from"] as? String ?? ""
+                let amount = d["amount"] as? String ?? ""
+                let memo = d["memo"] as? String ?? ""
+                let outgoing = (from == username)
+                out.append(HiveHistoryItem(title: outgoing ? "Transfer Out → \(to)" : "Transfer In ← \(from)",
+                                           amount: (outgoing ? "-" : "+") + amount, date: ts, memo: memo))
+            case "transfer_to_vesting":
+                out.append(HiveHistoryItem(title: "Power Up", amount: d["amount"] as? String ?? "", date: ts, memo: ""))
+            case "withdraw_vesting":
+                out.append(HiveHistoryItem(title: "Power Down", amount: "-" + (d["vesting_shares"] as? String ?? ""), date: ts, memo: ""))
+            case "claim_reward_balance":
+                let rewardHive = d["reward_hive"] as? String ?? ""
+                let rewardHbd = d["reward_hbd"] as? String ?? ""
+                out.append(HiveHistoryItem(title: "Claim Rewards", amount: rewardHive, date: ts,
+                                           memo: rewardHbd.isEmpty ? "" : "HBD: \(rewardHbd)"))
+            default:
+                continue
+            }
+        }
+        return out
+    }
+
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return items.isEmpty ? 1 : items.count
+    }
+
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "hiveHistoryCell") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "hiveHistoryCell")
+        cell.selectionStyle = .none
+        if items.isEmpty {
+            cell.textLabel?.text = "No transactions found"
+            cell.detailTextLabel?.text = ""
+            return cell
+        }
+        let item = items[indexPath.row]
+        cell.textLabel?.text = "\(item.title)   \(item.amount)"
+        cell.textLabel?.numberOfLines = 0
+        let subtitle = [item.date, item.memo].filter { !$0.isEmpty }.joined(separator: "  •  ")
+        cell.detailTextLabel?.text = subtitle
+        cell.detailTextLabel?.numberOfLines = 0
+        cell.detailTextLabel?.textColor = .gray
+        return cell
     }
 }
