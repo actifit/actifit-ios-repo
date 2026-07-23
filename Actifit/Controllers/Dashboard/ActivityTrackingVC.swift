@@ -119,6 +119,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var revampVotingLabel: UILabel?
   var revampEstRewardLabel: UILabel?
   var revampNudgeCard: UIView?
+  var revampCommunityStack: UIStackView?
   var heatmapCells: [(day: Int, view: UIView)] = []
   var activityDateToSave = Date()
   private var activityUpdateTimer: Timer?
@@ -1643,6 +1644,7 @@ extension ActivityTrackingVC {
         content.addArrangedSubview(buildRevampHeroCard())
         content.addArrangedSubview(buildRevampNewsCarousel())
         content.addArrangedSubview(buildRevampNudgeCard())
+        content.addArrangedSubview(buildRevampCommunityCard())
         content.addArrangedSubview(buildRevampEarningsCard())
         content.addArrangedSubview(buildRevampActionButtons())
         content.addArrangedSubview(buildRevampChartCard())
@@ -2157,6 +2159,87 @@ extension ActivityTrackingVC {
         stack.isLayoutMarginsRelativeArrangement = true
         stack.layoutMargins = UIEdgeInsets(top: 4, left: 8, bottom: 8, right: 8)
         return stack
+    }
+
+    // MARK: Community strip (ranked Actifit feed)
+
+    private func buildRevampCommunityCard() -> UIView {
+        let card = revampCard()
+        card.backgroundColor = UIColor(red: 0.99, green: 0.94, blue: 0.95, alpha: 1)
+
+        let icon = UILabel(); icon.text = "👥"; icon.font = .systemFont(ofSize: 16)
+        icon.setContentHuggingPriority(.required, for: .horizontal)
+        let title = UILabel(); title.text = "Community"; title.font = .systemFont(ofSize: 16, weight: .bold); title.textColor = UIColor(white: 0.13, alpha: 1)
+        let seeAll = UIButton(type: .system); seeAll.setTitle("See All ›", for: .normal); seeAll.setTitleColor(revampRed, for: .normal); seeAll.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        seeAll.setContentHuggingPriority(.required, for: .horizontal)
+        seeAll.addTarget(self, action: #selector(revampCommunitySeeAll), for: .touchUpInside)
+        let header = UIStackView(arrangedSubviews: [icon, title, seeAll]); header.axis = .horizontal; header.spacing = 8; header.alignment = .center
+
+        let scroll = UIScrollView(); scroll.showsHorizontalScrollIndicator = false
+        scroll.translatesAutoresizingMaskIntoConstraints = false
+        scroll.heightAnchor.constraint(equalToConstant: 96).isActive = true
+        let hstack = UIStackView(); hstack.axis = .horizontal; hstack.spacing = 14; hstack.alignment = .top
+        hstack.translatesAutoresizingMaskIntoConstraints = false
+        revampCommunityStack = hstack
+        scroll.addSubview(hstack)
+        NSLayoutConstraint.activate([
+            hstack.topAnchor.constraint(equalTo: scroll.topAnchor),
+            hstack.leadingAnchor.constraint(equalTo: scroll.leadingAnchor),
+            hstack.trailingAnchor.constraint(equalTo: scroll.trailingAnchor),
+            hstack.bottomAnchor.constraint(equalTo: scroll.bottomAnchor),
+            hstack.heightAnchor.constraint(equalTo: scroll.heightAnchor)
+        ])
+
+        let vstack = UIStackView(arrangedSubviews: [header, scroll])
+        vstack.axis = .vertical; vstack.spacing = 12
+        vstack.isLayoutMarginsRelativeArrangement = true
+        vstack.layoutMargins = UIEdgeInsets(top: 14, left: 16, bottom: 14, right: 16)
+        vstack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(vstack)
+        pinToEdges(vstack, card)
+        fetchCommunity()
+        return card
+    }
+
+    @objc private func revampCommunitySeeAll() {
+        tabBarController?.selectedIndex = 2   // Social tab
+    }
+
+    private func fetchCommunity() {
+        Task { [weak self] in
+            let result = await HTTPClient().getSocialPosts()
+            guard case .success(let model) = result else { return }
+            await MainActor.run { self?.populateCommunity(model.result) }
+        }
+    }
+
+    private func populateCommunity(_ posts: [SocialPost]) {
+        guard let hstack = revampCommunityStack else { return }
+        hstack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        for post in posts.prefix(12) {
+            hstack.addArrangedSubview(communityMember(author: post.author, steps: post.jsonMetadata.stepCount.first ?? "0"))
+        }
+    }
+
+    private func communityMember(author: String, steps: String) -> UIView {
+        let avatar = UIImageView()
+        avatar.translatesAutoresizingMaskIntoConstraints = false
+        avatar.widthAnchor.constraint(equalToConstant: 52).isActive = true
+        avatar.heightAnchor.constraint(equalToConstant: 52).isActive = true
+        avatar.layer.cornerRadius = 26; avatar.clipsToBounds = true
+        avatar.contentMode = .scaleAspectFill
+        avatar.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        if let url = URL(string: "https://images.hive.blog/u/\(author)/avatar/small") {
+            URLSession.shared.dataTask(with: url) { data, _, _ in
+                if let data = data, let img = UIImage(data: data) { DispatchQueue.main.async { avatar.image = img } }
+            }.resume()
+        }
+        let name = UILabel(); name.text = "@\(author)"; name.font = .systemFont(ofSize: 10); name.textColor = .gray; name.textAlignment = .center
+        name.lineBreakMode = .byTruncatingTail
+        let stepsL = UILabel(); stepsL.text = steps; stepsL.font = .systemFont(ofSize: 12, weight: .bold); stepsL.textColor = revampRed; stepsL.textAlignment = .center
+        let col = UIStackView(arrangedSubviews: [avatar, name, stepsL]); col.axis = .vertical; col.spacing = 2; col.alignment = .center
+        col.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        return col
     }
 
     private func buildRevampNudgeCard() -> UIView {
