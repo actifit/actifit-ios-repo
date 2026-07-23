@@ -47,6 +47,19 @@ _Last updated: 2026-07-23. Source: dual deep-dive of both codebases._
 
 ---
 
+## 🎨 UI Revamp backlog (match Android redesign)
+
+Beyond feature parity, three core screens need a **visual revamp** to match the Android redesign. Design target: Android repo `docs/screen-redesign-mockups.md` (Material 3, Actifit Red `#FF112D`, card radius 16, button radius 12, pill radius 24, bg `#F5F5F5`). The reusable `AccordionCardView` (from the wallet facelift) and a shared card/token style are the foundation.
+
+| # | Screen | Scope | Status |
+|---|---|---|---|
+| R1 | **Wallet** | Android-style accordion + inline action icons | ✅ Done (PR #3) |
+| R2 | **Dashboard** (`ActivityTrackingVC`) | Full revamp: clean header (greeting + profile, bell badge, wallet), unified "Today's Activity" hero card (single pie + source badge + Sync/Settings/Share row), quick-action pills (Post / Workout), Daily Rewards card (4 tiers + progress bar w/ milestones), Earnings card (AFIT/HIVE/BLURT + pending), Activity Breakdown chart card (Daily/Hourly segmented), Workout highlight, 4-item footer + "More" bottom sheet | ⏳ In progress |
+| R3 | **Login** (`LoginViewController`) | Revamp: animated logo + tagline, rounded input card w/ leading icons + QR trailing button, full-width red login button, "Continue as Guest" link, helper links | ☐ Not started |
+| R4 | **Post & Earn** (`PostToSeemitView`) | Full revamp: top bar w/ preview toggle, horizontal stepper, card sections (title, date/steps/activities as chips, collapsible measurements, content editor w/ toolbar + live preview), FAB post button | ☐ Not started |
+
+Design tokens to mirror (from the spec): `colorPrimary #FF112D`, `colorBackground #F5F5F5`, `colorSuccess #00C853`, `colorTextSecondary #757575`, card 16 / button 12 / pill 24 corner radii. iOS note: the dashboard's 3 separate pie charts (device/Fitbit/HealthKit) unify into one card with a dynamic source badge; Health Connect → HealthKit.
+
 ## 🚫 Intentionally excluded
 
 - **Health Connect** — Android-only; iOS uses CoreMotion + HealthKit + Fitbit. When building Profile rings / heatmap (#3, #11), source distance/active-energy from **HealthKit**.
