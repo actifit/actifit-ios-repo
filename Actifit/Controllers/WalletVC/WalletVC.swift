@@ -571,6 +571,42 @@ extension WalletVC : UITableViewDataSource, UITableViewDelegate {
         default: return UITableViewAutomaticDimension
         }
     }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let sourceCell = tableView.cellForRow(at: indexPath)
+        switch tableView {
+        case hiveEngineBalanceTableView:
+            guard indexPath.row < hiveEngineBalanceArray.count else { return }
+            let sheet = UIAlertController(title: "Token Actions", message: nil, preferredStyle: .actionSheet)
+            sheet.addAction(UIAlertAction(title: "Send", style: .default) { [weak self] _ in self?.presentHETokenAction(row: indexPath.row, action: .transfer) })
+            sheet.addAction(UIAlertAction(title: "Stake", style: .default) { [weak self] _ in self?.presentHETokenAction(row: indexPath.row, action: .stake) })
+            sheet.addAction(UIAlertAction(title: "Unstake", style: .default) { [weak self] _ in self?.presentHETokenAction(row: indexPath.row, action: .unstake) })
+            sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            presentActionSheet(sheet, from: sourceCell)
+        case coreBalanceTableView:
+            guard indexPath.row < coreBalanceArray.count else { return }
+            let item = coreBalanceArray[indexPath.row]
+            if item.allowExpanding == true { // HIVE row
+                let sheet = UIAlertController(title: "HIVE Actions", message: nil, preferredStyle: .actionSheet)
+                sheet.addAction(UIAlertAction(title: "Send HIVE / HBD", style: .default) { [weak self] _ in self?.openSendBalance() })
+                sheet.addAction(UIAlertAction(title: "Power Up", style: .default) { [weak self] _ in self?.presentPowerUp() })
+                sheet.addAction(UIAlertAction(title: "Power Down", style: .default) { [weak self] _ in self?.presentPowerDown() })
+                sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                presentActionSheet(sheet, from: sourceCell)
+            }
+        default:
+            break
+        }
+    }
+
+    private func presentActionSheet(_ sheet: UIAlertController, from source: UIView?) {
+        if let pop = sheet.popoverPresentationController {
+            pop.sourceView = source ?? view
+            pop.sourceRect = (source ?? view).bounds
+        }
+        present(sheet, animated: true)
+    }
 }
 
 extension Double {

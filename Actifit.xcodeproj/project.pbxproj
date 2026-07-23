@@ -208,6 +208,8 @@
 		4EF5916B2CACA30F00C26FF8 /* PostReward.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF5916A2CACA30F00C26FF8 /* PostReward.swift */; };
 		4EF80ED32AEC602A005DDE98 /* AdsOptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF80ED22AEC602A005DDE98 /* AdsOptionsViewController.swift */; };
 		5C964A8E4077E57129A03F2E /* MarketViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53BD9E36D21E2B35165C6E67 /* MarketViewController.swift */; };
+		6C6BB222ABE3E07DED4AE7AD /* AccordionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B208EB2944C3859F6196935F /* AccordionCardView.swift */; };
+		7621D628044BD829C348FCEF /* WalletAccordionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E9176BAC12F9896D0FFD70 /* WalletAccordionViewController.swift */; };
 		8A0D747122E99BED00D3C6B6 /* awsconfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = 8A0D747022E99BED00D3C6B6 /* awsconfiguration.json */; };
 		8A7EFB4B22E70CA000A4B32E /* ActivityFifteenMinutesInterval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A7EFB4A22E70CA000A4B32E /* ActivityFifteenMinutesInterval.swift */; };
 		8AAD14DE22E211D200A39934 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8AAD14DD22E211D200A39934 /* GoogleService-Info.plist */; };
@@ -484,6 +486,7 @@
 		A93CABE223390A9100136477 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AAA7D6873C39FCB390EB0080 /* Pods-Actifit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Actifit.release.xcconfig"; path = "Target Support Files/Pods-Actifit/Pods-Actifit.release.xcconfig"; sourceTree = "<group>"; };
 		AF5EC0DE0000000000000001 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
+		B208EB2944C3859F6196935F /* AccordionCardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AccordionCardView.swift; path = Actifit/Views/Accordion/AccordionCardView.swift; sourceTree = "<group>"; };
 		BE0AB410211A29B1000E9AEA /* Activity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Activity.swift; sourceTree = "<group>"; };
 		BE0AB412211A2C89000E9AEA /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		BE0AB422211BF45A000E9AEA /* TrackingHistoryVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TrackingHistoryVC.swift; sourceTree = "<group>"; };
@@ -524,6 +527,7 @@
 		BE925D9921273EDB00C87803 /* Dictionary+Additions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Dictionary+Additions.swift"; sourceTree = "<group>"; };
 		BE925D9B21273F7E00C87803 /* TransactionTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionTableViewCell.swift; sourceTree = "<group>"; };
 		BEFD706C2138F74800F2E7B6 /* Date+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extension.swift"; sourceTree = "<group>"; };
+		F0E9176BAC12F9896D0FFD70 /* WalletAccordionViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WalletAccordionViewController.swift; path = Actifit/Controllers/WalletVC/WalletAccordionViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1578,6 +1582,8 @@
 				5AA13FC8C3C7E14596880E7C /* Frameworks */,
 				256322C66FC8EFE70166A313 /* Pods */,
 				53BD9E36D21E2B35165C6E67 /* MarketViewController.swift */,
+				B208EB2944C3859F6196935F /* AccordionCardView.swift */,
+				F0E9176BAC12F9896D0FFD70 /* WalletAccordionViewController.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -2047,6 +2053,8 @@
 				4E7C54CB2A6A4DDC00C023FF /* BannerImages.swift in Sources */,
 				4EA3FA742AC1DAB300B866F8 /* ColorsExtension.swift in Sources */,
 				5C964A8E4077E57129A03F2E /* MarketViewController.swift in Sources */,
+				6C6BB222ABE3E07DED4AE7AD /* AccordionCardView.swift in Sources */,
+				7621D628044BD829C348FCEF /* WalletAccordionViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

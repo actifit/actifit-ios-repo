@@ -829,14 +829,16 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
 
   @IBAction func walletTapped(_ sender: Any) {
     if viewModel.isLoggedIn {
-      navigationController?.pushViewController(WalletVC.instantiateWithStoryboard(appStoryboard: .SB_Main), animated: true)
+      navigationController?.pushViewController(WalletAccordionViewController(), animated: true)
     } else {
       showToast(message: "Please login first")
     }
   }
 
   @IBAction func marketPlaceBtnTapped(_ sender: Any) {
-    openPopup(title: NSLocalizedString("virtual_gadgets", comment: ""), description: NSLocalizedString("virtual_gadgets_details", comment: ""), cancelTitle: NSLocalizedString("close_upper", comment: ""), actionTitle: NSLocalizedString("market", comment: ""), size: .medium)
+    present(TransparentPopupViewController.create(title: NSLocalizedString("virtual_gadgets", comment: ""), description: NSLocalizedString("virtual_gadgets_details", comment: ""), cancelButtonText: NSLocalizedString("close_upper", comment: ""), actionButtonText: NSLocalizedString("market", comment: ""), noteSize: .medium, onActionButtonTapped: { [weak self] in
+      self?.openGadgetMarket()
+    }), animated: true)
   }
 
   func setBtnFontSize(button: UIButton) -> UIButton{
