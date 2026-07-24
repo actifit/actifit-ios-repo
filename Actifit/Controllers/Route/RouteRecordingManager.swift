@@ -27,6 +27,22 @@ final class RouteRecordingManager: NSObject, CLLocationManagerDelegate {
     private var lastLocation: CLLocation?
     private var authContinuation: (() -> Void)?
 
+    /// Reject fixes worse than this many meters of horizontal accuracy.
+    private static let maxHorizontalAccuracy: CLLocationDistance = 50
+    /// Reject fixes older than this many seconds (drops the stale cached first-fix).
+    private static let maxLocationAgeSec: TimeInterval = 10
+
+    // MARK: - State exposed for a live map that (re)attaches to an in-progress run
+
+    /// Wall-clock start of the current recording, in epoch ms (0 when idle).
+    var recordingStartMs: Int { startTimeMs }
+    /// Distance accumulated so far, in meters.
+    var recordedDistance: Double { totalDistance }
+    /// Coordinates captured so far, for seeding a polyline on resume.
+    var recordedCoordinates: [CLLocationCoordinate2D] {
+        waypoints.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) }
+    }
+
     private override init() {
         super.init()
         locationManager.delegate = self
@@ -105,6 +121,14 @@ final class RouteRecordingManager: NSObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         for location in locations {
+            // Drop invalid/inaccurate/stale fixes before they corrupt the distance sum.
+            // A negative horizontalAccuracy means the coordinate itself is invalid; a large
+            // accuracy is a low-confidence fix; a stale timestamp is usually the cached
+            // first-fix delivered from a far-away spot when updates begin.
+            guard location.horizontalAccuracy >= 0,
+                  location.horizontalAccuracy <= Self.maxHorizontalAccuracy,
+                  abs(location.timestamp.timeIntervalSinceNow) <= Self.maxLocationAgeSec else { continue }
+
             let wp = RouteWaypoint(
                 lat: location.coordinate.latitude,
                 lng: location.coordinate.longitude,

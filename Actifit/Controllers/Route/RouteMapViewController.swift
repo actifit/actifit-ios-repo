@@ -150,7 +150,22 @@ final class RouteMapViewController: UIViewController, MKMapViewDelegate {
         activityLabel.text = activityType
         stopButton.isHidden = false
         currentMarker.title = "You"
-        liveStartMs = Int(Date().timeIntervalSince1970 * 1000)
+
+        // Seed from the manager's real start time / progress so a live map that
+        // (re)attaches to an already-running recording shows elapsed time, the
+        // accumulated distance, and the path drawn so far — not a reset to zero.
+        let manager = RouteRecordingManager.shared
+        liveStartMs = manager.recordingStartMs > 0 ? manager.recordingStartMs : Int(Date().timeIntervalSince1970 * 1000)
+        let progress = manager.recordedCoordinates
+        if !progress.isEmpty {
+            routeCoords = progress
+            redrawPolyline()
+            if let last = progress.last { addMarker(at: last) }
+            distanceLabel.text = String(format: "%.2f km", manager.recordedDistance / 1000.0)
+            fitToRoute()
+        }
+        tickTimer()
+
         NotificationCenter.default.addObserver(self, selector: #selector(onWaypoint(_:)), name: RouteRecordingManager.waypointUpdate, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(onStopped(_:)), name: RouteRecordingManager.recordingStopped, object: nil)
         liveTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.tickTimer() }
@@ -191,9 +206,13 @@ final class RouteMapViewController: UIViewController, MKMapViewDelegate {
         let coord = CLLocationCoordinate2D(latitude: lat, longitude: lng)
         routeCoords.append(coord)
         redrawPolyline()
+        addMarker(at: coord)
+        mapView.setCenter(coord, animated: true)
+    }
+
+    private func addMarker(at coord: CLLocationCoordinate2D) {
         currentMarker.coordinate = coord
         if !mapView.annotations.contains(where: { $0 === currentMarker }) { mapView.addAnnotation(currentMarker) }
-        mapView.setCenter(coord, animated: true)
     }
 
     // MARK: - VIEW mode
