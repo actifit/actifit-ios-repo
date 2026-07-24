@@ -216,6 +216,110 @@ public class API : NSObject{
     forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_POST, completion: completion, failure: failure)
   }
 
+  // MARK: - Phase 2: Gadget marketplace (Android port)
+
+  private func simpleGet(urlString: String, completion: APICompletionHandler, failure: APIFailureHandler) {
+    guard let url = URL(string: urlString) else { return }
+    var request = URLRequest.init(url: url)
+    request.addBasicHeaderFieldsForUpdateSettings()
+    forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure)
+  }
+
+  func getMarketProducts(completion: APICompletionHandler, failure: APIFailureHandler) {
+    simpleGet(urlString: ApiUrls.products, completion: completion, failure: failure)
+  }
+
+  func getNonConsumedGadgets(username: String, completion: APICompletionHandler, failure: APIFailureHandler) {
+    simpleGet(urlString: ApiUrls.nonConsumedGadgets + username, completion: completion, failure: failure)
+  }
+
+  func getConsumedGadgets(username: String, completion: APICompletionHandler, failure: APIFailureHandler) {
+    simpleGet(urlString: ApiUrls.consumedGadgets + username, completion: completion, failure: failure)
+  }
+
+  func getExchangeAfitPrice(completion: APICompletionHandler, failure: APIFailureHandler) {
+    simpleGet(urlString: ApiUrls.exchangeAfitPrice, completion: completion, failure: failure)
+  }
+
+  /// Latest X/Twitter posts for the dashboard news carousel.
+  func getLatestXPost(completion: APICompletionHandler, failure: APIFailureHandler) {
+    simpleGet(urlString: ApiUrls.latestXPost, completion: completion, failure: failure)
+  }
+
+  /// Server-computed estimated AFIT reward for today's step count.
+  func getEstimatedReward(username: String, steps: Int, completion: APICompletionHandler, failure: APIFailureHandler) {
+    var urlStr = ApiUrls.estimatedReward + "?user=\(username)"
+    if steps > 0 { urlStr += "&steps=\(steps)" }
+    simpleGet(urlString: urlStr, completion: completion, failure: failure)
+  }
+
+  /// Broadcasts an actifit gadget custom_json op (posting auth) via performTrx.
+  /// `transaction` is one of "buy-gadget", "activate-gadget", "deactivate-gadget".
+  func broadcastGadgetOperation(username: String, transaction: String, gadgetId: String, benefic: String?, completion: APICompletionHandler, failure: APIFailureHandler) {
+    var jsonInner = "{\"transaction\": \"\(transaction)\" , \"gadget\": \"\(gadgetId)\""
+    if let benefic = benefic, !benefic.isEmpty {
+      jsonInner += " , \"benefic\": \"\(benefic)\""
+    }
+    jsonInner += "}"
+    let parameters: [String: Any] = [
+      "required_auths": [],
+      "required_posting_auths": [username],
+      "id": "actifit",
+      "json": jsonInner
+    ]
+    let finalizedParams: [Any] = ["custom_json", parameters]
+    var urlString = ApiUrls.broadCastQueryAPI + "?user=\(username)"
+    do {
+      let jsonData = try JSONSerialization.data(withJSONObject: finalizedParams, options: [])
+      guard let jsonString = String(data: jsonData, encoding: .utf8) else {
+        failure?(NSError(domain: "Actifit", code: -1)); return
+      }
+      let cleaned = jsonString.replacingOccurrences(of: "\n", with: "")
+      urlString += "&operation=[\(cleaned)]&bchain=HIVE"
+      guard let encoded = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+            let url = URL(string: encoded) else { return }
+      var request = URLRequest.init(url: url)
+      request.addBroadCastHeaderWhenAfitSent()
+      forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure)
+    } catch let error {
+      failure?(error as NSError)
+    }
+  }
+
+  /// Buys a gadget with HIVE — transfer to actifit.market with memo (active key) via performTrxPost.
+  func buyGadgetWithHive(username: String, gadgetId: String, priceHive: String, activeKey: String, completion: APICompletionHandler, failure: APIFailureHandler) {
+    let params: [String: Any] = ["from": username, "to": ApiUrls.actifitMarketAccount, "amount": "\(priceHive) HIVE", "memo": "buy-gadget:\(gadgetId)"]
+    let operation: [Any] = ["transfer", params]
+    do {
+      let jsonData = try JSONSerialization.data(withJSONObject: [operation], options: [])
+      guard let jsonString = String(data: jsonData, encoding: .utf8) else {
+        failure?(NSError(domain: "Actifit", code: -1)); return
+      }
+      let cleaned = jsonString.replacingOccurrences(of: "\n", with: "")
+      let finalParams: [String: Any] = ["operation": cleaned, "active": activeKey]
+      guard let url = URL(string: ApiUrls.sendBalanceAndHive + "?user=\(username)&bchain=HIVE") else { return }
+      var request = URLRequest.init(url: url)
+      request.appendBodyWith(json: finalParams)
+      request.addBroadCastHeaderWhenAfitSent()
+      forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_POST, completion: completion, failure: failure)
+    } catch let error {
+      failure?(error as NSError)
+    }
+  }
+
+  /// Confirmation GET after a gadget broadcast: {confirmBase}{user}/{id}/{refBlockNum}/{txId}/HIVE[/{benefic}]
+  func confirmGadgetTransaction(confirmBase: String, username: String, gadgetId: String, refBlockNum: Int, txId: String, benefic: String?, completion: APICompletionHandler, failure: APIFailureHandler) {
+    var urlString = confirmBase + "\(username)/\(gadgetId)/\(refBlockNum)/\(txId)/HIVE"
+    if let benefic = benefic, !benefic.isEmpty {
+      urlString += "/\(benefic)"
+    }
+    guard let encoded = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+          let url = URL(string: encoded) else { return }
+    var request = URLRequest.init(url: url)
+    request.addBroadCastHeaderWhenAfitSent()
+    forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure)
+  }
+
   func createWave(body: [String: Any], username: String, comment: String, completion: APICompletionHandler, failure: APIFailureHandler) {
    // let params: [String:Any] = ["id":1,"jsonrpc":"2.0","method": "comment", "params": body]
     let array: [Any] = [comment, body]

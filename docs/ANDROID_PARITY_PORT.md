@@ -47,6 +47,19 @@ _Last updated: 2026-07-23. Source: dual deep-dive of both codebases._
 
 ---
 
+## 🎨 UI Revamp backlog (match Android redesign)
+
+Beyond feature parity, three core screens need a **visual revamp** to match the Android redesign. Design target: Android repo `docs/screen-redesign-mockups.md` (Material 3, Actifit Red `#FF112D`, card radius 16, button radius 12, pill radius 24, bg `#F5F5F5`). The reusable `AccordionCardView` (from the wallet facelift) and a shared card/token style are the foundation.
+
+| # | Screen | Scope | Status |
+|---|---|---|---|
+| R1 | **Wallet** | Android-style accordion + inline action icons | ✅ Done (PR #3) |
+| R2 | **Dashboard** (`ActivityTrackingVC`) | Full revamp: clean header (greeting + profile, bell badge, wallet), unified "Today's Activity" hero card (single pie + source badge + Sync/Settings/Share row), quick-action pills (Post / Workout), Daily Rewards card (4 tiers + progress bar w/ milestones), Earnings card (AFIT/HIVE/BLURT + pending), Activity Breakdown chart card (Daily/Hourly segmented), Workout highlight, 4-item footer + "More" bottom sheet | ⏳ In progress |
+| R3 | **Login** (`LoginViewController`) | Revamp: animated logo + tagline, rounded input card w/ leading icons + QR trailing button, full-width red login button, "Continue as Guest" link, helper links | ☐ Not started |
+| R4 | **Post & Earn** (`PostToSeemitView`) | Full revamp: top bar w/ preview toggle, horizontal stepper, card sections (title, date/steps/activities as chips, collapsible measurements, content editor w/ toolbar + live preview), FAB post button | ☐ Not started |
+
+Design tokens to mirror (from the spec): `colorPrimary #FF112D`, `colorBackground #F5F5F5`, `colorSuccess #00C853`, `colorTextSecondary #757575`, card 16 / button 12 / pill 24 corner radii. iOS note: the dashboard's 3 separate pie charts (device/Fitbit/HealthKit) unify into one card with a dynamic source badge; Health Connect → HealthKit.
+
 ## 🚫 Intentionally excluded
 
 - **Health Connect** — Android-only; iOS uses CoreMotion + HealthKit + Fitbit. When building Profile rings / heatmap (#3, #11), source distance/active-energy from **HealthKit**.
@@ -88,7 +101,22 @@ _Last updated: 2026-07-23. Source: dual deep-dive of both codebases._
 - Note: iOS already had the **AFIT reward** transactions list; on-chain Hive history (transfers, power up/down, reward claims) never existed — now added.
 - `HiveHistoryViewController` (a programmatic `UITableViewController` appended **inside `WalletVC.swift`** to avoid `.pbxproj` edits) fetches `condenser_api.get_account_history`, parses transfer / transfer_to_vesting / withdraw_vesting / claim_reward_balance, and lists them. Opened via a "Hive History" button on the wallet screen.
 
-**Phase 1 status: COMPLETE (pending build).** Next: Phase 2 (#7 gadget purchase, #3 Profile, #11 heatmap/streak, #12 achievements, #13 milestones).
+**Phase 1 status: COMPLETE (build-verified).** Merged via PR #1 (feature/android-parity-wallet → develop).
+
+### Phase 2 — Gadget marketplace (#7) (started 2026-07-23)
+
+Confirmed iOS had **no** gadget purchase — only owned-gadget display + an AFIT *exchanges* list. The dashboard "market" button did nothing (`openPopup` passed no action). Now built:
+
+- **`Actifit/Controllers/Market/MarketViewController.swift`** (new file, registered in the Xcode target via the `xcodeproj` gem on the build server) — a programmatic marketplace screen: lists active `ingame` gadgets sorted by level, with image, price (AFIT + HIVE), validity, boosts, and a **requirement engine** (User Rank ≥, AFIT balance ≥, prerequisite consumed gadgets) mirroring Android exactly. Buttons gate on eligibility + ownership state (none/bought/active).
+- **Four two-step flows** (relay broadcast → parse `trx.tx.{ref_block_num,id}` → confirmation call): buy-with-AFIT (`performTrx` custom_json id `actifit`, `buy-gadget`), buy-with-HIVE (`performTrxPost` transfer to `actifit.market`, memo `buy-gadget:<id>`), activate (with optional friend beneficiary), deactivate — each followed by `buyGadget`/`buyGadgetHive`/`activateGadget`/`deactivateGadget` confirms.
+- **`API.swift`** — `getMarketProducts`/`getNonConsumedGadgets`/`getConsumedGadgets`/`getExchangeAfitPrice`, `broadcastGadgetOperation`, `buyGadgetWithHive`, `confirmGadgetTransaction`. **`Structs.swift`** — marketplace endpoints + `actifit.market` + gadget image base.
+- **`ActivityTrackingVC.swift`** — dashboard gadget popup's "market" action now opens the marketplace.
+
+✅ **Build-verified** on Xcode 26.5 (BUILD SUCCEEDED, zero errors). Runtime testing pending.
+
+**Remaining Phase 2:** #3 Profile screen, #11 heatmap/streak, #12 achievements, #13 milestones.
+
+> ⚠️ **pbxproj note:** the `MarketViewController.swift` target registration was done on the build server. The local `Actifit.xcodeproj/project.pbxproj` must receive the same one-file addition before committing (see progress notes).
 
 > ✅ **Build verified (2026-07-23):** compiled on the MacinCloud server (Xcode 26.5) — `xcodebuild -workspace Actifit.xcworkspace -scheme Actifit -sdk iphonesimulator CODE_SIGNING_ALLOWED=NO build` → **BUILD SUCCEEDED**, zero compile errors in the Phase-1 code. One fix applied during the build: `UITableView.automaticDimension` → `UITableViewAutomaticDimension` (this codebase uses the old spelling via a rename shim). Notes: transferred the working tree via scp (repo is private); a clean `pod install` was required because the committed `Pods/` carried stale IQKeyboardManagerSwift files. Device/runtime testing of the new wallet flows still pending.
 

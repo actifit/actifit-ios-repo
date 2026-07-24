@@ -209,4 +209,18 @@ enum ApiUrls {
     static let pendingRewards = "https://api.actifit.io/pendingRewards"
     static let claimRewards = "https://api.actifit.io/claimRewards"
     static let hiveRPCNode = "https://hiveapi.actifit.io"
+    // Phase 2 — Gadget marketplace parity (Android port)
+    static let products = "https://api.actifit.io/products"
+    static let nonConsumedGadgets = "https://api.actifit.io/nonConsumedGadgetsByUser/"
+    static let consumedGadgets = "https://api.actifit.io/consumedGadgetsByUser/"
+    static let exchangeAfitPrice = "https://api.actifit.io/exchangeAFITPrice"
+    static let buyGadgetConfirm = "https://api.actifit.io/buyGadget/"
+    static let buyGadgetHiveConfirm = "https://api.actifit.io/buyGadgetHive/"
+    static let activateGadgetConfirm = "https://api.actifit.io/activateGadget/"
+    static let deactivateGadgetConfirm = "https://api.actifit.io/deactivateGadget/"
+    static let actifitMarketAccount = "actifit.market"
+    static let gadgetImageBase = "https://actifit.io/img/gadgets/"
+    // Dashboard revamp
+    static let estimatedReward = "https://api.actifit.io/getEstimatedReward"
+    static let latestXPost = "https://api.actifit.io/latestXPost"
 }

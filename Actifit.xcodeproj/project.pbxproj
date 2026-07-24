@@ -7,7 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0254ACCAAF5A4A83DE8B61C4 /* 1f405.json in Resources */ = {isa = PBXBuildFile; fileRef = EA76E0B414AC4B21ECBA3A37 /* 1f405.json */; };
+		0A3D16E363B8BD09871F577A /* 1f42c.json in Resources */ = {isa = PBXBuildFile; fileRef = E7002F7230473461DD4398F3 /* 1f42c.json */; };
 		0EA53C22242273ED0004C480 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE3D8FF4212F569200178152 /* HealthKit.framework */; };
+		11C121D15AF1323DB9A9C3FF /* 1f422.json in Resources */ = {isa = PBXBuildFile; fileRef = 8EC8E441FE6071DD9BBE80A8 /* 1f422.json */; };
 		162F962F2205DB4E008227EF /* AuthenticationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162F962E2205DB4E008227EF /* AuthenticationController.swift */; };
 		162F96312205E080008227EF /* FitbitAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162F96302205E080008227EF /* FitbitAPI.swift */; };
 		162F96332205EA7A008227EF /* StepStat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162F96322205EA7A008227EF /* StepStat.swift */; };
@@ -18,6 +21,12 @@
 		1D42713B237DB565008A4398 /* AllRecordsOfActivitiesNew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D42713A237DB565008A4398 /* AllRecordsOfActivitiesNew.swift */; };
 		1D8AF8422362167A00B6DF29 /* L102Language.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8AF8412362167A00B6DF29 /* L102Language.swift */; };
 		1D8DAFB02338D6880078253F /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1D8DAFB22338D6880078253F /* Localizable.strings */; };
+		29E7FD2D9D409701F6E8903A /* 1f9a9.json in Resources */ = {isa = PBXBuildFile; fileRef = 7AC88D237BECEBDBA7750018 /* 1f9a9.json */; };
+		2FDF85FD41296BDCA7A43646 /* 1f43a.json in Resources */ = {isa = PBXBuildFile; fileRef = 30DCF50AB3A6D9C82A4A9A1E /* 1f43a.json */; };
+		333EECF458032ADDD578D823 /* 1f40e.json in Resources */ = {isa = PBXBuildFile; fileRef = 3199EBA19E96B5959D391E8C /* 1f40e.json */; };
+		3A817624B56D1A083266AB0F /* RouteRecordingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EA5502112EADAE0051E2F8E /* RouteRecordingManager.swift */; };
+		45E5E06098A8063E1F912778 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D5F88052E9F40A1F37D5A18 /* Route.swift */; };
+		4BF233C175D58373FAD23E25 /* 1f984.json in Resources */ = {isa = PBXBuildFile; fileRef = D3C819B261D51D2484C60522 /* 1f984.json */; };
 		4E0144462BD467A7005E130F /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0144452BD467A7005E130F /* ImagePicker.swift */; };
 		4E0144532BD594E7005E130F /* CommentReplyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0144522BD594E7005E130F /* CommentReplyViewController.swift */; };
 		4E0144562BD5A19B005E130F /* CommentReplyViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0144552BD5A19B005E130F /* CommentReplyViewModel.swift */; };
@@ -207,12 +216,25 @@
 		4EF591692CACA09A00C26FF8 /* GetPostRewardEndPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF591682CACA09A00C26FF8 /* GetPostRewardEndPoint.swift */; };
 		4EF5916B2CACA30F00C26FF8 /* PostReward.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF5916A2CACA30F00C26FF8 /* PostReward.swift */; };
 		4EF80ED32AEC602A005DDE98 /* AdsOptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF80ED22AEC602A005DDE98 /* AdsOptionsViewController.swift */; };
+		5448C3EC6E7ECFB11772611A /* 1f988.json in Resources */ = {isa = PBXBuildFile; fileRef = 5848E872FFA077D40BAF34E9 /* 1f988.json */; };
+		5C964A8E4077E57129A03F2E /* MarketViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53BD9E36D21E2B35165C6E67 /* MarketViewController.swift */; };
+		67CDFB12F71B8709AA7F99E3 /* 1f415.json in Resources */ = {isa = PBXBuildFile; fileRef = F395376E7E79380BFE9012EB /* 1f415.json */; };
+		6BB4A4509C402F98AD5A649C /* 1f98a.json in Resources */ = {isa = PBXBuildFile; fileRef = DFA5EBF318F635862330DBB1 /* 1f98a.json */; };
+		6C6BB222ABE3E07DED4AE7AD /* AccordionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B208EB2944C3859F6196935F /* AccordionCardView.swift */; };
+		71C61E455EBC1F7E362DB43E /* 1f989.json in Resources */ = {isa = PBXBuildFile; fileRef = 9F379E5AE1E0FCF41226D380 /* 1f989.json */; };
+		721FEE10A3992E6894E360AB /* CompanionUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 948E36C55AB728B91248F795 /* CompanionUtil.swift */; };
+		7621D628044BD829C348FCEF /* WalletAccordionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E9176BAC12F9896D0FFD70 /* WalletAccordionViewController.swift */; };
+		791938BF6997E1D212815F67 /* 1f427.json in Resources */ = {isa = PBXBuildFile; fileRef = C9BE65F78835CA175833E9BB /* 1f427.json */; };
 		8A0D747122E99BED00D3C6B6 /* awsconfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = 8A0D747022E99BED00D3C6B6 /* awsconfiguration.json */; };
 		8A7EFB4B22E70CA000A4B32E /* ActivityFifteenMinutesInterval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A7EFB4A22E70CA000A4B32E /* ActivityFifteenMinutesInterval.swift */; };
 		8AAD14DE22E211D200A39934 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8AAD14DD22E211D200A39934 /* GoogleService-Info.plist */; };
 		8AC2C84322D3771100AA2F81 /* DayHistroyVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC2C84222D3771100AA2F81 /* DayHistroyVC.swift */; };
 		8ADF574922D788C5002D8C84 /* UIApplication+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ADF574822D788C5002D8C84 /* UIApplication+Extension.swift */; };
 		96ACD15D445A2C525D7A0582 /* Pods_Actifit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C201E6B3DB1C87A2C7C2E0B /* Pods_Actifit.framework */; };
+		9D5B21DDE7AC8CC3DB9CEEBD /* 1f43c.json in Resources */ = {isa = PBXBuildFile; fileRef = C0C3417B4C0BEAB29A5C15CF /* 1f43c.json */; };
+		9E8BC06713FE6151B7D7DE05 /* 1f43b.json in Resources */ = {isa = PBXBuildFile; fileRef = F86FAEBF82C80DEE955AF181 /* 1f43b.json */; };
+		AF5EC0DE0000000000000002 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5EC0DE0000000000000001 /* Secrets.swift */; };
+		B79A56C9D011D84F3DCEEBAB /* 1f98d.json in Resources */ = {isa = PBXBuildFile; fileRef = EF8BE1BF06EDC8230774E3BD /* 1f98d.json */; };
 		BE0AB411211A29B1000E9AEA /* Activity.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB410211A29B1000E9AEA /* Activity.swift */; };
 		BE0AB413211A2C89000E9AEA /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB412211A2C89000E9AEA /* Constants.swift */; };
 		BE0AB423211BF45A000E9AEA /* TrackingHistoryVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB422211BF45A000E9AEA /* TrackingHistoryVC.swift */; };
@@ -220,7 +242,6 @@
 		BE0AB428211BF64D000E9AEA /* StoryboardInstantiation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB427211BF64D000E9AEA /* StoryboardInstantiation.swift */; };
 		BE0AB433211CE5EA000E9AEA /* UIDevice+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB432211CE5EA000E9AEA /* UIDevice+Extension.swift */; };
 		BE0AB435211EB22F000E9AEA /* Structs.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB434211EB22F000E9AEA /* Structs.swift */; };
-		AF5EC0DE0000000000000002 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5EC0DE0000000000000001 /* Secrets.swift */; };
 		BE222CE52120BAAB00AD025F /* AFTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE222CE42120BAAB00AD025F /* AFTextField.swift */; };
 		BE222CE72120BC2E00AD025F /* ConstaintMaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE222CE62120BC2E00AD025F /* ConstaintMaker.swift */; };
 		BE222CE92120C17A00AD025F /* AFTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE222CE82120C17A00AD025F /* AFTextView.swift */; };
@@ -249,10 +270,19 @@
 		BE925D9821273E0800C87803 /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE925D9721273E0800C87803 /* Transaction.swift */; };
 		BE925D9A21273EDB00C87803 /* Dictionary+Additions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE925D9921273EDB00C87803 /* Dictionary+Additions.swift */; };
 		BE925D9C21273F7E00C87803 /* TransactionTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE925D9B21273F7E00C87803 /* TransactionTableViewCell.swift */; };
+		BEC46FC679E0A91B76746160 /* AuraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8BE602FE65B254BA6AE95AE /* AuraView.swift */; };
 		BEFD706D2138F74800F2E7B6 /* Date+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFD706C2138F74800F2E7B6 /* Date+Extension.swift */; };
+		CE084663BA9BDD1EAD367610 /* 1f981.json in Resources */ = {isa = PBXBuildFile; fileRef = 68417E18D1B82AAF4BD9338F /* 1f981.json */; };
+		E092AC71865641861CE6C3AF /* 1f998.json in Resources */ = {isa = PBXBuildFile; fileRef = 2771672E05C83BF9EFFF2A8E /* 1f998.json */; };
+		EA9AF26A9532F136B4FA469F /* 1f409.json in Resources */ = {isa = PBXBuildFile; fileRef = AF8A24F7A954111DB262B919 /* 1f409.json */; };
+		F7C8173F172FD691491D2ABC /* 1f407.json in Resources */ = {isa = PBXBuildFile; fileRef = 0D545FA9AB620EA7A577F894 /* 1f407.json */; };
+		FEFCAD9F86860306B08328DD /* 1f985.json in Resources */ = {isa = PBXBuildFile; fileRef = 08FA911569DCA346490DC311 /* 1f985.json */; };
+		FF2A9FCA34A7E073E0619784 /* RouteMapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65D6CA58CD49BC50CE8898B3 /* RouteMapViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		08FA911569DCA346490DC311 /* 1f985.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f985.json; path = Actifit/Resources/animals/1f985.json; sourceTree = "<group>"; };
+		0D545FA9AB620EA7A577F894 /* 1f407.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f407.json; path = Actifit/Resources/animals/1f407.json; sourceTree = "<group>"; };
 		162F962E2205DB4E008227EF /* AuthenticationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationController.swift; sourceTree = "<group>"; };
 		162F96302205E080008227EF /* FitbitAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitbitAPI.swift; sourceTree = "<group>"; };
 		162F96322205EA7A008227EF /* StepStat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepStat.swift; sourceTree = "<group>"; };
@@ -267,6 +297,10 @@
 		1D8DAFBA2338D87E0078253F /* pt-PT */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-PT"; path = "pt-PT.lproj/LaunchScreen.strings"; sourceTree = "<group>"; };
 		1D8DAFBC2338DA6A0078253F /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
 		1D8DAFBD2338DA6A0078253F /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
+		2771672E05C83BF9EFFF2A8E /* 1f998.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f998.json; path = Actifit/Resources/animals/1f998.json; sourceTree = "<group>"; };
+		30DCF50AB3A6D9C82A4A9A1E /* 1f43a.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f43a.json; path = Actifit/Resources/animals/1f43a.json; sourceTree = "<group>"; };
+		3199EBA19E96B5959D391E8C /* 1f40e.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f40e.json; path = Actifit/Resources/animals/1f40e.json; sourceTree = "<group>"; };
+		3EA5502112EADAE0051E2F8E /* RouteRecordingManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RouteRecordingManager.swift; path = Actifit/Controllers/Route/RouteRecordingManager.swift; sourceTree = "<group>"; };
 		4E0144452BD467A7005E130F /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		4E0144522BD594E7005E130F /* CommentReplyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentReplyViewController.swift; sourceTree = "<group>"; };
 		4E0144552BD5A19B005E130F /* CommentReplyViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentReplyViewModel.swift; sourceTree = "<group>"; };
@@ -455,13 +489,22 @@
 		4EF591682CACA09A00C26FF8 /* GetPostRewardEndPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetPostRewardEndPoint.swift; sourceTree = "<group>"; };
 		4EF5916A2CACA30F00C26FF8 /* PostReward.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostReward.swift; sourceTree = "<group>"; };
 		4EF80ED22AEC602A005DDE98 /* AdsOptionsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdsOptionsViewController.swift; sourceTree = "<group>"; };
+		53BD9E36D21E2B35165C6E67 /* MarketViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MarketViewController.swift; path = Actifit/Controllers/Market/MarketViewController.swift; sourceTree = "<group>"; };
+		5848E872FFA077D40BAF34E9 /* 1f988.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f988.json; path = Actifit/Resources/animals/1f988.json; sourceTree = "<group>"; };
 		5B0B410D0FC44AFD5AB83382 /* Pods-Actifit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Actifit.debug.xcconfig"; path = "Target Support Files/Pods-Actifit/Pods-Actifit.debug.xcconfig"; sourceTree = "<group>"; };
 		5C201E6B3DB1C87A2C7C2E0B /* Pods_Actifit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Actifit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5D5F88052E9F40A1F37D5A18 /* Route.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Route.swift; path = "Actifit/Models/Realm Models/Route.swift"; sourceTree = "<group>"; };
+		65D6CA58CD49BC50CE8898B3 /* RouteMapViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RouteMapViewController.swift; path = Actifit/Controllers/Route/RouteMapViewController.swift; sourceTree = "<group>"; };
+		68417E18D1B82AAF4BD9338F /* 1f981.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f981.json; path = Actifit/Resources/animals/1f981.json; sourceTree = "<group>"; };
+		7AC88D237BECEBDBA7750018 /* 1f9a9.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f9a9.json; path = Actifit/Resources/animals/1f9a9.json; sourceTree = "<group>"; };
 		8A0D747022E99BED00D3C6B6 /* awsconfiguration.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = awsconfiguration.json; sourceTree = "<group>"; };
 		8A7EFB4A22E70CA000A4B32E /* ActivityFifteenMinutesInterval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityFifteenMinutesInterval.swift; sourceTree = "<group>"; };
 		8AAD14DD22E211D200A39934 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		8AC2C84222D3771100AA2F81 /* DayHistroyVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayHistroyVC.swift; sourceTree = "<group>"; };
 		8ADF574822D788C5002D8C84 /* UIApplication+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIApplication+Extension.swift"; sourceTree = "<group>"; };
+		8EC8E441FE6071DD9BBE80A8 /* 1f422.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f422.json; path = Actifit/Resources/animals/1f422.json; sourceTree = "<group>"; };
+		948E36C55AB728B91248F795 /* CompanionUtil.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CompanionUtil.swift; path = Actifit/Controllers/Dashboard/Aura/CompanionUtil.swift; sourceTree = "<group>"; };
+		9F379E5AE1E0FCF41226D380 /* 1f989.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f989.json; path = Actifit/Resources/animals/1f989.json; sourceTree = "<group>"; };
 		A93CABD1233909D200136477 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Main.strings; sourceTree = "<group>"; };
 		A93CABD2233909D400136477 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
 		A93CABD3233909D400136477 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -481,6 +524,10 @@
 		A93CABE123390A9100136477 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
 		A93CABE223390A9100136477 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AAA7D6873C39FCB390EB0080 /* Pods-Actifit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Actifit.release.xcconfig"; path = "Target Support Files/Pods-Actifit/Pods-Actifit.release.xcconfig"; sourceTree = "<group>"; };
+		AF5EC0DE0000000000000001 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
+		AF8A24F7A954111DB262B919 /* 1f409.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f409.json; path = Actifit/Resources/animals/1f409.json; sourceTree = "<group>"; };
+		B208EB2944C3859F6196935F /* AccordionCardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AccordionCardView.swift; path = Actifit/Views/Accordion/AccordionCardView.swift; sourceTree = "<group>"; };
+		B8BE602FE65B254BA6AE95AE /* AuraView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AuraView.swift; path = Actifit/Controllers/Dashboard/Aura/AuraView.swift; sourceTree = "<group>"; };
 		BE0AB410211A29B1000E9AEA /* Activity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Activity.swift; sourceTree = "<group>"; };
 		BE0AB412211A2C89000E9AEA /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		BE0AB422211BF45A000E9AEA /* TrackingHistoryVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TrackingHistoryVC.swift; sourceTree = "<group>"; };
@@ -488,7 +535,6 @@
 		BE0AB427211BF64D000E9AEA /* StoryboardInstantiation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoryboardInstantiation.swift; sourceTree = "<group>"; };
 		BE0AB432211CE5EA000E9AEA /* UIDevice+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIDevice+Extension.swift"; sourceTree = "<group>"; };
 		BE0AB434211EB22F000E9AEA /* Structs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Structs.swift; sourceTree = "<group>"; };
-		AF5EC0DE0000000000000001 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		BE222CE42120BAAB00AD025F /* AFTextField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AFTextField.swift; sourceTree = "<group>"; };
 		BE222CE62120BC2E00AD025F /* ConstaintMaker.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConstaintMaker.swift; sourceTree = "<group>"; };
 		BE222CE82120C17A00AD025F /* AFTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AFTextView.swift; sourceTree = "<group>"; };
@@ -522,6 +568,16 @@
 		BE925D9921273EDB00C87803 /* Dictionary+Additions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Dictionary+Additions.swift"; sourceTree = "<group>"; };
 		BE925D9B21273F7E00C87803 /* TransactionTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionTableViewCell.swift; sourceTree = "<group>"; };
 		BEFD706C2138F74800F2E7B6 /* Date+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extension.swift"; sourceTree = "<group>"; };
+		C0C3417B4C0BEAB29A5C15CF /* 1f43c.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f43c.json; path = Actifit/Resources/animals/1f43c.json; sourceTree = "<group>"; };
+		C9BE65F78835CA175833E9BB /* 1f427.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f427.json; path = Actifit/Resources/animals/1f427.json; sourceTree = "<group>"; };
+		D3C819B261D51D2484C60522 /* 1f984.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f984.json; path = Actifit/Resources/animals/1f984.json; sourceTree = "<group>"; };
+		DFA5EBF318F635862330DBB1 /* 1f98a.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f98a.json; path = Actifit/Resources/animals/1f98a.json; sourceTree = "<group>"; };
+		E7002F7230473461DD4398F3 /* 1f42c.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f42c.json; path = Actifit/Resources/animals/1f42c.json; sourceTree = "<group>"; };
+		EA76E0B414AC4B21ECBA3A37 /* 1f405.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f405.json; path = Actifit/Resources/animals/1f405.json; sourceTree = "<group>"; };
+		EF8BE1BF06EDC8230774E3BD /* 1f98d.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f98d.json; path = Actifit/Resources/animals/1f98d.json; sourceTree = "<group>"; };
+		F0E9176BAC12F9896D0FFD70 /* WalletAccordionViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WalletAccordionViewController.swift; path = Actifit/Controllers/WalletVC/WalletAccordionViewController.swift; sourceTree = "<group>"; };
+		F395376E7E79380BFE9012EB /* 1f415.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f415.json; path = Actifit/Resources/animals/1f415.json; sourceTree = "<group>"; };
+		F86FAEBF82C80DEE955AF181 /* 1f43b.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f43b.json; path = Actifit/Resources/animals/1f43b.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1575,6 +1631,34 @@
 				BE27262F211452890020E32D /* Products */,
 				5AA13FC8C3C7E14596880E7C /* Frameworks */,
 				256322C66FC8EFE70166A313 /* Pods */,
+				53BD9E36D21E2B35165C6E67 /* MarketViewController.swift */,
+				B208EB2944C3859F6196935F /* AccordionCardView.swift */,
+				F0E9176BAC12F9896D0FFD70 /* WalletAccordionViewController.swift */,
+				948E36C55AB728B91248F795 /* CompanionUtil.swift */,
+				B8BE602FE65B254BA6AE95AE /* AuraView.swift */,
+				EA76E0B414AC4B21ECBA3A37 /* 1f405.json */,
+				0D545FA9AB620EA7A577F894 /* 1f407.json */,
+				AF8A24F7A954111DB262B919 /* 1f409.json */,
+				3199EBA19E96B5959D391E8C /* 1f40e.json */,
+				F395376E7E79380BFE9012EB /* 1f415.json */,
+				8EC8E441FE6071DD9BBE80A8 /* 1f422.json */,
+				C9BE65F78835CA175833E9BB /* 1f427.json */,
+				E7002F7230473461DD4398F3 /* 1f42c.json */,
+				30DCF50AB3A6D9C82A4A9A1E /* 1f43a.json */,
+				F86FAEBF82C80DEE955AF181 /* 1f43b.json */,
+				C0C3417B4C0BEAB29A5C15CF /* 1f43c.json */,
+				68417E18D1B82AAF4BD9338F /* 1f981.json */,
+				D3C819B261D51D2484C60522 /* 1f984.json */,
+				08FA911569DCA346490DC311 /* 1f985.json */,
+				5848E872FFA077D40BAF34E9 /* 1f988.json */,
+				9F379E5AE1E0FCF41226D380 /* 1f989.json */,
+				DFA5EBF318F635862330DBB1 /* 1f98a.json */,
+				EF8BE1BF06EDC8230774E3BD /* 1f98d.json */,
+				2771672E05C83BF9EFFF2A8E /* 1f998.json */,
+				7AC88D237BECEBDBA7750018 /* 1f9a9.json */,
+				5D5F88052E9F40A1F37D5A18 /* Route.swift */,
+				3EA5502112EADAE0051E2F8E /* RouteRecordingManager.swift */,
+				65D6CA58CD49BC50CE8898B3 /* RouteMapViewController.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1753,6 +1837,26 @@
 				4E6034F02A9D2FB600FAEC84 /* ReferralsPopup.storyboard in Resources */,
 				4ECA9EBB2AFEDE3B00A44D92 /* ExpandedSectionCell.xib in Resources */,
 				4EE5B2CE2ACE0298001F2E59 /* chatHTML.html in Resources */,
+				0254ACCAAF5A4A83DE8B61C4 /* 1f405.json in Resources */,
+				F7C8173F172FD691491D2ABC /* 1f407.json in Resources */,
+				EA9AF26A9532F136B4FA469F /* 1f409.json in Resources */,
+				333EECF458032ADDD578D823 /* 1f40e.json in Resources */,
+				67CDFB12F71B8709AA7F99E3 /* 1f415.json in Resources */,
+				11C121D15AF1323DB9A9C3FF /* 1f422.json in Resources */,
+				791938BF6997E1D212815F67 /* 1f427.json in Resources */,
+				0A3D16E363B8BD09871F577A /* 1f42c.json in Resources */,
+				2FDF85FD41296BDCA7A43646 /* 1f43a.json in Resources */,
+				9E8BC06713FE6151B7D7DE05 /* 1f43b.json in Resources */,
+				9D5B21DDE7AC8CC3DB9CEEBD /* 1f43c.json in Resources */,
+				CE084663BA9BDD1EAD367610 /* 1f981.json in Resources */,
+				4BF233C175D58373FAD23E25 /* 1f984.json in Resources */,
+				FEFCAD9F86860306B08328DD /* 1f985.json in Resources */,
+				5448C3EC6E7ECFB11772611A /* 1f988.json in Resources */,
+				71C61E455EBC1F7E362DB43E /* 1f989.json in Resources */,
+				6BB4A4509C402F98AD5A649C /* 1f98a.json in Resources */,
+				B79A56C9D011D84F3DCEEBAB /* 1f98d.json in Resources */,
+				E092AC71865641861CE6C3AF /* 1f998.json in Resources */,
+				29E7FD2D9D409701F6E8903A /* 1f9a9.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2043,6 +2147,14 @@
 				4E940C8D2A7BF62100F15CB5 /* CircularImage.swift in Sources */,
 				4E7C54CB2A6A4DDC00C023FF /* BannerImages.swift in Sources */,
 				4EA3FA742AC1DAB300B866F8 /* ColorsExtension.swift in Sources */,
+				5C964A8E4077E57129A03F2E /* MarketViewController.swift in Sources */,
+				6C6BB222ABE3E07DED4AE7AD /* AccordionCardView.swift in Sources */,
+				7621D628044BD829C348FCEF /* WalletAccordionViewController.swift in Sources */,
+				721FEE10A3992E6894E360AB /* CompanionUtil.swift in Sources */,
+				BEC46FC679E0A91B76746160 /* AuraView.swift in Sources */,
+				45E5E06098A8063E1F912778 /* Route.swift in Sources */,
+				3A817624B56D1A083266AB0F /* RouteRecordingManager.swift in Sources */,
+				FF2A9FCA34A7E073E0619784 /* RouteMapViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
