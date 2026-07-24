@@ -153,6 +153,9 @@ final class MarketViewController: UIViewController {
         return User.current()?.steemit_username.byTrimming(string: "@").lowercased() ?? ""
     }
 
+    /// When true (as a tab root), the modal Done button is hidden.
+    var hidesCloseButton = false
+
     static func create() -> MarketViewController {
         return MarketViewController()
     }
@@ -161,7 +164,9 @@ final class MarketViewController: UIViewController {
         super.viewDidLoad()
         title = "Market"
         view.backgroundColor = .white
-        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(closeTapped))
+        if !hidesCloseButton {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(closeTapped))
+        }
         setupTable()
         loadEverything()
     }
