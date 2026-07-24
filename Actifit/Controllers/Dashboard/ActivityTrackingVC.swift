@@ -120,6 +120,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var revampEstRewardLabel: UILabel?
   var revampNudgeCard: UIView?
   var revampCommunityStack: UIStackView?
+  var revampRouteSummaryLabel: UILabel?
   var revampTweetBanners: [BannerImageModel] = []
   var lastNewsCarouselWidth: CGFloat = 0
   var heatmapCells: [(day: Int, view: UIView)] = []
@@ -1658,6 +1659,7 @@ extension ActivityTrackingVC {
         content.addArrangedSubview(buildRevampNewsCarousel())
         content.addArrangedSubview(buildRevampNudgeCard())
         content.addArrangedSubview(buildRevampCommunityCard())
+        content.addArrangedSubview(buildRevampRouteCard())
         content.addArrangedSubview(buildRevampEarningsCard())
         content.addArrangedSubview(buildRevampActionButtons())
         content.addArrangedSubview(buildRevampChartCard())
@@ -1675,7 +1677,108 @@ extension ActivityTrackingVC {
         }.store(in: &cancellables)
         fetchEstimatedReward(steps: initialStepCount)
         fetchTweets()
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshRouteCard), name: RouteRecordingManager.recordingStopped, object: nil)
     }
+
+    // MARK: Route Tracking card
+
+    private func buildRevampRouteCard() -> UIView {
+        let card = revampCard()
+        card.backgroundColor = UIColor(red: 0.99, green: 0.94, blue: 0.95, alpha: 1)
+        let green = UIColor(red: 0, green: 0.6, blue: 0.2, alpha: 1)
+
+        let icon = UILabel(); icon.text = "🗺️"; icon.font = .systemFont(ofSize: 16); icon.setContentHuggingPriority(.required, for: .horizontal)
+        let title = UILabel(); title.text = "Route Tracking"; title.font = .systemFont(ofSize: 16, weight: .bold); title.textColor = UIColor(white: 0.13, alpha: 1)
+        let recordBtn = UIButton(type: .system)
+        recordBtn.setTitle("Record", for: .normal)
+        recordBtn.setTitleColor(revampRed, for: .normal)
+        recordBtn.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        recordBtn.layer.borderColor = revampRed.cgColor
+        recordBtn.layer.borderWidth = 1.5
+        recordBtn.layer.cornerRadius = 8
+        recordBtn.contentEdgeInsets = UIEdgeInsets(top: 6, left: 16, bottom: 6, right: 16)
+        recordBtn.setContentHuggingPriority(.required, for: .horizontal)
+        recordBtn.addTarget(self, action: #selector(routeRecordTapped), for: .touchUpInside)
+        let header = UIStackView(arrangedSubviews: [icon, title, recordBtn]); header.axis = .horizontal; header.spacing = 8; header.alignment = .center
+
+        let summary = UILabel()
+        summary.font = .systemFont(ofSize: 14)
+        summary.textColor = green
+        summary.numberOfLines = 0
+        revampRouteSummaryLabel = summary
+        let viewBtn = UIButton(type: .system)
+        viewBtn.setTitle("View ›", for: .normal)
+        viewBtn.setTitleColor(revampRed, for: .normal)
+        viewBtn.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        viewBtn.setContentHuggingPriority(.required, for: .horizontal)
+        viewBtn.addTarget(self, action: #selector(routeViewTapped), for: .touchUpInside)
+        let summaryRow = UIStackView(arrangedSubviews: [summary, viewBtn]); summaryRow.axis = .horizontal; summaryRow.spacing = 8; summaryRow.alignment = .center
+
+        let startBtn = UIButton(type: .system)
+        startBtn.setTitle("▶  Start Recording", for: .normal)
+        startBtn.setTitleColor(.white, for: .normal)
+        startBtn.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        startBtn.backgroundColor = revampRed
+        startBtn.layer.cornerRadius = 24
+        startBtn.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        startBtn.addTarget(self, action: #selector(routeRecordTapped), for: .touchUpInside)
+
+        let vstack = UIStackView(arrangedSubviews: [header, summaryRow, startBtn])
+        vstack.axis = .vertical; vstack.spacing = 12
+        vstack.isLayoutMarginsRelativeArrangement = true
+        vstack.layoutMargins = UIEdgeInsets(top: 14, left: 16, bottom: 14, right: 16)
+        vstack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(vstack)
+        pinToEdges(vstack, card)
+        refreshRouteCard()
+        return card
+    }
+
+    @objc func refreshRouteCard() {
+        if let route = Route.mostRecent() {
+            revampRouteSummaryLabel?.text = "\(route.formattedDistance)  •  \(route.formattedDuration)  •  \(route.activityType)"
+        } else {
+            revampRouteSummaryLabel?.text = "No route recorded yet"
+        }
+    }
+
+    @objc private func routeRecordTapped() {
+        if RouteRecordingManager.isRunning {
+            present(RouteMapViewController.create(mode: .live, activityType: RouteRecordingManager.shared.activityType), animated: true)
+            return
+        }
+        let status = RouteRecordingManager.shared.authorizationStatus
+        if status == .denied || status == .restricted {
+            showToast(message: "Location permission is required to record routes.")
+            return
+        }
+        RouteRecordingManager.shared.requestAuthorization { [weak self] in
+            self?.presentActivityPicker()
+        }
+    }
+
+    @objc private func routeViewTapped() {
+        guard let route = Route.mostRecent() else { showToast(message: "No route to view yet"); return }
+        present(RouteMapViewController.create(mode: .view, date: route.date), animated: true)
+    }
+
+    private func presentActivityPicker() {
+        let types = ["Walking", "Running", "Cycling", "Hiking", "Jogging", "Skating", "Skiing", "Geocaching", "Photowalking", "Plogging", "Sailing", "Scootering", "Kayaking"]
+        let sheet = UIAlertController(title: "Activity Type", message: nil, preferredStyle: .actionSheet)
+        for t in types {
+            sheet.addAction(UIAlertAction(title: t, style: .default) { [weak self] _ in self?.startRouteRecording(t) })
+        }
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        if let pop = sheet.popoverPresentationController { pop.sourceView = view; pop.sourceRect = view.bounds }
+        present(sheet, animated: true)
+    }
+
+    private func startRouteRecording(_ type: String) {
+        RouteRecordingManager.shared.start(activityType: type)
+        present(RouteMapViewController.create(mode: .live, activityType: type), animated: true)
+    }
+
+    // MARK: Community strip
 
     private func fetchTweets() {
         API().getLatestXPost(completion: { [weak self] info, _ in

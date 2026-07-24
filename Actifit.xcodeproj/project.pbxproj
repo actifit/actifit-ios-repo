@@ -24,6 +24,8 @@
 		29E7FD2D9D409701F6E8903A /* 1f9a9.json in Resources */ = {isa = PBXBuildFile; fileRef = 7AC88D237BECEBDBA7750018 /* 1f9a9.json */; };
 		2FDF85FD41296BDCA7A43646 /* 1f43a.json in Resources */ = {isa = PBXBuildFile; fileRef = 30DCF50AB3A6D9C82A4A9A1E /* 1f43a.json */; };
 		333EECF458032ADDD578D823 /* 1f40e.json in Resources */ = {isa = PBXBuildFile; fileRef = 3199EBA19E96B5959D391E8C /* 1f40e.json */; };
+		3A817624B56D1A083266AB0F /* RouteRecordingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EA5502112EADAE0051E2F8E /* RouteRecordingManager.swift */; };
+		45E5E06098A8063E1F912778 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D5F88052E9F40A1F37D5A18 /* Route.swift */; };
 		4BF233C175D58373FAD23E25 /* 1f984.json in Resources */ = {isa = PBXBuildFile; fileRef = D3C819B261D51D2484C60522 /* 1f984.json */; };
 		4E0144462BD467A7005E130F /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0144452BD467A7005E130F /* ImagePicker.swift */; };
 		4E0144532BD594E7005E130F /* CommentReplyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0144522BD594E7005E130F /* CommentReplyViewController.swift */; };
@@ -275,6 +277,7 @@
 		EA9AF26A9532F136B4FA469F /* 1f409.json in Resources */ = {isa = PBXBuildFile; fileRef = AF8A24F7A954111DB262B919 /* 1f409.json */; };
 		F7C8173F172FD691491D2ABC /* 1f407.json in Resources */ = {isa = PBXBuildFile; fileRef = 0D545FA9AB620EA7A577F894 /* 1f407.json */; };
 		FEFCAD9F86860306B08328DD /* 1f985.json in Resources */ = {isa = PBXBuildFile; fileRef = 08FA911569DCA346490DC311 /* 1f985.json */; };
+		FF2A9FCA34A7E073E0619784 /* RouteMapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65D6CA58CD49BC50CE8898B3 /* RouteMapViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -297,6 +300,7 @@
 		2771672E05C83BF9EFFF2A8E /* 1f998.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f998.json; path = Actifit/Resources/animals/1f998.json; sourceTree = "<group>"; };
 		30DCF50AB3A6D9C82A4A9A1E /* 1f43a.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f43a.json; path = Actifit/Resources/animals/1f43a.json; sourceTree = "<group>"; };
 		3199EBA19E96B5959D391E8C /* 1f40e.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f40e.json; path = Actifit/Resources/animals/1f40e.json; sourceTree = "<group>"; };
+		3EA5502112EADAE0051E2F8E /* RouteRecordingManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RouteRecordingManager.swift; path = Actifit/Controllers/Route/RouteRecordingManager.swift; sourceTree = "<group>"; };
 		4E0144452BD467A7005E130F /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		4E0144522BD594E7005E130F /* CommentReplyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentReplyViewController.swift; sourceTree = "<group>"; };
 		4E0144552BD5A19B005E130F /* CommentReplyViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentReplyViewModel.swift; sourceTree = "<group>"; };
@@ -489,6 +493,8 @@
 		5848E872FFA077D40BAF34E9 /* 1f988.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f988.json; path = Actifit/Resources/animals/1f988.json; sourceTree = "<group>"; };
 		5B0B410D0FC44AFD5AB83382 /* Pods-Actifit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Actifit.debug.xcconfig"; path = "Target Support Files/Pods-Actifit/Pods-Actifit.debug.xcconfig"; sourceTree = "<group>"; };
 		5C201E6B3DB1C87A2C7C2E0B /* Pods_Actifit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Actifit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5D5F88052E9F40A1F37D5A18 /* Route.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Route.swift; path = "Actifit/Models/Realm Models/Route.swift"; sourceTree = "<group>"; };
+		65D6CA58CD49BC50CE8898B3 /* RouteMapViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RouteMapViewController.swift; path = Actifit/Controllers/Route/RouteMapViewController.swift; sourceTree = "<group>"; };
 		68417E18D1B82AAF4BD9338F /* 1f981.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f981.json; path = Actifit/Resources/animals/1f981.json; sourceTree = "<group>"; };
 		7AC88D237BECEBDBA7750018 /* 1f9a9.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f9a9.json; path = Actifit/Resources/animals/1f9a9.json; sourceTree = "<group>"; };
 		8A0D747022E99BED00D3C6B6 /* awsconfiguration.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = awsconfiguration.json; sourceTree = "<group>"; };
@@ -1650,6 +1656,9 @@
 				EF8BE1BF06EDC8230774E3BD /* 1f98d.json */,
 				2771672E05C83BF9EFFF2A8E /* 1f998.json */,
 				7AC88D237BECEBDBA7750018 /* 1f9a9.json */,
+				5D5F88052E9F40A1F37D5A18 /* Route.swift */,
+				3EA5502112EADAE0051E2F8E /* RouteRecordingManager.swift */,
+				65D6CA58CD49BC50CE8898B3 /* RouteMapViewController.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -2143,6 +2152,9 @@
 				7621D628044BD829C348FCEF /* WalletAccordionViewController.swift in Sources */,
 				721FEE10A3992E6894E360AB /* CompanionUtil.swift in Sources */,
 				BEC46FC679E0A91B76746160 /* AuraView.swift in Sources */,
+				45E5E06098A8063E1F912778 /* Route.swift in Sources */,
+				3A817624B56D1A083266AB0F /* RouteRecordingManager.swift in Sources */,
+				FF2A9FCA34A7E073E0619784 /* RouteMapViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
