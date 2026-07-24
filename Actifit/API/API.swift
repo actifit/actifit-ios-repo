@@ -241,6 +241,11 @@ public class API : NSObject{
     simpleGet(urlString: ApiUrls.exchangeAfitPrice, completion: completion, failure: failure)
   }
 
+  /// Latest X/Twitter posts for the dashboard news carousel.
+  func getLatestXPost(completion: APICompletionHandler, failure: APIFailureHandler) {
+    simpleGet(urlString: ApiUrls.latestXPost, completion: completion, failure: failure)
+  }
+
   /// Server-computed estimated AFIT reward for today's step count.
   func getEstimatedReward(username: String, steps: Int, completion: APICompletionHandler, failure: APIFailureHandler) {
     var urlStr = ApiUrls.estimatedReward + "?user=\(username)"

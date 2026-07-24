@@ -120,6 +120,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var revampEstRewardLabel: UILabel?
   var revampNudgeCard: UIView?
   var revampCommunityStack: UIStackView?
+  var revampTweetBanners: [BannerImageModel] = []
   var lastNewsCarouselWidth: CGFloat = 0
   var heatmapCells: [(day: Int, view: UIView)] = []
   var activityDateToSave = Date()
@@ -667,7 +668,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
     }.store(in: &cancellables)
 
     viewModel.bannerImagesPublisher.receive(on: DispatchQueue.main).sink { [weak self] bannerItems in
-      self?.bannerImages = bannerItems
+      self?.bannerImages = (self?.revampTweetBanners ?? []) + bannerItems
       self?.setupPageControl()
       DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: {
         self?.startAutoScrollTimer()
@@ -1673,6 +1674,29 @@ extension ActivityTrackingVC {
             self?.revampVotingLabel?.text = model.status?.isVoting == false ? (model.rewardStart ?? "") : "Rewards cycle in progress…"
         }.store(in: &cancellables)
         fetchEstimatedReward(steps: initialStepCount)
+        fetchTweets()
+    }
+
+    private func fetchTweets() {
+        API().getLatestXPost(completion: { [weak self] info, _ in
+            guard let s = info as? String,
+                  let json = (try? JSONSerialization.jsonObject(with: s.utf8Data())) as? [String: Any],
+                  let tweets = json["tweets"] as? [[String: Any]] else { return }
+            let banners: [BannerImageModel] = tweets.prefix(2).compactMap { t in
+                let text = t["tweetText"] as? String ?? ""
+                let url = t["tweetUrl"] as? String ?? ""
+                guard !text.isEmpty, !url.isEmpty else { return nil }
+                return BannerImageModel(id: "tweet", featuredImageUrl: t["tweetImageUrl"] as? String, newsTitle: text, linkUrl: url, date: t["tweetTimestamp"] as? String)
+            }
+            guard !banners.isEmpty else { return }
+            DispatchQueue.main.async {
+                self?.revampTweetBanners = banners
+                let nonTweet = (self?.bannerImages ?? []).filter { $0.id != "tweet" }
+                self?.bannerImages = banners + nonTweet
+                self?.pageControl?.numberOfPages = self?.bannerImages.count ?? 0
+                self?.collectionVIew?.reloadData()
+            }
+        }, failure: { _ in })
     }
 
     private func buildRevampEarningsCard() -> UIView {

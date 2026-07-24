@@ -222,4 +222,5 @@ enum ApiUrls {
     static let gadgetImageBase = "https://actifit.io/img/gadgets/"
     // Dashboard revamp
     static let estimatedReward = "https://api.actifit.io/getEstimatedReward"
+    static let latestXPost = "https://api.actifit.io/latestXPost"
 }
