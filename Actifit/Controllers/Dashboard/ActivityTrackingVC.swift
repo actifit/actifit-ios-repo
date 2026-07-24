@@ -123,6 +123,10 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var revampRouteSummaryLabel: UILabel?
   var revampTweetBanners: [BannerImageModel] = []
   var lastNewsCarouselWidth: CGFloat = 0
+  weak var revampScrollView: UIScrollView?
+  var revampPostFab: UIButton?
+  var revampPostFabWidth: NSLayoutConstraint?
+  var revampPostFabCollapsed = false
   var heatmapCells: [(day: Int, view: UIView)] = []
   var activityDateToSave = Date()
   private var activityUpdateTimer: Timer?
@@ -1590,6 +1594,12 @@ extension ActivityTrackingVC: UICollectionViewDelegate, UICollectionViewDataSour
   }
 
   func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    if scrollView === revampScrollView {
+      // Android Extended-FAB behaviour: collapse the Post & Earn pill to an
+      // icon-only circle once the dashboard scrolls past the hero card.
+      updatePostFab(collapsed: scrollView.contentOffset.y > 40)
+      return
+    }
     if(scrollView != gadgetScrollView) {
       let pageWidth = collectionVIew.frame.width
       let currentPage = Int((scrollView.contentOffset.x + pageWidth / 1.5) / pageWidth)
@@ -1629,8 +1639,10 @@ extension ActivityTrackingVC {
         let scroll = UIScrollView()
         scroll.translatesAutoresizingMaskIntoConstraints = false
         scroll.backgroundColor = UIColor(white: 0.96, alpha: 1)
-        scroll.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 100, right: 0)
+        scroll.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 120, right: 0)
         scroll.showsVerticalScrollIndicator = false
+        scroll.delegate = self
+        revampScrollView = scroll
         view.addSubview(scroll)
         NSLayoutConstraint.activate([
             scroll.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -1664,7 +1676,8 @@ extension ActivityTrackingVC {
         content.addArrangedSubview(buildRevampActionButtons())
         content.addArrangedSubview(buildRevampChartCard())
         content.addArrangedSubview(buildRevampHeatmapCard())
-        content.addArrangedSubview(buildRevampPostSection())
+
+        addRevampPostFab()
 
         NotificationCenter.default.addObserver(self, selector: #selector(revampStepsUpdated(_:)), name: Notification.Name(StepsUpdatedNotification), object: nil)
         let user = User.current()?.steemit_username.byTrimming(string: "@") ?? ""
@@ -2281,23 +2294,46 @@ extension ActivityTrackingVC {
         }
     }
 
-    private func buildRevampPostSection() -> UIView {
-        let postBtn = UIButton(type: .system)
-        postBtn.setTitle("  Post & Earn", for: .normal)
-        postBtn.setImage(UIImage(systemName: "square.and.pencil"), for: .normal)
-        postBtn.tintColor = .white
-        postBtn.setTitleColor(.white, for: .normal)
-        postBtn.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
-        postBtn.backgroundColor = revampRed
-        postBtn.layer.cornerRadius = 24
-        postBtn.heightAnchor.constraint(equalToConstant: 52).isActive = true
-        postBtn.addTarget(self, action: #selector(postAndEarnTapped(_:)), for: .touchUpInside)
+    // MARK: Post & Earn floating FAB (Android Extended FAB)
+    // Floats above the dashboard (over the scroll view, above the tab bar) as an
+    // expanded "Post & Earn" pill and collapses to an icon-only circle on scroll.
 
-        let stack = UIStackView(arrangedSubviews: [postBtn])
-        stack.axis = .vertical
-        stack.isLayoutMarginsRelativeArrangement = true
-        stack.layoutMargins = UIEdgeInsets(top: 4, left: 8, bottom: 8, right: 8)
-        return stack
+    private func addRevampPostFab() {
+        let fab = UIButton(type: .system)
+        fab.setTitle("  Post & Earn", for: .normal)
+        fab.setImage(UIImage(systemName: "square.and.pencil"), for: .normal)
+        fab.tintColor = .white
+        fab.setTitleColor(.white, for: .normal)
+        fab.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
+        fab.backgroundColor = revampRed
+        fab.layer.cornerRadius = 28
+        fab.layer.shadowColor = UIColor.black.cgColor
+        fab.layer.shadowOpacity = 0.25
+        fab.layer.shadowRadius = 8
+        fab.layer.shadowOffset = CGSize(width: 0, height: 4)
+        fab.translatesAutoresizingMaskIntoConstraints = false
+        fab.addTarget(self, action: #selector(postAndEarnTapped(_:)), for: .touchUpInside)
+        view.addSubview(fab)
+
+        let width = fab.widthAnchor.constraint(equalToConstant: 190)
+        NSLayoutConstraint.activate([
+            fab.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            fab.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -14),
+            fab.heightAnchor.constraint(equalToConstant: 56),
+            width
+        ])
+        revampPostFab = fab
+        revampPostFabWidth = width
+    }
+
+    private func updatePostFab(collapsed: Bool) {
+        guard collapsed != revampPostFabCollapsed, let fab = revampPostFab else { return }
+        revampPostFabCollapsed = collapsed
+        fab.setTitle(collapsed ? "" : "  Post & Earn", for: .normal)
+        revampPostFabWidth?.constant = collapsed ? 56 : 190
+        UIView.animate(withDuration: 0.22, delay: 0, options: .curveEaseInOut) {
+            self.view.layoutIfNeeded()
+        }
     }
 
     // MARK: Community strip (ranked Actifit feed)
