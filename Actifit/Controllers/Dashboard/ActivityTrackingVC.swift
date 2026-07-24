@@ -120,6 +120,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var revampEstRewardLabel: UILabel?
   var revampNudgeCard: UIView?
   var revampCommunityStack: UIStackView?
+  var lastNewsCarouselWidth: CGFloat = 0
   var heatmapCells: [(day: Int, view: UIView)] = []
   var activityDateToSave = Date()
   private var activityUpdateTimer: Timer?
@@ -132,6 +133,17 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
     setAccessibilityIdentifiers()
     checkForUpdates()
     setupRevampedDashboard()
+  }
+
+  // The revamp news carousel is re-pointed after layout; its full-width paging cells
+  // need a valid collection-view width. Re-lay them out once the width is known.
+  override func viewDidLayoutSubviews() {
+    super.viewDidLayoutSubviews()
+    if let cv = collectionVIew, cv.bounds.width > 0, lastNewsCarouselWidth != cv.bounds.width {
+      lastNewsCarouselWidth = cv.bounds.width
+      cv.collectionViewLayout.invalidateLayout()
+      cv.reloadData()
+    }
   }
 
   /// Stable identifiers for the icon-only dashboard shortcuts so UI tests can
