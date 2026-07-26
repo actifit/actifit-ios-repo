@@ -398,11 +398,8 @@ class PostToSeemitViewModel2: ObservableObject {
 
 
     func proceeedPostingWith(json : [String : Any]) {
-        if stepCountInDigit < PostMinActivityStepsCount {
-            showMinStepsAlert = true
-            return
-        }
-
+        // Hard 500-step minimum removed by request; the 5,000 "post anyway?"
+        // confirmation on the submit button is the only step-count gate now.
         if selectedActivities.isEmpty || selectedActivities.contains("Activity Type") {
             showNoActivitiesAlert = true
             return
