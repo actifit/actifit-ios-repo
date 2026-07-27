@@ -533,6 +533,14 @@ public class API : NSObject{
   }
 
 
+  func getTrackedActivity(username : String, completion : APICompletionHandler, failure : APIFailureHandler) {
+    let urlStr = "\(ApiUrls.trackedActivity)\(username)"
+    let url = URL.init(string: urlStr)
+    var request = URLRequest.init(url: url!)
+    request.addBasicHeaderFields()
+    self.forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure)
+  }
+
   func getWalletBalanceWith(username : String, completion : APICompletionHandler, failure : APIFailureHandler) {
     let urlStr = ApiUrls.walletBalance + username
     let url = URL.init(string: urlStr)

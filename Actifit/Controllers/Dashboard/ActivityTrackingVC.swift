@@ -426,10 +426,16 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   }
 
   @objc func profileBtnAction(_ sender: UITapGestureRecognizer) {
-    if let username = viewModel.userName {
-        let url = URL(string: "https://actifit.io/" + username)
-        UIApplication.shared.open(url!)
-    }
+    openNativeProfile()
+  }
+
+  /// Opens the native "Living Fitness Identity" profile for the logged-in user
+  /// (replaces the old web-profile Safari open).
+  func openNativeProfile() {
+    guard let username = User.current()?.steemit_username else { return }
+    let vc = ProfileViewController(username: username, isSelf: true)
+    vc.modalPresentationStyle = .fullScreen
+    present(vc, animated: true)
   }
 
   private func scaleEarnButton() {
@@ -2031,8 +2037,10 @@ extension ActivityTrackingVC {
         let sensorTL = UIButton(type: .custom)
         sensorTL.translatesAutoresizingMaskIntoConstraints = false
         sensorTL.imageView?.contentMode = .scaleAspectFit
-        sensorTL.heightAnchor.constraint(equalToConstant: 24).isActive = true
-        sensorTL.widthAnchor.constraint(lessThanOrEqualToConstant: 84).isActive = true
+        sensorTL.contentHorizontalAlignment = .fill
+        sensorTL.contentVerticalAlignment = .fill
+        sensorTL.heightAnchor.constraint(equalToConstant: 32).isActive = true
+        sensorTL.widthAnchor.constraint(equalToConstant: 32).isActive = true
         sensorTL.addTarget(self, action: #selector(revampSourceLogoTapped), for: .touchUpInside)
         revampSourceLogoBtn = sensorTL
         // Top-right: cloud sync — hidden in device mode.
@@ -2705,10 +2713,7 @@ extension ActivityTrackingVC {
     }
 
     @objc func openProfileFromRevamp() {
-        guard let username = User.current()?.steemit_username else { return }
-        if let url = URL(string: "https://actifit.io/" + username.byTrimming(string: "@")) {
-            UIApplication.shared.open(url)
-        }
+        openNativeProfile()
     }
 }
 

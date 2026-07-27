@@ -48,11 +48,62 @@ final class WalletAccordionViewController: UIViewController {
         loadAll()
     }
 
+    private func makeHeaderBar() -> UIView {
+        let header = UIView()
+        header.backgroundColor = .white
+        header.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(header)
+
+        let back = UIButton(type: .system)
+        back.setTitle("‹", for: .normal)
+        back.titleLabel?.font = .systemFont(ofSize: 30, weight: .bold)
+        back.setTitleColor(brandRed, for: .normal)
+        back.addTarget(self, action: #selector(walletBackTapped), for: .touchUpInside)
+        back.translatesAutoresizingMaskIntoConstraints = false
+
+        let titleLabel = UILabel()
+        titleLabel.text = "Your Wallet"
+        titleLabel.font = .systemFont(ofSize: 20, weight: .bold)
+        titleLabel.textColor = brandRed
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        let sep = UIView()
+        sep.backgroundColor = UIColor(red: 224/255, green: 224/255, blue: 224/255, alpha: 1)
+        sep.translatesAutoresizingMaskIntoConstraints = false
+
+        header.addSubview(back); header.addSubview(titleLabel); header.addSubview(sep)
+        NSLayoutConstraint.activate([
+            header.topAnchor.constraint(equalTo: view.topAnchor),
+            header.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            header.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            back.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            back.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 12),
+            back.widthAnchor.constraint(equalToConstant: 40),
+            back.bottomAnchor.constraint(equalTo: header.bottomAnchor, constant: -10),
+            titleLabel.centerXAnchor.constraint(equalTo: header.centerXAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: back.centerYAnchor),
+            sep.leadingAnchor.constraint(equalTo: header.leadingAnchor),
+            sep.trailingAnchor.constraint(equalTo: header.trailingAnchor),
+            sep.bottomAnchor.constraint(equalTo: header.bottomAnchor),
+            sep.heightAnchor.constraint(equalToConstant: 1)
+        ])
+        return header
+    }
+
+    @objc private func walletBackTapped() {
+        if let nav = navigationController, nav.viewControllers.first != self {
+            nav.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
+    }
+
     private func setupScroll() {
+        let header = makeHeaderBar()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.topAnchor.constraint(equalTo: header.bottomAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
