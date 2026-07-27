@@ -426,10 +426,16 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   }
 
   @objc func profileBtnAction(_ sender: UITapGestureRecognizer) {
-    if let username = viewModel.userName {
-        let url = URL(string: "https://actifit.io/" + username)
-        UIApplication.shared.open(url!)
-    }
+    openNativeProfile()
+  }
+
+  /// Opens the native "Living Fitness Identity" profile for the logged-in user
+  /// (replaces the old web-profile Safari open).
+  func openNativeProfile() {
+    guard let username = User.current()?.steemit_username else { return }
+    let vc = ProfileViewController(username: username, isSelf: true)
+    vc.modalPresentationStyle = .fullScreen
+    present(vc, animated: true)
   }
 
   private func scaleEarnButton() {
@@ -2705,10 +2711,7 @@ extension ActivityTrackingVC {
     }
 
     @objc func openProfileFromRevamp() {
-        guard let username = User.current()?.steemit_username else { return }
-        if let url = URL(string: "https://actifit.io/" + username.byTrimming(string: "@")) {
-            UIApplication.shared.open(url)
-        }
+        openNativeProfile()
     }
 }
 

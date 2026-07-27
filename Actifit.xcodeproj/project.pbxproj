@@ -234,6 +234,7 @@
 		9E8BC06713FE6151B7D7DE05 /* 1f43b.json in Resources */ = {isa = PBXBuildFile; fileRef = F86FAEBF82C80DEE955AF181 /* 1f43b.json */; };
 		AF5EC0DE0000000000000002 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5EC0DE0000000000000001 /* Secrets.swift */; };
 		B79A56C9D011D84F3DCEEBAB /* 1f98d.json in Resources */ = {isa = PBXBuildFile; fileRef = EF8BE1BF06EDC8230774E3BD /* 1f98d.json */; };
+		BA44DDE833EC3CA733B8587E /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69DA7A973191ED7518B29C0F /* ProfileViewController.swift */; };
 		BE0AB411211A29B1000E9AEA /* Activity.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB410211A29B1000E9AEA /* Activity.swift */; };
 		BE0AB413211A2C89000E9AEA /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB412211A2C89000E9AEA /* Constants.swift */; };
 		BE0AB423211BF45A000E9AEA /* TrackingHistoryVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE0AB422211BF45A000E9AEA /* TrackingHistoryVC.swift */; };
@@ -495,6 +496,7 @@
 		5D5F88052E9F40A1F37D5A18 /* Route.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Route.swift; path = "Actifit/Models/Realm Models/Route.swift"; sourceTree = "<group>"; };
 		65D6CA58CD49BC50CE8898B3 /* RouteMapViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RouteMapViewController.swift; path = Actifit/Controllers/Route/RouteMapViewController.swift; sourceTree = "<group>"; };
 		68417E18D1B82AAF4BD9338F /* 1f981.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f981.json; path = Actifit/Resources/animals/1f981.json; sourceTree = "<group>"; };
+		69DA7A973191ED7518B29C0F /* ProfileViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProfileViewController.swift; path = Actifit/Controllers/Profile/ProfileViewController.swift; sourceTree = "<group>"; };
 		7AC88D237BECEBDBA7750018 /* 1f9a9.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f9a9.json; path = Actifit/Resources/animals/1f9a9.json; sourceTree = "<group>"; };
 		8A7EFB4A22E70CA000A4B32E /* ActivityFifteenMinutesInterval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityFifteenMinutesInterval.swift; sourceTree = "<group>"; };
 		8AAD14DD22E211D200A39934 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -1657,6 +1659,7 @@
 				5D5F88052E9F40A1F37D5A18 /* Route.swift */,
 				3EA5502112EADAE0051E2F8E /* RouteRecordingManager.swift */,
 				65D6CA58CD49BC50CE8898B3 /* RouteMapViewController.swift */,
+				69DA7A973191ED7518B29C0F /* ProfileViewController.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -2151,6 +2154,7 @@
 				45E5E06098A8063E1F912778 /* Route.swift in Sources */,
 				3A817624B56D1A083266AB0F /* RouteRecordingManager.swift in Sources */,
 				FF2A9FCA34A7E073E0619784 /* RouteMapViewController.swift in Sources */,
+				BA44DDE833EC3CA733B8587E /* ProfileViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

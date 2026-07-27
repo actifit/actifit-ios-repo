@@ -201,6 +201,7 @@ enum ApiUrls {
     static let transactions = "https://api.actifit.io/transactions/"
     static let charities = "https://api.actifit.io/charities/"
     static let getRank = "https://api.actifit.io/getRank/"
+    static let trackedActivity = "https://api.actifit.io/trackedActivity/"
     static let getUserSetting = "https://api.actifit.io/userSettings"
     static let updateUserSetting = "https://api.actifit.io/updateSettings"
     static let notificationType = "https://api2.actifit.io/notificationTypes"
