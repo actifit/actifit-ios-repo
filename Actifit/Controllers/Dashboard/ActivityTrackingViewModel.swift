@@ -11,6 +11,14 @@ import UIKit
 import GoogleMobileAds
 import RealmSwift
 import Charts
+
+/// Step-tracking source, cycled by the dashboard's swap button.
+enum TrackingMode: Int {
+    case device = 0   // CoreMotion (default, auto)
+    case health = 1   // Apple Watch / Apple Health (manual sync)
+    case fitbit = 2   // Fitbit (manual sync)
+}
+
 class ActivityTrackingViewModel {
   var stepsArray = [Double]()
   var appDelegate = UIApplication.shared.delegate as? AFAppDelegate
@@ -206,6 +214,46 @@ class ActivityTrackingViewModel {
 
   func switchSensor(isThirdParty: Bool) {
     UserDefaults.standard.isThirdPartySensor = isThirdParty
+  }
+
+  // MARK: - Tracking mode (3-way cycle: device -> Apple Health/Watch -> Fitbit)
+
+  private static let trackingModeKey = "actifitTrackingMode"
+
+  var trackingMode: TrackingMode {
+    get {
+      // Migrate from the legacy boolean the first time.
+      if UserDefaults.standard.object(forKey: Self.trackingModeKey) == nil {
+        return (UserDefaults.standard.isThirdPartySensor == true) ? .fitbit : .device
+      }
+      return TrackingMode(rawValue: UserDefaults.standard.integer(forKey: Self.trackingModeKey)) ?? .device
+    }
+    set {
+      UserDefaults.standard.set(newValue.rawValue, forKey: Self.trackingModeKey)
+      // Keep the legacy flag consistent — only Fitbit is a "third-party" sensor.
+      UserDefaults.standard.isThirdPartySensor = (newValue == .fitbit)
+    }
+  }
+
+  @discardableResult
+  func cycleTrackingMode() -> TrackingMode {
+    let next = TrackingMode(rawValue: (trackingMode.rawValue + 1) % 3) ?? .device
+    trackingMode = next
+    return next
+  }
+
+  var lastHealthSteps: Int {
+    get { UserDefaults.standard.integer(forKey: "lastHealthSteps") }
+    set { UserDefaults.standard.set(newValue, forKey: "lastHealthSteps") }
+  }
+
+  var lastSyncHealthDate: String? {
+    get { UserDefaults.standard.string(forKey: "lastHealthSyncDate") }
+    set { UserDefaults.standard.set(newValue, forKey: "lastHealthSyncDate") }
+  }
+
+  func updateHealthSyncDate() {
+    UserDefaults.standard.set(Date().dateTimeString(), forKey: "lastHealthSyncDate")
   }
 
   func clearFitBitSteps() {

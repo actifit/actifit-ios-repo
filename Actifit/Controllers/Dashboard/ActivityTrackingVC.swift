@@ -127,6 +127,8 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var revampTweetBanners: [BannerImageModel] = []
   var lastNewsCarouselWidth: CGFloat = 0
   weak var revampScrollView: UIScrollView?
+  var revampSourceLogoBtn: UIButton?
+  var revampCloudBtn: UIButton?
   var revampPostFab: UIButton?
   var revampPostFabWidth: NSLayoutConstraint?
   var revampPostFabCollapsed = false
@@ -227,13 +229,31 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   }
   
   @IBAction func cloudBtnTapped(_ sender: Any) {
-    showSyncOptionsAlert {
+    // The cloud button syncs the currently-selected source.
+    switch viewModel.trackingMode {
+    case .health:
+      syncHealthSteps()
+    case .fitbit:
       self.authenticationController = AuthenticationController(delegate: self)
       self.authenticationController?.login(fromParentViewController: self)
-    } watchHandler: {
-      self.viewModel.switchSensor(isThirdParty: false)
-      UserDefaults.standard.lastSynchronizedSteps = self.initialStepCount
-      self.queryAndUpdateDatafromMidnight(isFromThirdParty: true)
+    case .device:
+      break   // device mode auto-syncs; no manual sync needed
+    }
+  }
+
+  /// Reads today's step count from Apple Health (Watch/Health app) and displays it.
+  func syncHealthSteps() {
+    HealthKitManager.shared.requestAuthorization { [weak self] success, _ in
+      guard let self = self, success else { return }
+      HealthKitManager.shared.retrieveStepCount { steps in
+        DispatchQueue.main.async {
+          self.viewModel.lastHealthSteps = Int(steps)
+          self.viewModel.updateHealthSyncDate()
+          self.initialStepCount = Int(steps)
+          self.showStepsCount(count: Int(steps))
+          self.showToast(message: "Synced \(Int(steps)) steps from Apple Health")
+        }
+      }
     }
   }
 
@@ -1188,17 +1208,25 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
         DispatchQueue.main.async {
 
           let totalSteps = pedometerData.numberOfSteps.intValue
-          if isFromThirdParty {
+          switch self.viewModel.trackingMode {
+          case .fitbit:
+              // Fitbit: display the last synced Fitbit count (synced on demand via the cloud button).
               self.viewModel.updateDateSync()
+              self.initialStepCount = self.viewModel.lastFitbitSteps
               self.showStepsCount(count: self.viewModel.lastFitbitSteps)
-          } else {
+          case .health:
+              // Apple Health: display the last synced Health count (synced on demand via the cloud button).
+              self.initialStepCount = self.viewModel.lastHealthSteps
+              self.showStepsCount(count: self.viewModel.lastHealthSteps)
+          case .device:
+              // Device (CoreMotion): live, auto-synced.
               UserDefaults.standard.lastSynchronizedSteps = totalSteps
               self.showStepsCount(count: totalSteps)
-          }
-          if self.initialStepCount != totalSteps {
-            self.initialStepCount =  totalSteps
-            self.saveCurrentStepsCounts(steps: totalSteps, midnightStartDate: AppDelegate.todayStartDate())
-            NotificationCenter.default.post(name: Notification.Name.init(StepsUpdatedNotification), object: nil, userInfo: ["steps" : totalSteps])
+              if self.initialStepCount != totalSteps {
+                self.initialStepCount = totalSteps
+                self.saveCurrentStepsCounts(steps: totalSteps, midnightStartDate: AppDelegate.todayStartDate())
+                NotificationCenter.default.post(name: Notification.Name.init(StepsUpdatedNotification), object: nil, userInfo: ["steps" : totalSteps])
+              }
           }
         }
       }
@@ -1998,11 +2026,21 @@ extension ActivityTrackingVC {
             dummyPie.leadingAnchor.constraint(equalTo: auraContainer.leadingAnchor)
         ])
 
-        // Corner icons around the ring, wired to the app's EXISTING sensor handlers — no tracking change.
-        let sensorTL = revampIconButton(system: "figure.walk.circle.fill", action: #selector(appleWatchTapped(_:)))
+        // Corner icons around the ring.
+        // Top-left: dynamic source logo (Apple Health / Fitbit) — hidden in device mode; tap shows last sync.
+        let sensorTL = UIButton(type: .custom)
+        sensorTL.translatesAutoresizingMaskIntoConstraints = false
+        sensorTL.imageView?.contentMode = .scaleAspectFit
+        sensorTL.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        sensorTL.widthAnchor.constraint(lessThanOrEqualToConstant: 84).isActive = true
+        sensorTL.addTarget(self, action: #selector(revampSourceLogoTapped), for: .touchUpInside)
+        revampSourceLogoBtn = sensorTL
+        // Top-right: cloud sync — hidden in device mode.
         let cloudTR = revampIconButton(system: "icloud.and.arrow.down.fill", action: #selector(cloudBtnTapped(_:)))
+        revampCloudBtn = cloudTR
         let shareBL = revampIconButton(system: "square.and.arrow.up", action: #selector(revampShareTapped))
-        let swapBR = revampIconButton(system: "arrow.left.arrow.right", action: #selector(switchBtnTapped(_:)))
+        // Bottom-right: cycle device -> Apple Health -> Fitbit -> device.
+        let swapBR = revampIconButton(system: "arrow.left.arrow.right", action: #selector(revampCycleTrackingMode))
         [sensorTL, cloudTR, shareBL, swapBR].forEach { auraContainer.addSubview($0) }
         NSLayoutConstraint.activate([
             sensorTL.leadingAnchor.constraint(equalTo: auraContainer.leadingAnchor),
@@ -2014,6 +2052,7 @@ extension ActivityTrackingVC {
             swapBR.trailingAnchor.constraint(equalTo: auraContainer.trailingAnchor),
             swapBR.bottomAnchor.constraint(equalTo: auraContainer.bottomAnchor, constant: -8)
         ])
+        applyTrackingModeUI()
 
         let consistency = buildConsistencyRow()
 
@@ -2599,6 +2638,62 @@ extension ActivityTrackingVC {
             }
             let wd = cal.component(.weekday, from: day) // 1=Sun..7=Sat
             streakDayLabels[i].text = abbr[wd - 1]
+        }
+    }
+
+    // MARK: - Tracking mode (device / Apple Health / Fitbit)
+
+    /// Bottom-right swap button: cycle device -> Apple Health -> Fitbit -> device.
+    @objc func revampCycleTrackingMode() {
+        let mode = viewModel.cycleTrackingMode()
+        applyTrackingModeUI()
+        switch mode {
+        case .device:
+            queryAndUpdateDatafromMidnight()
+        case .health:
+            if viewModel.lastHealthSteps > 0 { showStepsCount(count: viewModel.lastHealthSteps) }
+            syncHealthSteps()
+        case .fitbit:
+            showStepsCount(count: viewModel.lastFitbitSteps)
+        }
+        showToast(message: "Tracking source: \(modeName(mode))")
+    }
+
+    /// Reflects the active mode: cloud + source logo show only for Health/Fitbit.
+    func applyTrackingModeUI() {
+        let mode = viewModel.trackingMode
+        revampCloudBtn?.isHidden = (mode == .device)
+        switch mode {
+        case .device:
+            revampSourceLogoBtn?.isHidden = true
+        case .health:
+            revampSourceLogoBtn?.isHidden = false
+            revampSourceLogoBtn?.setImage(UIImage(named: "apple_health_logo")?.withRenderingMode(.alwaysOriginal), for: .normal)
+        case .fitbit:
+            revampSourceLogoBtn?.isHidden = false
+            revampSourceLogoBtn?.setImage(UIImage(named: "fitbit_logo")?.withRenderingMode(.alwaysOriginal), for: .normal)
+        }
+    }
+
+    /// Top-left source logo tap: show when the active source last synced.
+    @objc func revampSourceLogoTapped() {
+        switch viewModel.trackingMode {
+        case .fitbit:
+            let d = viewModel.lastSyncFitbitDate ?? ""
+            showToast(message: d.isEmpty ? "Fitbit — not synced yet" : "Last Fitbit sync: \(d)")
+        case .health:
+            let d = viewModel.lastSyncHealthDate ?? ""
+            showToast(message: d.isEmpty ? "Apple Health — not synced yet" : "Last Health sync: \(d)")
+        case .device:
+            break
+        }
+    }
+
+    private func modeName(_ m: TrackingMode) -> String {
+        switch m {
+        case .device: return "Device"
+        case .health: return "Apple Health"
+        case .fitbit: return "Fitbit"
         }
     }
 
