@@ -111,6 +111,9 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var revampGoalLabel: UILabel?
   var revampPctLabel: UILabel?
   var revampBigStepLabel: UILabel?
+  /// Last step count pushed into the revamp hero, so every source (device /
+  /// HealthKit / Fitbit) refreshes it while we avoid re-animating on no-op repeats.
+  var lastRevampSteps = -1
   var auraView: AuraView?
   var streakDayCircles: [UIView] = []
   var streakDayLabels: [UILabel] = []
@@ -1485,6 +1488,9 @@ extension ActivityTrackingVC {
   //show the user activity data on UI
   private func showStepsCount(count : Int) {
     self.pieChart(stepsCount: count)
+    // Keep the revamped hero (big number + activity rings) in sync for EVERY
+    // source — device sensors, Apple Health and Fitbit all funnel through here.
+    refreshRevampSteps(count)
       if viewModel.isFitSystemSelected {
       self.stepsCountLabel.text = "Fitbit Tracking Mode On"
       return
@@ -2503,6 +2509,16 @@ extension ActivityTrackingVC {
 
     @objc func revampStepsUpdated(_ note: Notification) {
         let steps = (note.userInfo?["steps"] as? Int) ?? initialStepCount
+        refreshRevampSteps(steps)
+    }
+
+    /// Single, deduped entry point for pushing a step count into the revamp hero.
+    /// Called from every step source (the CoreMotion notification and the
+    /// HealthKit/Fitbit display funnel `showStepsCount`); skips no-op repeats so
+    /// the activity rings don't re-animate on identical values.
+    func refreshRevampSteps(_ steps: Int) {
+        guard steps != lastRevampSteps else { return }
+        lastRevampSteps = steps
         updateAura(steps: steps)
     }
 
