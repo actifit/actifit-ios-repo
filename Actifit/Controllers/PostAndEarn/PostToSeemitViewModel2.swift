@@ -18,7 +18,9 @@ enum PostState {
 
 class PostToSeemitViewModel2: ObservableObject {
     var viewModel: PostToSeemitViewModel = PostToSeemitViewModel()
-    var activityTypes = ["Aerobics", "BasketBall","Badminton", "Boxing", "Bootcamp","Calisthenics", "Chasing Pokemons", "Cricket", "Cycling", "Daily Activity", "Dancing", "Elliptical", "Football", "Gardening", "Geocaching", "Golf", "Gym", "Hiking", "Hockey", "House Chores", "Jogging", "Kettlebell Training", "Martial Arts", "Moving Around Office", "Photowalking","Pickle Ball", "Plogging" ,"Rollerblading", "Rope Skipping", "Running", "Scootering", "Shopping", "Shoveling", "Skating", "Skiing", "Stair Mill", "Street Workout", "Swimming", "Table Tennis", "Tennis", "Treadmill", "Volleyball", "Walking", "Weight Lifting"]
+    var activityTypes = ["Aerobics", "BasketBall","Badminton", "Boxing", "Bootcamp","Calisthenics", "Chasing Pokemons", "Cricket", "Crossfit", "Cycling", "Daily Activity", "Dancing", "Elliptical", "Fitness Gaming", "Football", "Gardening", "Geocaching", "Golf", "Gym", "Hiking", "Hockey", "Home Improvement", "House Chores", "Jogging", "Kayaking", "Kettlebell Training", "Kid Play", "Martial Arts", "Moving Around Office", "Photowalking","Pickle Ball", "Plogging" ,"Rollerblading", "Rope Skipping", "Running", "Sailing", "Scootering", "Shopping", "Shoveling", "Skating", "Skiing", "Snowshoeing", "Stair Climbing", "Stair Mill", "Street Workout", "Stretching", "Swimming", "Table Tennis", "Tennis", "Treadmill", "Volleyball", "Walking", "Weight Lifting", "Yard Work", "Yoga"].sorted()
+    /// The common activities shown up-front as chips; the rest sit behind "Show more" (Android parity).
+    let topActivities = ["Walking", "Running", "Cycling", "Gym", "Dancing", "Yoga", "Swimming", "Hiking", "Daily Activity", "Weight Lifting"]
     var randomHints = ["Describe your day's activity using original content in as little as a few sentences. The more the merrier!","What did you do today?", "Got some cool content to share?", "The more original content you write, the better the potential rewards!", "Did you cross some milestones today? tell the world about it!", "How's your fitness journey going? share it with other actifitters", "You got cool pics from your walk/jog/workout/...? Let's go"]
     var activityDate = ""
     var activityDateToSave = Date()
@@ -396,11 +398,8 @@ class PostToSeemitViewModel2: ObservableObject {
 
 
     func proceeedPostingWith(json : [String : Any]) {
-        if stepCountInDigit < PostMinActivityStepsCount {
-            showMinStepsAlert = true
-            return
-        }
-
+        // Hard 500-step minimum removed by request; the 5,000 "post anyway?"
+        // confirmation on the submit button is the only step-count gate now.
         if selectedActivities.isEmpty || selectedActivities.contains("Activity Type") {
             showNoActivitiesAlert = true
             return

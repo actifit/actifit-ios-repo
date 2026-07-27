@@ -3,6 +3,11 @@
 //  Actifit
 //
 //  Created by Ali Jaber on 15/07/2024.
+//  Revamped to match the Actifit Android "Post to Hive" screen — card-based
+//  sections on a light background, activity/tag chips, collapsible measurement
+//  sliders, a content toolbar with a character-count progress bar and an
+//  expandable editor, and a floating pulsing "Post & Earn" FAB. The posting
+//  payload / API layer is unchanged.
 //
 
 import SwiftUI
@@ -10,6 +15,7 @@ import SafariServices
 import _PhotosUI_SwiftUI
 import Combine
 import MarkdownUI
+
 struct PostToSeemitView: View {
   @State private var isVideoPickerPresented = false
   @ObservedObject var viewModel = PostToSeemitViewModel2()
@@ -22,42 +28,48 @@ struct PostToSeemitView: View {
   @State private var selectedImage: UIImage?
   @State var postContent = ""
   @State private var isPulsing = false
+  @State private var showMoreActivities = false
+  @State private var measurementsExpanded = false
+  @State private var isEditorExpanded = false
+  @State private var tagInput = ""
+
   enum FocusedField: Int, CaseIterable {
-      case markdown, postTitle, reportTags, height, weigth, bodyFat, waist, thigs, chest
+      case markdown, postTitle, tagInput
   }
-
   @FocusState var focusedField: FocusedField?
-  var body: some View {
-    VStack(spacing: 0) {
-      topNavigationBar
-    ScrollView {
-        submitButton
-          .padding(.top, 10)
-          .scaleEffect(isPulsing ? 1 : 0.9)
-          .onAppear {
-              withAnimation(
-                .easeInOut(duration: 0.5)
-                .repeatForever(autoreverses: true)
-              ) {
-                  isPulsing = true // Start pulsing animation
-              }
-          }
 
-      titleHeader(digit: "1", title: "Report Title")
-        tagsAndTitleTextField(text: $viewModel.postTitle, focusType: .postTitle)
-        titleHeader(digit: "2", title: "Activity Date")
-        activityDates
-      titleHeader(digit: "3", title: "Activity Count", redTitle: !viewModel.isStepsValid)
-        activityCount(steps: $viewModel.stepCount)
-      titleHeader(digit: "4", title: "Activity Type", redTitle: viewModel.isActivityTypeEmpty)
-        activityTypeButton
-        titleHeader(digit: "5", title: "Track Measurements")
-        trackMeasurements
-      titleHeader(digit: "6", title: "Report Tags", redTitle: viewModel.isReportTagsEmpty)
-        tagsAndTitleTextField(text: $viewModel.reportTags, focusType: .reportTags)
-      titleHeader(digit: "7", title: "Activity Report Content", redTitle: viewModel.isContentValid)
-        markDownTopSection
+  // MARK: Design tokens (Android parity)
+  private let pageBg = Color(red: 245/255, green: 245/255, blue: 245/255)
+  private let inputBg = Color(red: 245/255, green: 245/255, blue: 245/255)
+  private let separator = Color(red: 224/255, green: 224/255, blue: 224/255)
+  private let chipBg = Color(red: 238/255, green: 238/255, blue: 238/255)
+  private let textSecondary = Color(red: 117/255, green: 117/255, blue: 117/255)
+  private let successGreen = Color(red: 0, green: 200/255, blue: 83/255)
+  private var brandRed: Color { Color(.primaryRedColor()) }
+
+  var body: some View {
+    ZStack(alignment: .bottomTrailing) {
+      pageBg.ignoresSafeArea()
+
+      VStack(spacing: 0) {
+        topNavigationBar
+        ScrollView {
+          VStack(spacing: 16) {
+            if !isEditorExpanded {
+              titleCard
+              dateAndStepsCard
+              activityTypeCard
+              measurementsCard
+              tagsCard
+            }
+            contentCard
+            Color.clear.frame(height: 90) // clearance for the floating FAB
+          }
+          .padding(16)
+        }
       }
+
+      if !isEditorExpanded { postFab }
     }
     .toolbar {
         ToolbarItemGroup(placement: .keyboard) {
@@ -73,17 +85,6 @@ struct PostToSeemitView: View {
       viewModel.postTitle =  "\(Messages.default_post_title)\(viewModel.todayDateStringWithFormat(format: "MMMM d yyyy"))"
       viewModel.getInitialMarkdownContent()
     }
-
-    .sheet(isPresented: $viewModel.showActivityTypes, content: {
-      NewActivityTypesView(activities: viewModel.activityTypes, selectedActivities: viewModel.selectedActivities, onDoneTapped: { selectedActivities in
-        viewModel.showActivityTypes = false
-        if selectedActivities.isEmpty {
-          viewModel.selectedActivities = ["Activity Type"]
-        } else {
-          viewModel.selectedActivities = selectedActivities
-        }
-      })
-    })
     .actionSheet(isPresented: $showSyncSheet) {
       ActionSheet(
         title: Text("Sync your data from"),
@@ -145,7 +146,7 @@ struct PostToSeemitView: View {
       Button("Continue") {
         coordinator.action = .dismiss
       }
-     
+
     }, message: {
       Text(Messages.success_post)
     })
@@ -173,12 +174,10 @@ struct PostToSeemitView: View {
       }
     }
     .onChange(of: selectedImage, perform: { value in
-
             if let image = value {
                 Task {
                     await viewModel.uploadImage(image:  image)
                 }
-            
         }
     })
     .onChange(of: viewModel.selectedActivities, perform: { value in
@@ -208,7 +207,6 @@ struct PostToSeemitView: View {
             switch action {
             case .viewPost:
                 coordinator.action = .viewPost(url: "http://actifit.io/\(viewModel.username)/\(viewModel.activityPostModel?.permlink ?? "")")
-              //TODO: open safari
             case .share:
               coordinator.action = .sharePost(url: "http://actifit.io/\(viewModel.username)/\(viewModel.activityPostModel?.permlink ?? "")")
             case .dismiss:
@@ -243,311 +241,498 @@ struct PostToSeemitView: View {
     .navigationBarHidden(true)
   }
 
-    var topNavigationBar: some View {
-        ZStack {
-            HStack {
-                Button(action: {
-                    coordinator.action = .dismiss
-                }, label: {
-                    Image(systemName: "chevron.backward")
-                        .foregroundStyle(.white)
-                })
-                Spacer()
-            }
+  // MARK: - Top bar
 
-            Text("Post And Earn")
-                .font(.headline)
-                .foregroundStyle(.white)
-        }
-        .padding(.top, 50)
-        .padding(.leading, 20)
-        .padding(.bottom, 10)
-        .background(Color(.primaryRedColor()))
+  var topNavigationBar: some View {
+    ZStack {
+      HStack {
+        Button(action: {
+          coordinator.action = .dismiss
+        }, label: {
+          Image(systemName: "chevron.backward")
+            .foregroundStyle(.white)
+        })
+        Spacer()
+      }
+      Text("Post & Earn")
+        .font(.headline)
+        .foregroundStyle(.white)
     }
+    .padding(.top, 50)
+    .padding(.horizontal, 20)
+    .padding(.bottom, 12)
+    .background(brandRed)
+  }
 
-  @ViewBuilder
-  var submitButton: some View {
+  // MARK: - Reusable card container
+
+  private func card<Content: View>(_ title: String, redTitle: Bool = false, trailing: AnyView? = nil, @ViewBuilder content: () -> Content) -> some View {
+    VStack(alignment: .leading, spacing: 12) {
+      HStack {
+        Text(title)
+          .font(.system(size: 16, weight: .bold))
+          .foregroundStyle(redTitle ? brandRed : Color(red: 0.13, green: 0.13, blue: 0.13))
+        Spacer()
+        if let trailing = trailing { trailing }
+      }
+      content()
+    }
+    .padding(16)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color.white)
+    .clipShape(RoundedRectangle(cornerRadius: 16))
+    .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+  }
+
+  private func styledField(_ placeholder: String, text: Binding<String>, focus: FocusedField) -> some View {
+    TextField(placeholder, text: text)
+      .focused($focusedField, equals: focus)
+      .padding(.horizontal, 12)
+      .padding(.vertical, 12)
+      .background(inputBg)
+      .overlay(RoundedRectangle(cornerRadius: 12).stroke(separator, lineWidth: 1))
+      .clipShape(RoundedRectangle(cornerRadius: 12))
+  }
+
+  // MARK: 1 — Title
+
+  var titleCard: some View {
+    card("Report Title") {
+      styledField("", text: $viewModel.postTitle, focus: .postTitle)
+    }
+  }
+
+  // MARK: 2 — Date & Steps
+
+  var dateAndStepsCard: some View {
+    card("Date & Steps", redTitle: !viewModel.isStepsValid) {
+      HStack(spacing: 10) {
+        toggleButton("Today", selected: viewModel.isToday) { viewModel.btnTodayTapped() }
+        toggleButton("Yesterday", selected: !viewModel.isToday) { viewModel.btnYesterdayTapped() }
+      }
+      HStack(spacing: 12) {
+        Text(viewModel.stepCount)
+          .font(.system(size: 18, weight: .bold))
+          .foregroundStyle(successGreen)
+          .frame(minWidth: 70)
+          .padding(.vertical, 10)
+          .padding(.horizontal, 12)
+          .background(inputBg)
+          .overlay(RoundedRectangle(cornerRadius: 12).stroke(separator, lineWidth: 1))
+          .clipShape(RoundedRectangle(cornerRadius: 12))
+        Button(action: { showSyncSheet = true }, label: {
+          Text("SYNC DATA")
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(.white)
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .background(brandRed)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        })
+        Spacer()
+      }
+    }
+  }
+
+  private func toggleButton(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
+    Button(action: action, label: {
+      Text(title)
+        .font(.system(size: 15, weight: .semibold))
+        .foregroundStyle(selected ? Color.white : brandRed)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(selected ? brandRed : Color.clear)
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(brandRed, lineWidth: 1.5))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    })
+  }
+
+  // MARK: 3 — Activity type chips
+
+  var activityTypeCard: some View {
+    card("Activity Type", redTitle: viewModel.isActivityTypeEmpty) {
+      let extras = viewModel.selectedActivities.filter { $0 != "Activity Type" && !viewModel.topActivities.contains($0) }
+      let shown = showMoreActivities
+        ? viewModel.activityTypes
+        : (viewModel.topActivities + extras)
+      FlowLayout(items: shown, spacing: 8) { activity in
+        chip(activity,
+             selected: viewModel.selectedActivities.contains(activity),
+             closable: false) {
+          toggleActivity(activity)
+        }
+      }
+      Button(action: { showMoreActivities.toggle() }, label: {
+        Text(showMoreActivities ? "Show fewer activities" : "Show more activities")
+          .font(.system(size: 14, weight: .semibold))
+          .foregroundStyle(brandRed)
+      })
+    }
+  }
+
+  private func toggleActivity(_ activity: String) {
+    if viewModel.selectedActivities.contains(activity) {
+      viewModel.selectedActivities.removeAll { $0 == activity }
+      if viewModel.selectedActivities.isEmpty {
+        viewModel.selectedActivities = ["Activity Type"]
+      }
+    } else {
+      viewModel.selectedActivities.removeAll { $0 == "Activity Type" }
+      viewModel.selectedActivities.append(activity)
+    }
+  }
+
+  // MARK: 4 — Measurements (collapsible sliders)
+
+  var measurementsCard: some View {
+    VStack(alignment: .leading, spacing: 14) {
+      Button(action: {
+        withAnimation(.easeInOut(duration: 0.2)) { measurementsExpanded.toggle() }
+      }, label: {
+        HStack {
+          Text("Track Measurements")
+            .font(.system(size: 16, weight: .bold))
+            .foregroundStyle(Color(red: 0.13, green: 0.13, blue: 0.13))
+          Spacer()
+          Image(systemName: "chevron.down")
+            .foregroundStyle(textSecondary)
+            .rotationEffect(.degrees(measurementsExpanded ? 180 : 0))
+        }
+        .contentShape(Rectangle())
+      })
+      .buttonStyle(PlainButtonStyle())
+
+      if measurementsExpanded {
+        VStack(spacing: 14) {
+          MeasureSlider(title: "Height", stringValue: $viewModel.height, range: isMetric ? 100...220 : 39...87, step: 1, decimals: 0, unit: isMetric ? "cm" : "in", accent: brandRed, secondary: textSecondary)
+          MeasureSlider(title: "Weight", stringValue: $viewModel.weight, range: isMetric ? 30...200 : 66...440, step: 1, decimals: 0, unit: isMetric ? "kg" : "lb", accent: brandRed, secondary: textSecondary)
+          MeasureSlider(title: "Body Fat", stringValue: $viewModel.bodyFat, range: 0...60, step: 0.5, decimals: 1, unit: "%", accent: brandRed, secondary: textSecondary)
+          MeasureSlider(title: "Waist", stringValue: $viewModel.waist, range: isMetric ? 40...150 : 16...60, step: 1, decimals: 0, unit: isMetric ? "cm" : "in", accent: brandRed, secondary: textSecondary)
+          MeasureSlider(title: "Thighs", stringValue: $viewModel.thights, range: isMetric ? 30...90 : 12...35, step: 1, decimals: 0, unit: isMetric ? "cm" : "in", accent: brandRed, secondary: textSecondary)
+          MeasureSlider(title: "Chest", stringValue: $viewModel.chest, range: isMetric ? 60...150 : 24...60, step: 1, decimals: 0, unit: isMetric ? "cm" : "in", accent: brandRed, secondary: textSecondary)
+        }
+      }
+    }
+    .padding(16)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(Color.white)
+    .clipShape(RoundedRectangle(cornerRadius: 16))
+    .shadow(color: Color.black.opacity(0.06), radius: 4, x: 0, y: 2)
+  }
+
+  private var isMetric: Bool {
+    (viewModel.settings?.measurementSystem ?? MeasurementSystem.metric.rawValue) == MeasurementSystem.metric.rawValue
+  }
+
+  // MARK: 5 — Tag chips
+
+  var tagsCard: some View {
+    card("Report Tags", redTitle: viewModel.isReportTagsEmpty) {
+      if !tagsArray.isEmpty {
+        FlowLayout(items: tagsArray, spacing: 8) { tag in
+          chip(tag, selected: true, closable: true) { removeTag(tag) }
+        }
+      }
+      HStack {
+        TextField("Add a tag", text: $tagInput)
+          .focused($focusedField, equals: .tagInput)
+          .autocapitalization(.none)
+          .disableAutocorrection(true)
+          .onChange(of: tagInput) { value in
+            if value.contains(",") || value.contains(" ") {
+              addTag(value)
+            }
+          }
+          .onSubmit { addTag(tagInput) }
+          .padding(.horizontal, 12)
+          .padding(.vertical, 12)
+          .background(inputBg)
+          .overlay(RoundedRectangle(cornerRadius: 12).stroke(separator, lineWidth: 1))
+          .clipShape(RoundedRectangle(cornerRadius: 12))
+      }
+    }
+  }
+
+  private var tagsArray: [String] {
+    viewModel.reportTags
+      .split(whereSeparator: { $0 == "," || $0 == " " })
+      .map { String($0) }
+      .filter { !$0.isEmpty }
+  }
+
+  private func addTag(_ raw: String) {
+    let tag = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    tagInput = ""
+    guard !tag.isEmpty else { return }
+    var arr = tagsArray
+    guard arr.count < 10, !arr.contains(tag) else { return }
+    arr.append(tag)
+    viewModel.reportTags = arr.joined(separator: ",")
+  }
+
+  private func removeTag(_ tag: String) {
+    viewModel.reportTags = tagsArray.filter { $0 != tag }.joined(separator: ",")
+  }
+
+  // MARK: 6 — Report content
+
+  var contentCard: some View {
+    card("Report Content") {
+      Text("Markdown content accepted")
+        .font(.system(size: 12))
+        .foregroundStyle(textSecondary)
+
+      // Toolbar
+      HStack(spacing: 10) {
+        toolbarIcon("photo") { isPickerPresented = true }
+        toolbarIcon("video.fill") { isVideoPickerPresented = true }
+        toolbarIcon(isEditorExpanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right") {
+          withAnimation(.easeInOut(duration: 0.2)) { isEditorExpanded.toggle() }
+        }
+        Spacer()
+        HStack(spacing: 2) {
+          Text("\(viewModel.markDownContent.count)")
+            .foregroundStyle(viewModel.markDownContent.count < 100 ? brandRed : successGreen)
+          Text("/100").foregroundStyle(textSecondary)
+        }
+        .font(.system(size: 13, weight: .semibold))
+        Button(action: { viewModel.showMarkDownInfoAlert = true }, label: {
+          Image(systemName: "info.circle")
+            .foregroundStyle(.white)
+            .frame(width: 30, height: 30)
+            .background(brandRed)
+            .clipShape(Circle())
+        })
+      }
+
+      // Character-count progress bar
+      GeometryReader { geo in
+        ZStack(alignment: .leading) {
+          Capsule().fill(separator)
+          Capsule()
+            .fill(viewModel.markDownContent.count >= 100 ? successGreen : brandRed)
+            .frame(width: geo.size.width * min(CGFloat(viewModel.markDownContent.count) / 100.0, 1))
+        }
+      }
+      .frame(height: 3)
+
+      editorField
+        .frame(height: isEditorExpanded ? max(UIScreen.main.bounds.height * 0.5, 300) : 200)
+
+      // Preview — always shown (incl. expanded editor) and auto-grows to fit all
+      // content; the outer page ScrollView handles any overflow, so no inner
+      // fixed-height scroll that would hide content behind invisible scrollbars.
+      Text("Preview")
+        .font(.system(size: 14, weight: .bold))
+        .foregroundStyle(Color(red: 0.13, green: 0.13, blue: 0.13))
+      Markdown(viewModel.markDownContent)
+        .padding(12)
+        .frame(maxWidth: .infinity, minHeight: 60, alignment: .topLeading)
+        .background(inputBg)
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(separator, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+  }
+
+  private var editorField: some View {
+    Group {
+      if #available(iOS 16.0, *) {
+        TextView(text: $viewModel.markDownContent, placeholder: viewModel.randomHints.randomElement() ?? "")
+          .background(Color.white)
+      } else {
+        ZStack(alignment: .topLeading) {
+          TextEditor(text: $viewModel.markDownContent)
+            .padding(6)
+            .foregroundStyle(.black)
+            .font(.system(size: 16))
+            .focused($focusedField, equals: .markdown)
+          if viewModel.markDownContent.isEmpty {
+            Text(viewModel.randomHints.randomElement() ?? "")
+              .foregroundColor(.gray)
+              .padding(.top, 14)
+              .padding(.leading, 10)
+          }
+        }
+      }
+    }
+    .overlay(RoundedRectangle(cornerRadius: 12).stroke(separator, lineWidth: 1))
+    .clipShape(RoundedRectangle(cornerRadius: 12))
+  }
+
+  private func toolbarIcon(_ systemName: String, action: @escaping () -> Void) -> some View {
+    Button(action: action, label: {
+      Image(systemName: systemName)
+        .font(.system(size: 15, weight: .semibold))
+        .foregroundStyle(brandRed)
+        .frame(width: 38, height: 34)
+        .background(chipBg)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    })
+  }
+
+  // MARK: - Chip primitive
+
+  private func chip(_ label: String, selected: Bool, closable: Bool, action: @escaping () -> Void) -> some View {
+    Button(action: action, label: {
+      HStack(spacing: 6) {
+        Text(label)
+          .font(.system(size: 14, weight: .medium))
+          .foregroundStyle(selected ? Color.white : Color(red: 0.13, green: 0.13, blue: 0.13))
+        if closable {
+          Image(systemName: "xmark")
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(selected ? Color.white : textSecondary)
+        }
+      }
+      .padding(.horizontal, 14)
+      .padding(.vertical, 8)
+      .background(selected ? brandRed : chipBg)
+      .clipShape(Capsule())
+    })
+  }
+
+  // MARK: - Floating Post FAB
+
+  var postFab: some View {
     Button(action: {
+      commitPendingTag()
       if viewModel.stepCountInDigit < 5000 {
         viewModel.showNotReachedMinimumAlert = true
       } else {
         viewModel.triggerCharityAlert()
       }
-
-
     }, label: {
-      Text("POST & EARN")
-        .font(.system(size: 16, weight: .medium))
-        .padding(.vertical, 5)
-        .frame(maxWidth: .infinity)
-        .foregroundStyle(.white)
-        .background(Color(.primaryRedColor()))
-        .clipShape(.rect(cornerRadius: 2))
-        .padding(.horizontal, 100)
+      HStack(spacing: 8) {
+        Image(systemName: "square.and.pencil")
+        Text("Post & Earn").font(.system(size: 16, weight: .bold))
+      }
+      .foregroundStyle(.white)
+      .padding(.vertical, 15)
+      .padding(.horizontal, 24)
+      .background(brandRed)
+      .clipShape(Capsule())
+      .shadow(color: Color.black.opacity(0.25), radius: 8, x: 0, y: 4)
     })
-
-  }
-
-  func titleHeader(digit: String, title: String, redTitle: Bool = false) -> some View {
-    HStack {
-      Text(digit)
-        .foregroundColor(Color(uiColor: redTitle ? .primaryRedColor() : .primaryGreenColor()))
-        .font(.headline)
-        .frame(width: 25, height: 25)
-        .background(Circle().fill(Color.white))
-        .overlay(Circle().stroke(Color(uiColor: redTitle ? .primaryRedColor() : .primaryGreenColor()), lineWidth: 3))
-      Text(title)
-      Spacer()
-    }.padding()
-  }
-
-  func tagsAndTitleTextField(text: Binding<String>, focusType: FocusedField) -> some View {
-    VStack {
-      TextField("", text: text)
-        .focused($focusedField, equals: focusType)
-      Rectangle()
-        .frame(height: 1)
+    .scaleEffect(isPulsing ? 1 : 0.94)
+    .padding(.trailing, 20)
+    .padding(.bottom, 24)
+    .onAppear {
+      withAnimation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true)) {
+        isPulsing = true
+      }
     }
-    .padding()
   }
 
-  var activityDates: some View {
-    VStack(spacing: 5) {
-      HStack {
-        Button(action: {
-          viewModel.btnTodayTapped()
-        }, label: {
-          ZStack {
-            radioButtonBorder
-            if viewModel.isToday {
-              radioButtonCircle
-            }
-          }
-        })
-        Text("Today")
-        Spacer()
-      }
-      HStack {
-        Button(action: {
-          viewModel.btnYesterdayTapped()
-        }, label: {
-          ZStack {
-            radioButtonBorder
-            if !viewModel.isToday {
-              radioButtonCircle
-            }
-          }
-        })
-        Text("Yesterday")
-        Spacer()
-      }
-    }.padding()
+  private func commitPendingTag() {
+    if !tagInput.trimmingCharacters(in: .whitespaces).isEmpty {
+      addTag(tagInput)
+    }
+  }
+}
+
+// MARK: - Collapsible measurement slider
+
+private struct MeasureSlider: View {
+  let title: String
+  @Binding var stringValue: String
+  let range: ClosedRange<Double>
+  let step: Double
+  let decimals: Int
+  let unit: String
+  let accent: Color
+  let secondary: Color
+
+  @State private var value: Double
+  @State private var touched: Bool
+
+  init(title: String, stringValue: Binding<String>, range: ClosedRange<Double>, step: Double, decimals: Int, unit: String, accent: Color, secondary: Color) {
+    self.title = title
+    self._stringValue = stringValue
+    self.range = range
+    self.step = step
+    self.decimals = decimals
+    self.unit = unit
+    self.accent = accent
+    self.secondary = secondary
+    let existing = Double(stringValue.wrappedValue)
+    _value = State(initialValue: existing ?? range.lowerBound)
+    _touched = State(initialValue: existing != nil && existing! > 0)
   }
 
-  func activityCount(steps: Binding<String>) -> some View {
-    HStack {
-      VStack {
-        TextField("", text: steps)
-          .multilineTextAlignment(.center)
-          .disabled(true)
-          .foregroundStyle(Color(.primaryGreenColor()))
-        Rectangle()
-          .frame(height: 1)
-      }.frame(width: 100)
-      Button(action: {
-        showSyncSheet = true
-      }, label: {
-        Text("WEARABLE SYNC")
-          .font(.system(size: 16, weight: .medium))
-          .padding(5)
-          .foregroundStyle(.white)
-          .background(Color(.primaryRedColor()))
-          .clipShape(.rect(cornerRadius: 2))
+  private var formatted: String { String(format: "%.\(decimals)f", value) }
 
+  var body: some View {
+    VStack(spacing: 2) {
+      HStack {
+        Text(title)
+          .font(.system(size: 14, weight: .medium))
+          .foregroundStyle(secondary)
+        Spacer()
+        Text(touched ? "\(formatted) \(unit)" : "—")
+          .font(.system(size: 14, weight: .semibold))
+          .foregroundStyle(touched ? accent : secondary)
+      }
+      Slider(value: $value, in: range, step: step, onEditingChanged: { _ in
+        touched = true
+        stringValue = formatted
       })
-      Spacer()
-    }.padding()
-  }
-
-  var radioButtonBorder: some View {
-    Circle()
-      .fill(Color.white)
-      .frame(width: 30, height: 30)
-      .overlay {
-        Circle().stroke(Color.gray, lineWidth: 2)
-      }
-  }
-
-  var radioButtonCircle: some View {
-    Circle()
-      .fill(Color(.primaryRedColor()))
-      .frame(width: 20, height: 20)
-  }
-
-  var activityTypeButton: some View {
-    Button(action: {
-      viewModel.showActivityTypes = true
-    }, label: {
-      HStack {
-        Text( viewModel.selectedActivities.joined(separator: ", "))
-          .foregroundStyle(.black)
-        Spacer()
-        Button(action: {
-          viewModel.showActivityTypes = true
-        }, label: {
-         Image(systemName: "arrowtriangle.down.fill")
-            .foregroundStyle(.black)
-            .font(.system(size: 6))
-        })
-      }
-    }).padding()
-  }
-
-  func measureSection(text: String, binding: Binding<String>, measure: String) -> some View {
-    HStack(spacing: 0) {
-      Text(text)
-        .font(.system(size: 12, weight: .regular))
-      VStack {
-        TextField("", text: binding)
-          .multilineTextAlignment(.center)
-        Rectangle()
-          .frame(height: 1)
-      }
-      Text(measure)
-        .font(.system(size: 12, weight: .regular))
-    }
-    .keyboardType(.decimalPad)
-  }
-
-  var trackMeasurements: some View {
-    VStack {
-      HStack {
-        measureSection(text: "Height", binding: $viewModel.height, measure: "cm")
-          .focused($focusedField, equals: .height)
-        measureSection(text: "Weight", binding: $viewModel.weight, measure: "kg")
-          .focused($focusedField, equals: .weigth)
-        measureSection(text: "Body Fat", binding: $viewModel.bodyFat, measure: "%")
-          .focused($focusedField, equals: .bodyFat)
-      }
-      HStack {
-        measureSection(text: "Waist", binding: $viewModel.waist, measure: "cm")
-          .focused($focusedField, equals: .waist)
-        measureSection(text: "Thighs", binding: $viewModel.thights, measure: "cm")
-          .focused($focusedField, equals: .thigs)
-        measureSection(text: "Chest", binding: $viewModel.chest, measure: "cm")
-          .focused($focusedField, equals: .chest)
+      .accentColor(accent)
+      .onChange(of: value) { newValue in
+        if touched { stringValue = String(format: "%.\(decimals)f", newValue) }
       }
     }
-    .frame(maxWidth: .infinity)
-    .padding()
+  }
+}
+
+// MARK: - Wrapping flow layout for chips (iOS 13+ via alignmentGuide)
+
+private struct FlowLayout<Content: View>: View {
+  let items: [String]
+  let spacing: CGFloat
+  let content: (String) -> Content
+  @State private var totalHeight: CGFloat = .zero
+
+  var body: some View {
+    GeometryReader { geo in
+      generate(in: geo)
+    }
+    .frame(height: totalHeight)
   }
 
-
-  var markDownTopSection: some View {
-    VStack {
-      HStack {
-        Text("Markdown Content Accepted")
-
-        Spacer()
-      }
-      HStack {
-        photoAndVideoButtons(imageName: "photo") {
-          isPickerPresented = true
-        }
-        photoAndVideoButtons(imageName: "video.fill") {
-          isVideoPickerPresented = true
-        }
-
-        Spacer()
-        HStack{
-          Text("\(viewModel.markDownContent.count)")
-            .foregroundStyle(viewModel.markDownContent.count < 100 ? Color(uiColor: .primaryRedColor()) : Color(.primaryGreenColor()))
-          Text(" / ")
-          Text("100")
-        }
-
-        Button(action: {
-          viewModel.showMarkDownInfoAlert = true
-        }, label: {
-          Image(systemName: "info.circle")
-            .foregroundStyle(.white)
-            .frame(width: 30, height: 30)
-        })
-        .background(Color(.primaryRedColor()))
-        .clipShape(Circle())
-      }
-      textFieldForMarkDonw(placeholder: viewModel.randomHints.randomElement() ?? "", text: $viewModel.markDownContent)
-      ScrollView {
-          Markdown(viewModel.markDownContent)
-          .padding()
-      }
-
-    }.padding()
-  }
-
-  @ViewBuilder
-  func textFieldForMarkDonw(placeholder: String, text: Binding<String>) -> some View {
-    VStack {
-      if #available(iOS 16.0, *) {
-        VStack {
-            TextView(text: text, placeholder: placeholder)
-               .frame(height: 200)
-              .background(Color.white)
-              .cornerRadius(10)
-        }
-      }
-      else {
-        ZStack(alignment: .topLeading) {
-          VStack {
-            TextEditor(text: $viewModel.markDownContent)
-              .padding(.vertical)
-              .foregroundStyle(.black)
-              .font(.system(size: 18, weight: .regular))
-              .frame(height: 200)
-              .focused($focusedField, equals: .markdown)
-
+  private func generate(in g: GeometryProxy) -> some View {
+    var width = CGFloat.zero
+    var height = CGFloat.zero
+    return ZStack(alignment: .topLeading) {
+      ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+        content(item)
+          .padding(.trailing, spacing)
+          .padding(.bottom, spacing)
+          .alignmentGuide(.leading) { d in
+            if abs(width - d.width) > g.size.width {
+              width = 0
+              height -= d.height
+            }
+            let result = width
+            if index == items.count - 1 { width = 0 } else { width -= d.width }
+            return result
           }
-          if viewModel.markDownContent.isEmpty {
-            Text(placeholder)
-              .foregroundColor(.gray)
-              .padding(.top, 8)
-              .padding(.leading, 5)
-              .onTapGesture {
-                focusedField = .markdown
-              }
+          .alignmentGuide(.top) { _ in
+            let result = height
+            if index == items.count - 1 { height = 0 }
+            return result
           }
-        }
-
       }
-      Rectangle()
-        .frame(height: 1)
     }
-    .foregroundStyle(.black)
-    .font(.system(size: 18, weight: .regular))
-    .focused($focusedField, equals: .markdown)
+    .background(heightReader($totalHeight))
   }
 
-
-  func photoAndVideoButtons(imageName: String, onTap: @escaping () -> Void) -> some View {
-    Button(action: {
-      onTap()
-    }, label: {
-      RoundedRectangle(cornerRadius: 10)
-          .stroke(Color.gray, lineWidth: 2)
-          .frame(width: 40, height: 40)
-          .overlay(
-              Rectangle()
-                .fill(Color.red)
-                .frame(width: 40, height: 40)
-                  .overlay(
-                      Image(systemName: imageName)
-                          .foregroundColor(.white)
-
-                  )
-          )
-    })
-    .background(Color(.primaryRedColor()))
-    .cornerRadius(10)
+  private func heightReader(_ binding: Binding<CGFloat>) -> some View {
+    GeometryReader { geo -> Color in
+      DispatchQueue.main.async {
+        binding.wrappedValue = geo.frame(in: .local).size.height
+      }
+      return Color.clear
+    }
   }
 }
 
