@@ -1,15 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "Fitbit_logo.svg",
+      "filename" : "fitbit_app_icon.png",
       "idiom" : "universal"
     }
   ],
   "info" : {
     "author" : "xcode",
     "version" : 1
-  },
-  "properties" : {
-    "preserves-vector-representation" : true
   }
 }

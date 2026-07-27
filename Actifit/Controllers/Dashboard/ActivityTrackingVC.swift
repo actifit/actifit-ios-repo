@@ -2037,8 +2037,10 @@ extension ActivityTrackingVC {
         let sensorTL = UIButton(type: .custom)
         sensorTL.translatesAutoresizingMaskIntoConstraints = false
         sensorTL.imageView?.contentMode = .scaleAspectFit
-        sensorTL.heightAnchor.constraint(equalToConstant: 24).isActive = true
-        sensorTL.widthAnchor.constraint(lessThanOrEqualToConstant: 84).isActive = true
+        sensorTL.contentHorizontalAlignment = .fill
+        sensorTL.contentVerticalAlignment = .fill
+        sensorTL.heightAnchor.constraint(equalToConstant: 32).isActive = true
+        sensorTL.widthAnchor.constraint(equalToConstant: 32).isActive = true
         sensorTL.addTarget(self, action: #selector(revampSourceLogoTapped), for: .touchUpInside)
         revampSourceLogoBtn = sensorTL
         // Top-right: cloud sync — hidden in device mode.
