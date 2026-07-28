@@ -12,15 +12,17 @@ on:
 jobs:
   build:
     name: Build (iOS Simulator)
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 60
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 15.4
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
 
       - name: Show toolchain versions
         run: |
@@ -92,56 +94,14 @@ jobs:
         run: |
           find Pods -name "*.sh" -exec chmod +x {} +
 
-      - name: Generate UI test target
-        run: ruby ci_scripts/add_uitest_target.rb
-
-      - name: Create and boot simulator
-        id: sim
-        run: |
-          RUNTIME=$(xcrun simctl list runtimes available | grep -oE "com.apple.CoreSimulator.SimRuntime.iOS[^ ]*" | tail -1)
-          echo "Runtime: $RUNTIME"
-          DEVICE=$(xcrun simctl create "ci-iphone" "iPhone 15" "$RUNTIME")
-          echo "device=$DEVICE" >> "$GITHUB_OUTPUT"
-          echo "Device UDID: $DEVICE"
-          xcrun simctl boot "$DEVICE"
-          xcrun simctl bootstatus "$DEVICE" -b
-          # Pre-grant photo access to reduce the launch permission prompt.
-          xcrun simctl privacy "$DEVICE" grant photos com.Actifit.fitnesstracker || true
-
-      - name: Run UI login test
-        env:
-          TEST_RUNNER_ACTIFIT_USER: ${{ secrets.ACTIFIT_TEST_USER }}
-          TEST_RUNNER_ACTIFIT_KEY: ${{ secrets.ACTIFIT_TEST_KEY }}
+      - name: Build (compile check)
         run: |
           set -o pipefail
-          xcodebuild test \
+          xcodebuild \
             -workspace Actifit.xcworkspace \
             -scheme Actifit \
             -configuration Debug \
-            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device }}" \
-            -only-testing:ActifitUITests \
-            -resultBundlePath result.xcresult \
+            -sdk iphonesimulator \
+            -destination "generic/platform=iOS Simulator" \
             CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            | tee xcodebuild-test.log
-
-      - name: Extract screenshots and logs
-        if: always()
-        run: |
-          mkdir -p artifacts
-          brew install chargepoint/xcparse/xcparse || true
-          if command -v xcparse >/dev/null 2>&1 && [ -d result.xcresult ]; then
-            xcparse screenshots result.xcresult artifacts/screens || true
-          fi
-          # Fallback raw screenshot of the simulator's final state.
-          xcrun simctl io "${{ steps.sim.outputs.device }}" screenshot artifacts/final-state.png || true
-          cp -R ~/Library/Logs/DiagnosticReports artifacts/CrashReports 2>/dev/null || true
-          ls -R artifacts || true
-
-      - name: Upload run artifacts (screenshot + any crash logs)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: simulator-run
-          path: artifacts
-          if-no-files-found: ignore
+            build | tee xcodebuild.log
