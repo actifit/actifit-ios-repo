@@ -37,10 +37,41 @@ class Route: Object {
 
     var durationMs: Int { endTimeMs <= startTimeMs ? 0 : endTimeMs - startTimeMs }
 
-    var formattedDistance: String {
-        if distanceMeters < 1000 { return String(format: "%.0f m", distanceMeters) }
-        return String(format: "%.2f km", distanceMeters / 1000.0)
+    /// Whether the user's Settings use the metric system (defaults to metric).
+    static var isMetric: Bool {
+        (Settings.current()?.measurementSystem ?? MeasurementSystem.metric.rawValue) == MeasurementSystem.metric.rawValue
     }
+
+    /// Distance string honouring the Metric/US measurement setting.
+    static func distanceString(_ meters: Double) -> String {
+        if isMetric {
+            if meters < 1000 { return String(format: "%.0f m", meters) }
+            return String(format: "%.2f km", meters / 1000.0)
+        } else {
+            let miles = meters / 1609.344
+            if miles < 0.1 { return String(format: "%.0f ft", meters * 3.28084) }
+            return String(format: "%.2f mi", miles)
+        }
+    }
+
+    /// Average pace (min/km or min/mile per the setting), "--" if no movement.
+    static func paceString(distanceMeters: Double, durationMs: Int) -> String {
+        let durationSec = durationMs / 1000
+        if durationSec == 0 { return "--" }
+        if isMetric {
+            let distKm = distanceMeters / 1000.0
+            if distKm < 0.01 { return "--" }
+            let s = Double(durationSec) / distKm
+            return String(format: "%d:%02d/km", Int(s) / 60, Int(s) % 60)
+        } else {
+            let miles = distanceMeters / 1609.344
+            if miles < 0.01 { return "--" }
+            let s = Double(durationSec) / miles
+            return String(format: "%d:%02d/mi", Int(s) / 60, Int(s) % 60)
+        }
+    }
+
+    var formattedDistance: String { Route.distanceString(distanceMeters) }
 
     var formattedDuration: String {
         let ms = durationMs
@@ -51,16 +82,7 @@ class Route: Object {
         return String(format: "%d:%02d", minutes, seconds)
     }
 
-    /// avg pace as min/km, "--" if no movement.
-    var formattedPace: String {
-        let durationSec = durationMs / 1000
-        let distKm = distanceMeters / 1000.0
-        if distKm < 0.01 || durationSec == 0 { return "--" }
-        let secPerKm = Double(durationSec) / distKm
-        let paceMin = Int(secPerKm) / 60
-        let paceSec = Int(secPerKm) % 60
-        return String(format: "%d:%02d/km", paceMin, paceSec)
-    }
+    var formattedPace: String { Route.paceString(distanceMeters: distanceMeters, durationMs: durationMs) }
 
     var waypoints: [RouteWaypoint] {
         guard let data = waypointsJson.data(using: .utf8),
