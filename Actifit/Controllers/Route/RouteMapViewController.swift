@@ -161,7 +161,7 @@ final class RouteMapViewController: UIViewController, MKMapViewDelegate {
             routeCoords = progress
             redrawPolyline()
             if let last = progress.last { addMarker(at: last) }
-            distanceLabel.text = String(format: "%.2f km", manager.recordedDistance / 1000.0)
+            distanceLabel.text = Route.distanceString(manager.recordedDistance)
             fitToRoute()
         }
         tickTimer()
@@ -182,10 +182,9 @@ final class RouteMapViewController: UIViewController, MKMapViewDelegate {
               let lat = info["lat"] as? Double, let lng = info["lng"] as? Double else { return }
         addPoint(lat: lat, lng: lng)
         let distance = info["distance"] as? Double ?? 0
-        distanceLabel.text = String(format: "%.2f km", distance / 1000.0)
+        distanceLabel.text = Route.distanceString(distance)
         if distance > 50, let durationMs = info["durationMs"] as? Int, durationMs > 0 {
-            let secPerKm = (Double(durationMs) / 1000.0) / (distance / 1000.0)
-            paceLabel.text = String(format: "%d:%02d/km", Int(secPerKm) / 60, Int(secPerKm) % 60)
+            paceLabel.text = Route.paceString(distanceMeters: distance, durationMs: durationMs)
         }
     }
 
