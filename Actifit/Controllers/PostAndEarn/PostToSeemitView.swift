@@ -602,16 +602,14 @@ struct PostToSeemitView: View {
         viewModel.triggerCharityAlert()
       }
     }, label: {
-      HStack(spacing: 8) {
-        Image(systemName: "square.and.pencil")
-        Text("Post & Earn").font(.system(size: 16, weight: .bold))
-      }
-      .foregroundStyle(.white)
-      .padding(.vertical, 15)
-      .padding(.horizontal, 24)
-      .background(brandRed)
-      .clipShape(Capsule())
-      .shadow(color: Color.black.opacity(0.25), radius: 8, x: 0, y: 4)
+      Text("Post")
+        .font(.system(size: 16, weight: .bold))
+        .foregroundStyle(.white)
+        .padding(.vertical, 14)
+        .padding(.horizontal, 30)
+        .background(brandRed)
+        .clipShape(Capsule())
+        .shadow(color: Color.black.opacity(0.25), radius: 8, x: 0, y: 4)
     })
     .scaleEffect(isPulsing ? 1 : 0.94)
     .padding(.trailing, 20)
