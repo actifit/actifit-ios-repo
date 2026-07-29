@@ -190,9 +190,6 @@ struct PostToSeemitView: View {
     .onDisappear{
       coordinator.action = nil
     }
-    .onChange(of: viewModel.markDownContent) { value in
-      viewModel.updatePostContent(content: value)
-    }
     .overlay {
       if viewModel.showLoader {
           ProgressView()
@@ -525,7 +522,7 @@ struct PostToSeemitView: View {
       Text("Preview")
         .font(.system(size: 14, weight: .bold))
         .foregroundStyle(Color(red: 0.13, green: 0.13, blue: 0.13))
-      Markdown(viewModel.markDownContent)
+      Markdown(viewModel.previewContent)
         .padding(12)
         .frame(maxWidth: .infinity, minHeight: 60, alignment: .topLeading)
         .background(inputBg)

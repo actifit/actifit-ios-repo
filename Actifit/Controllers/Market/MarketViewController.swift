@@ -516,8 +516,10 @@ final class MarketProductCell: UITableViewCell {
         beneficiaryField.autocorrectionType = .no
         beneficiaryField.font = .systemFont(ofSize: 14)
 
-        styleButton(buyAfitBtn, color: .systemBlue)
-        styleButton(buyHiveBtn, color: .systemIndigo)
+        // Android renders both buy buttons in the brand red (#FF112D); match it
+        // instead of the off-brand blue/indigo.
+        styleButton(buyAfitBtn, color: .primaryRedColor())
+        styleButton(buyHiveBtn, color: .primaryRedColor())
         styleButton(activateBtn, color: .systemGreen)
         styleButton(deactivateBtn, color: .systemRed)
         activateBtn.setTitle("Activate", for: .normal)

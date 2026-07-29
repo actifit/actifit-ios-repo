@@ -457,13 +457,18 @@ final class WalletAccordionViewController: UIViewController {
         let titleLabel = UILabel()
         titleLabel.text = title
         titleLabel.font = .systemFont(ofSize: 14, weight: .semibold)
-        titleLabel.numberOfLines = 0
+        titleLabel.numberOfLines = 2
+        titleLabel.lineBreakMode = .byTruncatingTail
+        // Let the description yield space so the AFIT amount is never squeezed out.
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         let amountLabel = UILabel()
         amountLabel.text = amount
         amountLabel.font = .systemFont(ofSize: 14, weight: .bold)
         amountLabel.textColor = positive ? .systemGreen : brandRed
         amountLabel.setContentHuggingPriority(.required, for: .horizontal)
+        // Always render the amount in full; truncate the title instead.
+        amountLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         amountLabel.textAlignment = .right
 
         let topRow = UIStackView(arrangedSubviews: [titleLabel, amountLabel])

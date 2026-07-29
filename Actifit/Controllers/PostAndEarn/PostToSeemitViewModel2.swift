@@ -10,6 +10,7 @@ import UIKit
 import SwiftUI
 import CryptoKit
 import HealthKit
+import Combine
 enum PostState {
     case none
     case success
@@ -44,6 +45,12 @@ class PostToSeemitViewModel2: ObservableObject {
     @Published var chest: String = ""
     @Published var markDownCharacterCount: Int = 0
     @Published var markDownContent: String = ""
+    /// Debounced mirror of `markDownContent` used to drive the (expensive) Markdown
+    /// preview. Rendering the live value on every keystroke re-parsed the whole
+    /// document each character and made the editor flicker; this updates ~300ms
+    /// after the user pauses instead.
+    @Published var previewContent: String = ""
+    private var cancellables = Set<AnyCancellable>()
     @Published var showLoader = false
     @Published var showMarkDownInfoAlert = false
     var activityPostModel: PostActivityModel? = nil
@@ -72,6 +79,18 @@ class PostToSeemitViewModel2: ObservableObject {
         }
         self.btnTodayTapped()
 
+        // Drive the preview off a debounced copy of the editor text and persist
+        // the draft here (instead of re-writing `markDownContent` on every
+        // keystroke), so typing no longer re-parses Markdown each character.
+        $markDownContent
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .sink { [weak self] value in
+                self?.previewContent = value
+                UserDefaults.standard.postContent = value
+            }
+            .store(in: &cancellables)
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
             self.getHealthKitPermission()//Todo: remove this
         })
@@ -97,6 +116,7 @@ class PostToSeemitViewModel2: ObservableObject {
 
     func getInitialMarkdownContent() {
         markDownContent =  UserDefaults.standard.postContent ?? ""
+        previewContent = markDownContent
     }
 
     func todayDateStringWithFormat(format : String) -> String {

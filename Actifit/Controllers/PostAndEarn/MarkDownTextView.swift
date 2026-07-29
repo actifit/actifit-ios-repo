@@ -21,9 +21,10 @@ struct TextView: UIViewRepresentable {
         }
 
         func textViewDidBeginEditing(_ textView: UITextView) {
-            if textView.text == parent.placeholder {
+            // Clear the placeholder (identified by its colour) when editing starts.
+            if textView.textColor == .placeholderText {
                 textView.text = ""
-                textView.textColor = .black // Placeholder color
+                textView.textColor = .black
             }
         }
 
@@ -31,18 +32,13 @@ struct TextView: UIViewRepresentable {
         func textViewDidEndEditing(_ textView: UITextView) {
             if textView.text.isEmpty {
                 textView.text = parent.placeholder
-                textView.textColor =  .gray // Placeholder color
+                textView.textColor = .placeholderText
             }
         }
 
         func textViewDidChange(_ textView: UITextView) {
             parent.text = textView.text
-                       if textView.text.isEmpty {
-                           textView.textColor = .gray // Update color when text becomes empty
-                         //  textView.text = parent.placeholder
-                       } else {
-                           textView.textColor = .black
-                       }
+            textView.textColor = textView.text.isEmpty ? .placeholderText : .black
         }
     }
 
@@ -53,7 +49,6 @@ struct TextView: UIViewRepresentable {
     func makeUIView(context: Context) -> UITextView {
         let textView = UITextView()
         textView.delegate = context.coordinator
-        textView.text = placeholder
         textView.font = UIFont.systemFont(ofSize: 18)
         textView.isScrollEnabled = true
         textView.backgroundColor = .white
@@ -61,24 +56,31 @@ struct TextView: UIViewRepresentable {
         textView.layer.borderWidth = 0                      // Remove border width
         textView.textContainerInset = .zero                 // Adjust text insets if needed
         textView.textContainer.lineFragmentPadding = 0
+        // Seed the field from the binding, falling back to the placeholder.
+        if text.isEmpty {
+            textView.text = placeholder
+            textView.textColor = .placeholderText
+        } else {
+            textView.text = text
+            textView.textColor = .black
+        }
         return textView
     }
 
 
     func updateUIView(_ uiView: UITextView, context: Context) {
-        if uiView.text != text {
-            let selectedRange = uiView.selectedTextRange
-            if !text.isEmpty {
-                uiView.text = text + "\n"
-            }
-            if text.isEmpty && uiView.text != placeholder {
-                       uiView.textColor = .gray // Placeholder color
-                   } else if uiView.text != text {
-                       uiView.textColor = .black // User typing color
-                   }
+        // Only push the bound value into the text view when it genuinely differs
+        // — i.e. a programmatic change from outside. Doing this on every keystroke
+        // (as the old code did, appending "\n" and forcing the caret to the end)
+        // made the field visibly flicker and jump the cursor while typing.
+        if uiView.textColor == .placeholderText && text.isEmpty { return }
+        guard uiView.text != text else { return }
+        let selectedRange = uiView.selectedTextRange
+        uiView.text = text
+        uiView.textColor = text.isEmpty ? .placeholderText : .black
+        // Preserve the caret so an external sync doesn't send it to the end.
+        if let selectedRange = selectedRange {
             uiView.selectedTextRange = selectedRange
-            let endPosition = uiView.endOfDocument
-            uiView.selectedTextRange = uiView.textRange(from: endPosition, to: endPosition)
         }
     }
 }

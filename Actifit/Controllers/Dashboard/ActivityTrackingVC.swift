@@ -1063,7 +1063,9 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
     xAxis.labelFont = .systemFont(ofSize: 8)
     xAxis.granularityEnabled = true
     xAxis.granularity = 0.5
-    xAxis.labelCount = 96
+    // Keep the hourly axis readable instead of cramming all 96 quarter-hour ticks.
+    xAxis.setLabelCount(8, force: false)
+    xAxis.labelRotationAngle = -45
     xAxis.spaceMax = 73.0
     let leftAxisFormatter = NumberFormatter()
     leftAxisFormatter.minimumFractionDigits = 0
@@ -1597,7 +1599,10 @@ extension ActivityTrackingVC {
         xAxis.labelFont = .systemFont(ofSize: 8)
         xAxis.granularityEnabled = true
         xAxis.granularity = 1.0
-        xAxis.labelCount = 96
+        // 96 quarter-hour slots overlapped when every label was drawn; show a
+        // sparse, angled subset so the times stay readable (Charts thins them).
+        xAxis.setLabelCount(8, force: false)
+        xAxis.labelRotationAngle = -45
         xAxis.valueFormatter = IndexAxisValueFormatter(values: timeSlot)
         let set1 = BarChartDataSet(entries: entriesFifteenMinuteIntervel, label: "Today Activity Details")
         let data = BarChartData(dataSet: set1)
