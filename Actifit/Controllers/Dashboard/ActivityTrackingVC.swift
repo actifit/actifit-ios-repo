@@ -1739,7 +1739,9 @@ extension ActivityTrackingVC {
         let user = User.current()?.steemit_username.byTrimming(string: "@") ?? ""
         auraView?.setCompanion(CompanionUtil.resolveCompanion(username: user, isSelf: true))
         pieChart(stepsCount: initialStepCount)   // updates the hidden dummy pie harmlessly
-        updateAura(steps: initialStepCount)
+        // Funnel the initial paint through refreshRevampSteps (not updateAura directly) so the
+        // counter text and 📏/🔥 metrics line get set too — updateAura only draws the rings now.
+        refreshRevampSteps(initialStepCount)
 
         viewModel.votingStatusPublisher.receive(on: DispatchQueue.main).sink { [weak self] model in
             self?.revampVotingLabel?.text = model.status?.isVoting == false ? (model.rewardStart ?? "") : "Rewards cycle in progress…"
