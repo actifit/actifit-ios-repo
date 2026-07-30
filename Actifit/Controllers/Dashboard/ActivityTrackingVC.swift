@@ -251,7 +251,15 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   /// Reads today's step count from Apple Health (Watch/Health app) and displays it.
   func syncHealthSteps() {
     HealthKitManager.shared.requestAuthorization { [weak self] success, _ in
-      guard let self = self, success else { return }
+      guard let self = self else { return }
+      // Fail loudly instead of silently: an unavailable/denied HealthKit used to leave the
+      // cloud button looking dead (no toast, no change). Tell the user what happened.
+      guard success else {
+        DispatchQueue.main.async {
+          self.showToast(message: "Apple Health is unavailable or permission was denied. Enable it in Settings → Health → Actifit.")
+        }
+        return
+      }
       HealthKitManager.shared.retrieveTodayMetrics { steps, distanceMeters, kcal in
         DispatchQueue.main.async {
           self.viewModel.lastHealthSteps = Int(steps)
@@ -262,7 +270,14 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
           self.liveCalories = kcal
           self.lastRevampSteps = -1   // force the rings to refresh with the new real values
           self.showStepsCount(count: Int(steps))
-          self.showToast(message: "Synced \(Int(steps)) steps from Apple Health")
+          // A "successful" sync can still read 0 — HealthKit never reveals whether *read*
+          // access was granted, so 0 means either an empty Health store or a silent denial.
+          // Spell that out rather than showing a bare "Synced 0 steps".
+          if Int(steps) == 0 {
+            self.showToast(message: "Synced 0 steps — check that Apple Health has today's data and Actifit has permission (Settings → Health → Actifit).")
+          } else {
+            self.showToast(message: "Synced \(Int(steps)) steps from Apple Health")
+          }
         }
       }
     }
@@ -1678,14 +1693,16 @@ extension ActivityTrackingVC: AuthenticationProtocol {
       return
     }
     FitbitAPI.sharedInstance.authorize(with: authToken)
-    let _ = StepStat.fetchTodaysStepStat(forDate: self.activityDateToSave) { [weak self] stepStat, error in
+    let syncDate = self.activityDateToSave
+    let _ = StepStat.fetchTodaysStepStat(forDate: syncDate) { [weak self] stepStat, error in
       guard let self = self else { return }
       let steps = stepStat?.steps ?? 0
       self.initialStepCount = Int(steps)
       self.showStepsCount(count:  self.initialStepCount)
       viewModel.switchSensor(isThirdParty: true)
       self.viewModel.switchToFitbitSensor(steps: Int(stepStat?.steps ?? 0))
-
+      // Also pull Fitbit's real distance + calories for the multi-metric rings (Android PR #83).
+      self.fetchFitbitMetrics(forDate: syncDate)
     }
   }
 }
@@ -2618,12 +2635,66 @@ extension ActivityTrackingVC {
 
     /// Effective distance (metres) + calories for display: the active source's real values
     /// when available, otherwise a step-derived estimate. The booleans say which is which.
+    /// Fitbit's real values live in the view model (fetched on sync); Device/Health set `live*`.
     private func effectiveMetrics(steps: Int) -> (dist: Double, cal: Double, distReal: Bool, calReal: Bool) {
-        let distReal = liveDistanceMeters >= 0
-        let calReal = liveCalories >= 0
-        return (distReal ? liveDistanceMeters : Double(steps) * 0.762,
-                calReal ? liveCalories : Double(steps) * 0.04,
+        let dMeters = (viewModel.trackingMode == .fitbit) ? viewModel.lastFitbitDistanceMeters : liveDistanceMeters
+        let cVal = (viewModel.trackingMode == .fitbit) ? viewModel.lastFitbitCalories : liveCalories
+        let distReal = dMeters >= 0
+        let calReal = cVal >= 0
+        return (distReal ? dMeters : Double(steps) * 0.762,
+                calReal ? cVal : Double(steps) * 0.04,
                 distReal, calReal)
+    }
+
+    /// Pulls Fitbit's own distance + calories (real values) after a sync and refreshes the rings
+    /// once, if we're currently showing Fitbit.
+    private func fetchFitbitMetrics(forDate date: Date) {
+        let isMetric = Route.isMetric
+        let group = DispatchGroup()
+
+        // Distance: pin the unit via Accept-Language to the app's own metric/US setting, so the
+        // fetched unit and the displayed unit can't disagree, then convert to metres.
+        group.enter()
+        _ = StepStat.fetchTodaysActivitySeries(
+            resource: "activities/tracker/distance",
+            responseKey: "activities-tracker-distance",
+            acceptLanguage: isMetric ? nil : "en_US",
+            forDate: date) { [weak self] value in
+            if let value, value >= 0 {
+                self?.viewModel.lastFitbitDistanceMeters = value * (isMetric ? 1000.0 : 1609.344)
+            } else {
+                self?.viewModel.lastFitbitDistanceMeters = -1
+            }
+            group.leave()
+        }
+
+        // Calories: activity-only kcal — comparable to Health's active energy and the step
+        // estimate. (tracker/calories returns BMR+activity total, which would peg the ring full
+        // and diverge ~5–6× from Health mode.)
+        group.enter()
+        _ = StepStat.fetchTodaysActivitySeries(
+            resource: "activities/activityCalories",
+            responseKey: "activities-activityCalories",
+            forDate: date) { [weak self] value in
+            if let value, value >= 0 {
+                self?.viewModel.lastFitbitCalories = value
+            } else {
+                self?.viewModel.lastFitbitCalories = -1
+            }
+            group.leave()
+        }
+
+        // Single refresh once both land — avoids a double ring animation and the brief
+        // estimate→real flash from refreshing per-metric.
+        group.notify(queue: .main) { [weak self] in
+            self?.refreshFitbitRingsIfActive()
+        }
+    }
+
+    private func refreshFitbitRingsIfActive() {
+        guard viewModel.trackingMode == .fitbit else { return }
+        lastRevampSteps = -1   // force the rings to re-animate with the new real values
+        refreshRevampSteps(viewModel.lastFitbitSteps)
     }
 
     func updateRevampGoal(steps: Int) {

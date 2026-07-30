@@ -194,9 +194,17 @@ class PostToSeemitViewModel2: ObservableObject {
         }
 
         if fetchMeasurments {
-            let _ = StepStat.fetchUser() { [weak self] userStat, error in
-                self?.measurmentKeys.updateValue("\(userStat!["height"] as! NSNumber)", forKey: PostKeys.height)
-                self?.measurmentKeys.updateValue("\(userStat!["weight"] as! NSNumber)", forKey: PostKeys.weight)
+            // Pin the profile's unit system to the app's own metric/US setting (same as the
+            // sliders' labels), so Fitbit's height/weight come back in the units we display.
+            let isMetric = (self.settings?.measurementSystem ?? MeasurementSystem.metric.rawValue) == MeasurementSystem.metric.rawValue
+            let _ = StepStat.fetchUser(acceptLanguage: isMetric ? nil : "en_US") { [weak self] userStat, error in
+                guard let self = self, let userStat = userStat else { return }
+                if let height = userStat["height"] as? NSNumber {
+                    self.measurmentKeys.updateValue("\(height)", forKey: PostKeys.height)
+                }
+                if let weight = userStat["weight"] as? NSNumber {
+                    self.measurmentKeys.updateValue("\(weight)", forKey: PostKeys.weight)
+                }
             }
         }
     }

@@ -212,6 +212,17 @@ class ActivityTrackingViewModel {
     return UserDefaults.standard.lastSynchronizedSteps
   }
 
+  /// Real Fitbit distance (metres) / calories (kcal) from the last sync; -1 = not synced yet,
+  /// so the dashboard falls back to a step-derived estimate.
+  var lastFitbitDistanceMeters: Double {
+    get { (UserDefaults.standard.object(forKey: "lastFitbitDistanceMeters") as? Double) ?? -1 }
+    set { UserDefaults.standard.set(newValue, forKey: "lastFitbitDistanceMeters") }
+  }
+  var lastFitbitCalories: Double {
+    get { (UserDefaults.standard.object(forKey: "lastFitbitCalories") as? Double) ?? -1 }
+    set { UserDefaults.standard.set(newValue, forKey: "lastFitbitCalories") }
+  }
+
   func switchSensor(isThirdParty: Bool) {
     UserDefaults.standard.isThirdPartySensor = isThirdParty
   }
@@ -263,6 +274,8 @@ class ActivityTrackingViewModel {
       if difference != 0 {
         UserDefaults.standard.lastDateStepSynchronization = nil
         UserDefaults.standard.lastSynchronizedSteps = 0
+        lastFitbitDistanceMeters = -1
+        lastFitbitCalories = -1
       }
     }
 
