@@ -16,6 +16,12 @@ enum ThreadSource {
     case leo     // leothreads (InLeo)
 }
 
+/// `@MainActor`: the discussions data is filled by three concurrent Tasks (waves/snaps/leo),
+/// each of which writes its comment array and then merges all three in `sortComments`. Pinning
+/// the view model to the main actor serializes those writes so the shared arrays can't race /
+/// corrupt. Network `await`s inside still run off-main; only the state mutations are serialized.
+/// The sole consumer (WavesPopupViewController) is already main-actor, so callers are unaffected.
+@MainActor
 class WavesPopupViewModel {
     var hivePosts: HivePosts?
     var snapPost: HivePosts?
