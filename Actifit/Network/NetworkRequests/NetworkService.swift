@@ -27,6 +27,7 @@ protocol MyAppServiceProtocols {
   func createWave(username: String, body: [String: Any], comment: String) async -> Result<CreateWaveModel, RequestError>
   func getWave() async -> Result<HivePosts, RequestError>
   func getSnaps() async -> Result<HivePosts, RequestError>
+  func getLeoThreads() async -> Result<HivePosts, RequestError>
   func getUserPosts(username: String) async -> Result<HiveUserPosts, RequestError>
   func postActivity(body: [String:Any]) async -> Result<PostActivityModel, RequestError>
   func dailyLeaderboard() async -> Result<[LeaderboardModel], RequestError>
@@ -145,6 +146,10 @@ extension HTTPClient: MyAppServiceProtocols {
 
     func getSnaps() async -> Result<HivePosts, RequestError> {
         return await sendRequest(endpoint: GetSnapsEndPoint.getSnaps, responseModel: HivePosts.self)
+    }
+
+    func getLeoThreads() async -> Result<HivePosts, RequestError> {
+        return await sendRequest(endpoint: GetSnapsEndPoint.getLeoThreads, responseModel: HivePosts.self)
     }
 
 }

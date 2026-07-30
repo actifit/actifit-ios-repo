@@ -43,6 +43,9 @@ struct PostToSeemitView: View {
   private let inputBg = Color(red: 245/255, green: 245/255, blue: 245/255)
   private let separator = Color(red: 224/255, green: 224/255, blue: 224/255)
   private let chipBg = Color(red: 238/255, green: 238/255, blue: 238/255)
+  // Selected tag/activity chips use a slate fill (not brand red) so the red Post CTA stands out
+  // instead of blending into a wall of red chips (tester feedback).
+  private let chipSelectedBg = Color(red: 0.20, green: 0.23, blue: 0.26)
   private let textSecondary = Color(red: 117/255, green: 117/255, blue: 117/255)
   private let successGreen = Color(red: 0, green: 200/255, blue: 83/255)
   private var brandRed: Color { Color(.primaryRedColor()) }
@@ -583,7 +586,7 @@ struct PostToSeemitView: View {
       }
       .padding(.horizontal, 14)
       .padding(.vertical, 8)
-      .background(selected ? brandRed : chipBg)
+      .background(selected ? chipSelectedBg : chipBg)
       .clipShape(Capsule())
     })
   }

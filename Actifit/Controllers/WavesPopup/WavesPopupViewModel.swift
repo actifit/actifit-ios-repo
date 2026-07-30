@@ -8,9 +8,24 @@
 import Foundation
 import Combine
 import UIKit
+
+/// The short-form Hive sources aggregated in the Discussions modal (Android parity).
+enum ThreadSource {
+    case waves   // ecency.waves
+    case snaps   // peak.snaps
+    case leo     // leothreads (InLeo)
+}
+
+/// `@MainActor`: the discussions data is filled by three concurrent Tasks (waves/snaps/leo),
+/// each of which writes its comment array and then merges all three in `sortComments`. Pinning
+/// the view model to the main actor serializes those writes so the shared arrays can't race /
+/// corrupt. Network `await`s inside still run off-main; only the state mutations are serialized.
+/// The sole consumer (WavesPopupViewController) is already main-actor, so callers are unaffected.
+@MainActor
 class WavesPopupViewModel {
     var hivePosts: HivePosts?
     var snapPost: HivePosts?
+    var leoPosts: HivePosts?
     var upvotesId: [Int] = []
     var cancellables = Set<AnyCancellable>()
     private let loaderSubject = PassthroughSubject<Bool, Never>()
@@ -43,12 +58,14 @@ class WavesPopupViewModel {
 //    var permlink = ""
     private var ecencyComments: [PostComments] = []
     private var snapComments: [PostComments] = []
+    private var leoComments: [PostComments] = []
     var postResult: PostsResults? = nil
     var commentsAndSnaps: [PostComments] = []
     init(){
         Task {
             await getWaveContent()
             await getSnaps()
+            await getLeoThreads()
         }
     }
 
@@ -128,7 +145,7 @@ class WavesPopupViewModel {
             self.hivePosts = success
             guard let post = success.result.first else { self.loaderSubject.send(false); return }
             Task {
-                await self.getWavePostComments(wavePost: post, isSnap: false)
+                await self.getWavePostComments(wavePost: post, source: .waves)
             }
         case .failure(let failure):
             print(failure.localizedDescription)
@@ -144,7 +161,23 @@ class WavesPopupViewModel {
             self.snapPost = success
             guard let post = success.result.first else { self.loaderSubject.send(false); return }
             Task {
-                await self.getWavePostComments(wavePost: post, isSnap: true)
+                await self.getWavePostComments(wavePost: post, source: .snaps)
+            }
+        case .failure(let failure):
+            print(failure.localizedDescription)
+            self.loaderSubject.send(false)
+        }
+    }
+
+    private func getLeoThreads() async {
+        self.loaderSubject.send(true)
+        let content = await HTTPClient().getLeoThreads()
+        switch content {
+        case .success(let success):
+            self.leoPosts = success
+            guard let post = success.result.first else { self.loaderSubject.send(false); return }
+            Task {
+                await self.getWavePostComments(wavePost: post, source: .leo)
             }
         case .failure(let failure):
             print(failure.localizedDescription)
@@ -160,29 +193,29 @@ class WavesPopupViewModel {
             guard let posts = self.snapPost?.result, posts.count > 1 else { return }
             let post = posts[1]
             Task {
-                await getWavePostComments(wavePost: post, isSnap: true)
+                await getWavePostComments(wavePost: post, source: .snaps)
             }
         } else {
             guard let posts = self.hivePosts?.result, posts.count > 1 else { return }
             let post = posts[1]
             Task {
-                await getWavePostComments(wavePost: post, isSnap: false)
+                await getWavePostComments(wavePost: post, source: .waves)
             }
         }
     }
 
-    private func getWavePostComments(wavePost: PostsResults, isSnap: Bool) async {
+    private func getWavePostComments(wavePost: PostsResults, source: ThreadSource) async {
         let comments = await HTTPClient().getComments(author: wavePost.author ?? "", permlink: wavePost.permlink ?? "")
         switch comments {
         case .success(let comments):
             comments.result.forEach { comment in
-                comment.updateSnapStatus(isSnap: isSnap)
+                comment.updateSnapStatus(isSnap: source == .snaps)
             }
             self.postResult = wavePost
-            if isSnap {
-                self.snapComments = comments.result
-            } else {
-                self.ecencyComments = comments.result
+            switch source {
+            case .waves: self.ecencyComments = comments.result
+            case .snaps: self.snapComments = comments.result
+            case .leo:   self.leoComments = comments.result
             }
             self.sortComments()
             self.loaderSubject.send(false)
@@ -193,7 +226,7 @@ class WavesPopupViewModel {
     }
 
     func sortComments() {
-        commentsAndSnaps = (ecencyComments + snapComments).sorted {
+        commentsAndSnaps = (ecencyComments + snapComments + leoComments).sorted {
             guard let date1 = dateFormatter.date(from: $0.created),
                   let date2 = dateFormatter.date(from: $1.created) else { return false }
             return date1 > date2

@@ -44,7 +44,10 @@ class PostComments: Codable, Equatable {
         body = try container.decode(String.self, forKey: .body)
         children = try container.decode(Int.self, forKey: .children)
         created = try container.decode(String.self, forKey: .created)
-        id = try container.decode(Int.self, forKey: .id)
+        // Current Hive nodes no longer return `id` on condenser_api.get_content_replies, so a
+        // required decode here threw and failed the WHOLE reply list (empty discussions). Decode
+        // it when present, default to 0 otherwise.
+        id = (try? container.decode(Int.self, forKey: .id)) ?? 0
         permlink = try container.decode(String.self, forKey: .permlink)
         netVotes = try? container.decode(Int.self, forKey: .netVotes)
 
