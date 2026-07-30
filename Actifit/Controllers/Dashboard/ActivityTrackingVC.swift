@@ -2008,15 +2008,15 @@ extension ActivityTrackingVC {
         aura.centerDiscColor = card.backgroundColor
         auraView = aura
 
-        // High-contrast, theme-neutral colours so the centre content reads on the disc
-        // instead of blurring into the arcs (was brand-red 32pt over the rings).
-        let onSurface = UIColor(white: 0.13, alpha: 1)      // ~#212121
+        // The disc gives the counter a clean surface; the counter colour is milestone-driven at
+        // runtime in refreshRevampSteps (brand red below the goal, green once hit) — matching
+        // Android's tv_step_count_hc. Secondary grey for the goal + metrics lines.
         let textSecondary = UIColor(white: 0.46, alpha: 1)  // ~#757575
 
         let bigStep = UILabel()
         bigStep.text = "0"
         bigStep.font = .systemFont(ofSize: 26, weight: .bold)
-        bigStep.textColor = onSurface
+        bigStep.textColor = revampRed
         bigStep.textAlignment = .center
         revampBigStepLabel = bigStep
 
@@ -2027,9 +2027,10 @@ extension ActivityTrackingVC {
         goalLabel.text = "/ 10,000 steps"
         revampGoalLabel = goalLabel
 
-        // Third line surfaces distance + calories (populated in updateAura); was "% to goal".
+        // Third line surfaces distance + calories (populated in updateRevampGoal); was "% to goal".
+        // Bold for legibility (Android parity).
         let pctLabel = UILabel()
-        pctLabel.font = .systemFont(ofSize: 11)
+        pctLabel.font = .systemFont(ofSize: 11, weight: .bold)
         pctLabel.textColor = textSecondary
         pctLabel.textAlignment = .center
         pctLabel.text = ""
@@ -2593,6 +2594,8 @@ extension ActivityTrackingVC {
         // Cheap text refresh always runs (so real distance/calories surface even when the
         // step count itself hasn't changed); the expensive ring re-animation stays guarded.
         revampBigStepLabel?.text = "\(steps)"
+        // Milestone colour (Android parity): brand red until the 10k goal, green once reached.
+        revampBigStepLabel?.textColor = steps >= 10000 ? UIColor(red: 0, green: 0.5, blue: 0, alpha: 1) : revampRed
         updateRevampGoal(steps: steps)
         guard steps != lastRevampSteps else { return }
         lastRevampSteps = steps
@@ -2616,7 +2619,8 @@ extension ActivityTrackingVC {
         let m = effectiveMetrics(steps: steps)
         let distStr = (m.distReal ? "" : "≈") + Route.distanceString(m.dist)
         let calStr = (m.calReal ? "" : "≈") + "\(Int(m.cal.rounded())) kcal"
-        revampPctLabel?.text = "📏 \(distStr)   🔥 \(calStr)"
+        // Leading LTR mark keeps the emoji/number order stable in RTL locales (Android textDirection=ltr).
+        revampPctLabel?.text = "\u{200E}📏 \(distStr)   🔥 \(calStr)"
     }
 
     // MARK: Aura + streak (Android CompanionUtil / streak parity)
