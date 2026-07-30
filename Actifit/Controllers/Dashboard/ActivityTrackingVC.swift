@@ -2632,17 +2632,47 @@ extension ActivityTrackingVC {
     }
 
     /// Pulls Fitbit's own distance + calories (real values) after a sync and refreshes the rings
-    /// if we're currently showing Fitbit. Distance comes back in km → convert to metres.
+    /// once, if we're currently showing Fitbit.
     private func fetchFitbitMetrics(forDate date: Date) {
-        _ = StepStat.fetchTodaysTrackerMetric("distance", forDate: date) { [weak self] km in
-            guard let self = self else { return }
-            self.viewModel.lastFitbitDistanceMeters = (km != nil && km! >= 0) ? km! * 1000.0 : -1
-            self.refreshFitbitRingsIfActive()
+        let isMetric = Route.isMetric
+        let group = DispatchGroup()
+
+        // Distance: pin the unit via Accept-Language to the app's own metric/US setting, so the
+        // fetched unit and the displayed unit can't disagree, then convert to metres.
+        group.enter()
+        _ = StepStat.fetchTodaysActivitySeries(
+            resource: "activities/tracker/distance",
+            responseKey: "activities-tracker-distance",
+            acceptLanguage: isMetric ? nil : "en_US",
+            forDate: date) { [weak self] value in
+            if let value, value >= 0 {
+                self?.viewModel.lastFitbitDistanceMeters = value * (isMetric ? 1000.0 : 1609.344)
+            } else {
+                self?.viewModel.lastFitbitDistanceMeters = -1
+            }
+            group.leave()
         }
-        _ = StepStat.fetchTodaysTrackerMetric("calories", forDate: date) { [weak self] kcal in
-            guard let self = self else { return }
-            self.viewModel.lastFitbitCalories = (kcal != nil && kcal! >= 0) ? kcal! : -1
-            self.refreshFitbitRingsIfActive()
+
+        // Calories: activity-only kcal — comparable to Health's active energy and the step
+        // estimate. (tracker/calories returns BMR+activity total, which would peg the ring full
+        // and diverge ~5–6× from Health mode.)
+        group.enter()
+        _ = StepStat.fetchTodaysActivitySeries(
+            resource: "activities/activityCalories",
+            responseKey: "activities-activityCalories",
+            forDate: date) { [weak self] value in
+            if let value, value >= 0 {
+                self?.viewModel.lastFitbitCalories = value
+            } else {
+                self?.viewModel.lastFitbitCalories = -1
+            }
+            group.leave()
+        }
+
+        // Single refresh once both land — avoids a double ring animation and the brief
+        // estimate→real flash from refreshing per-metric.
+        group.notify(queue: .main) { [weak self] in
+            self?.refreshFitbitRingsIfActive()
         }
     }
 
