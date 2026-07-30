@@ -251,7 +251,15 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   /// Reads today's step count from Apple Health (Watch/Health app) and displays it.
   func syncHealthSteps() {
     HealthKitManager.shared.requestAuthorization { [weak self] success, _ in
-      guard let self = self, success else { return }
+      guard let self = self else { return }
+      // Fail loudly instead of silently: an unavailable/denied HealthKit used to leave the
+      // cloud button looking dead (no toast, no change). Tell the user what happened.
+      guard success else {
+        DispatchQueue.main.async {
+          self.showToast(message: "Apple Health is unavailable or permission was denied. Enable it in Settings → Health → Actifit.")
+        }
+        return
+      }
       HealthKitManager.shared.retrieveTodayMetrics { steps, distanceMeters, kcal in
         DispatchQueue.main.async {
           self.viewModel.lastHealthSteps = Int(steps)
@@ -262,7 +270,14 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
           self.liveCalories = kcal
           self.lastRevampSteps = -1   // force the rings to refresh with the new real values
           self.showStepsCount(count: Int(steps))
-          self.showToast(message: "Synced \(Int(steps)) steps from Apple Health")
+          // A "successful" sync can still read 0 — HealthKit never reveals whether *read*
+          // access was granted, so 0 means either an empty Health store or a silent denial.
+          // Spell that out rather than showing a bare "Synced 0 steps".
+          if Int(steps) == 0 {
+            self.showToast(message: "Synced 0 steps — check that Apple Health has today's data and Actifit has permission (Settings → Health → Actifit).")
+          } else {
+            self.showToast(message: "Synced \(Int(steps)) steps from Apple Health")
+          }
         }
       }
     }
