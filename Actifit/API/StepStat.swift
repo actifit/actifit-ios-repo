@@ -60,9 +60,9 @@ struct StepStat {
         }
     }
     
-    static func fetchUser(callback: @escaping (NSDictionary?, Error?)->Void) -> URLSessionDataTask? {
+    static func fetchUser(acceptLanguage: String? = nil, callback: @escaping (NSDictionary?, Error?)->Void) -> URLSessionDataTask? {
         let datePath = "/today/1d.json"
-        return fetchUser(for: datePath) { (stepStats, error) in
+        return fetchUser(for: datePath, acceptLanguage: acceptLanguage) { (stepStats, error) in
             callback(stepStats, error)
         }
     }
@@ -152,12 +152,19 @@ struct StepStat {
         return dataTask
     }
 
-    static func fetchUser(for datePath: String, callback: @escaping (NSDictionary?, Error?)->Void) -> URLSessionDataTask? {
+    /// `acceptLanguage` pins the profile's unit system (height/weight): nil = Fitbit metric
+    /// default (cm/kg), "en_US" = US (in/lb). Pass the app's own metric/US setting so the
+    /// fetched measurements match the units the UI labels them with.
+    static func fetchUser(for datePath: String, acceptLanguage: String? = nil, callback: @escaping (NSDictionary?, Error?)->Void) -> URLSessionDataTask? {
         guard let session = FitbitAPI.sharedInstance.session,
             let stepURL = URL(string: "https://api.fitbit.com/1/user/-/profile.json") else {
                 return nil
         }
-        let dataTask = session.dataTask(with: stepURL) { (data, response, error) in
+        var request = URLRequest(url: stepURL)
+        if let acceptLanguage = acceptLanguage {
+            request.setValue(acceptLanguage, forHTTPHeaderField: "Accept-Language")
+        }
+        let dataTask = session.dataTask(with: request) { (data, response, error) in
             guard let response = response as? HTTPURLResponse, response.statusCode < 300 else {
                 DispatchQueue.main.async {
                     callback(nil, error)
