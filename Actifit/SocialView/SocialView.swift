@@ -34,7 +34,10 @@ struct SocialView: View {
 //            .frame(height: 40)
             ScrollView {
                 LazyVStack {
-                    ForEach(viewModel.socialPosts, id: \.postId) { socialPost in
+                    // Key on permlink, NOT postId: Hive's get_ranked_posts no longer returns a
+                    // post id, so postId is nil for every post — identical ForEach ids made SwiftUI
+                    // render only ONE row and leave the rest blank. Permlink is unique per report.
+                    ForEach(viewModel.socialPosts, id: \.permlink) { socialPost in
                         socialPostView(post: socialPost)
                             .background(.white)
                             .padding(.horizontal, 8)
@@ -192,7 +195,6 @@ struct SocialView: View {
                 DownViewRepresentable(markdownText:  generateMarkdownText(for: post, expandedPosts: expandedPosts, translationManager: translationManager), contentHeight: $estimatedHeigt)
                     .frame(height:  expandedPosts["\(post.author)-\(post.permlink)"] == true ? estimatedHeigt : 100)
                     .edgesIgnoringSafeArea(.all)
-                    .background(.red)
                     .id(expandedPosts["\(post.author)-\(post.permlink)"] == true ? "expanded-\(post.author)-\(post.permlink)" : "collapsed-\(post.author)-\(post.permlink)")
             }
             HStack {
