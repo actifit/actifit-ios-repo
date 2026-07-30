@@ -34,10 +34,11 @@ struct SocialView: View {
 //            .frame(height: 40)
             ScrollView {
                 LazyVStack {
-                    // Key on permlink, NOT postId: Hive's get_ranked_posts no longer returns a
-                    // post id, so postId is nil for every post — identical ForEach ids made SwiftUI
-                    // render only ONE row and leave the rest blank. Permlink is unique per report.
-                    ForEach(viewModel.socialPosts, id: \.permlink) { socialPost in
+                    // Key on the stable author+permlink uid, NOT postId: Hive's get_ranked_posts no
+                    // longer returns a post id, so postId is nil for every post — identical ForEach
+                    // ids made SwiftUI render only ONE row and blank the rest. (uid is globally
+                    // unique; a bare permlink is only unique per author.)
+                    ForEach(viewModel.socialPosts, id: \.uid) { socialPost in
                         socialPostView(post: socialPost)
                             .background(.white)
                             .padding(.horizontal, 8)
@@ -353,16 +354,13 @@ struct SocialView: View {
         }
 
     func getImageFromMetadata(metaData: Metadata) -> String? {
-        if let images = metaData.images {
-            return images.first{$0.contains(find: ".png")
-            }
+        // Match common image types, not just .png — most Actifit reports use .jpg/.gif, which the
+        // old .png-only check missed, leaving a blank image box on the header.
+        let exts = [".png", ".jpg", ".jpeg", ".gif", ".webp"]
+        func firstImage(in arr: [String]?) -> String? {
+            arr?.first { url in exts.contains { url.lowercased().contains(find: $0) } }
         }
-        else if let image = metaData.image {
-            return image.first{$0.contains(find: ".png")
-            }
-        } else {
-            return nil
-        }
+        return firstImage(in: metaData.images) ?? firstImage(in: metaData.image)
     }
 
     func togglePostExpansion(postId: String) {
