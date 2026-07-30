@@ -93,6 +93,10 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   @IBOutlet weak var cloudBtn: UIButton!
   let activityManager = CMMotionActivityManager()
   private let pedometer = CMPedometer()
+  /// Real distance (metres) / active calories (kcal) from the active source; `-1` means the
+  /// source didn't provide it, so the dashboard falls back to a step-derived estimate.
+  private var liveDistanceMeters: Double = -1
+  private var liveCalories: Double = -1
 
   var startDate = Date()
   var timer : Timer?
@@ -245,11 +249,15 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   func syncHealthSteps() {
     HealthKitManager.shared.requestAuthorization { [weak self] success, _ in
       guard let self = self, success else { return }
-      HealthKitManager.shared.retrieveStepCount { steps in
+      HealthKitManager.shared.retrieveTodayMetrics { steps, distanceMeters, kcal in
         DispatchQueue.main.async {
           self.viewModel.lastHealthSteps = Int(steps)
           self.viewModel.updateHealthSyncDate()
           self.initialStepCount = Int(steps)
+          // Real Health distance/calories (-1 when Health has no source → estimate).
+          self.liveDistanceMeters = distanceMeters
+          self.liveCalories = kcal
+          self.lastRevampSteps = -1   // force the rings to refresh with the new real values
           self.showStepsCount(count: Int(steps))
           self.showToast(message: "Synced \(Int(steps)) steps from Apple Health")
         }
@@ -1227,7 +1235,10 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
               self.initialStepCount = self.viewModel.lastHealthSteps
               self.showStepsCount(count: self.viewModel.lastHealthSteps)
           case .device:
-              // Device (CoreMotion): live, auto-synced.
+              // Device (CoreMotion): live, auto-synced. CMPedometer gives real distance
+              // (but no calories, so those stay a step estimate).
+              self.liveDistanceMeters = pedometerData.distance?.doubleValue ?? -1
+              self.liveCalories = -1
               UserDefaults.standard.lastSynchronizedSteps = totalSteps
               self.showStepsCount(count: totalSteps)
               if self.initialStepCount != totalSteps {
@@ -1991,27 +2002,35 @@ extension ActivityTrackingVC {
 
         let aura = AuraView()
         aura.translatesAutoresizingMaskIntoConstraints = false
+        // Clean disc behind the counter, matching the card colour (Android AuraView parity).
+        aura.centerDiscColor = card.backgroundColor
         auraView = aura
+
+        // High-contrast, theme-neutral colours so the centre content reads on the disc
+        // instead of blurring into the arcs (was brand-red 32pt over the rings).
+        let onSurface = UIColor(white: 0.13, alpha: 1)      // ~#212121
+        let textSecondary = UIColor(white: 0.46, alpha: 1)  // ~#757575
 
         let bigStep = UILabel()
         bigStep.text = "0"
-        bigStep.font = .systemFont(ofSize: 32, weight: .bold)
-        bigStep.textColor = revampRed
+        bigStep.font = .systemFont(ofSize: 26, weight: .bold)
+        bigStep.textColor = onSurface
         bigStep.textAlignment = .center
         revampBigStepLabel = bigStep
 
         let goalLabel = UILabel()
-        goalLabel.font = .systemFont(ofSize: 13)
-        goalLabel.textColor = .darkGray
+        goalLabel.font = .systemFont(ofSize: 12)
+        goalLabel.textColor = textSecondary
         goalLabel.textAlignment = .center
         goalLabel.text = "/ 10,000 steps"
         revampGoalLabel = goalLabel
 
+        // Third line surfaces distance + calories (populated in updateAura); was "% to goal".
         let pctLabel = UILabel()
-        pctLabel.font = .systemFont(ofSize: 12)
-        pctLabel.textColor = .gray
+        pctLabel.font = .systemFont(ofSize: 11)
+        pctLabel.textColor = textSecondary
         pctLabel.textAlignment = .center
-        pctLabel.text = "0% to goal"
+        pctLabel.text = ""
         revampPctLabel = pctLabel
 
         let centerText = UIStackView(arrangedSubviews: [bigStep, goalLabel, pctLabel])
@@ -2569,30 +2588,46 @@ extension ActivityTrackingVC {
     /// HealthKit/Fitbit display funnel `showStepsCount`); skips no-op repeats so
     /// the activity rings don't re-animate on identical values.
     func refreshRevampSteps(_ steps: Int) {
+        // Cheap text refresh always runs (so real distance/calories surface even when the
+        // step count itself hasn't changed); the expensive ring re-animation stays guarded.
+        revampBigStepLabel?.text = "\(steps)"
+        updateRevampGoal(steps: steps)
         guard steps != lastRevampSteps else { return }
         lastRevampSteps = steps
         updateAura(steps: steps)
     }
 
+    /// Effective distance (metres) + calories for display: the active source's real values
+    /// when available, otherwise a step-derived estimate. The booleans say which is which.
+    private func effectiveMetrics(steps: Int) -> (dist: Double, cal: Double, distReal: Bool, calReal: Bool) {
+        let distReal = liveDistanceMeters >= 0
+        let calReal = liveCalories >= 0
+        return (distReal ? liveDistanceMeters : Double(steps) * 0.762,
+                calReal ? liveCalories : Double(steps) * 0.04,
+                distReal, calReal)
+    }
+
     func updateRevampGoal(steps: Int) {
-        let pct = min(100, max(0, Int((Double(steps) / 10000.0) * 100)))
-        revampPctLabel?.text = "\(pct)% to goal"
+        // Distance + calories under the count (Android PR 82 parity). Real source data shows
+        // as-is; step-derived estimates carry an "≈". Distance honours the user's measurement
+        // system (km / mi) via the shared Route formatter.
+        let m = effectiveMetrics(steps: steps)
+        let distStr = (m.distReal ? "" : "≈") + Route.distanceString(m.dist)
+        let calStr = (m.calReal ? "" : "≈") + "\(Int(m.cal.rounded())) kcal"
+        revampPctLabel?.text = "📏 \(distStr)   🔥 \(calStr)"
     }
 
     // MARK: Aura + streak (Android CompanionUtil / streak parity)
 
     func updateAura(steps: Int) {
-        revampBigStepLabel?.text = "\(steps)"
-        updateRevampGoal(steps: steps)
         let streak = computeStreak()
         let level = CompanionUtil.levelFromStreak(streak)
         let hour = Calendar.current.component(.hour, from: Date())
         let wilting = CompanionUtil.isWilting(streak: streak, todaySteps: steps, hourOfDay: hour)
-        let distKm = Double(steps) * 0.762 / 1000.0
-        let cal = Double(steps) * 0.04
+        let m = effectiveMetrics(steps: steps)
         auraView?.setActivityRings(steps: CGFloat(steps) / 10000.0,
-                                   distance: CGFloat(distKm) / 8.0,
-                                   calories: CGFloat(cal) / 500.0,
+                                   distance: CGFloat(m.dist / 1000.0) / 8.0,
+                                   calories: CGFloat(m.cal) / 500.0,
                                    level: level, wilting: wilting)
         updateStreakStrip(streak: streak)
         updateRewardHint(steps: steps)
@@ -2659,6 +2694,10 @@ extension ActivityTrackingVC {
     /// Bottom-right swap button: cycle device -> Apple Health -> Fitbit -> device.
     @objc func revampCycleTrackingMode() {
         let mode = viewModel.cycleTrackingMode()
+        // Clear the previous source's distance/calories so we don't show stale real data
+        // before the new source reports (each source repopulates these on its next update).
+        liveDistanceMeters = -1
+        liveCalories = -1
         applyTrackingModeUI()
         switch mode {
         case .device:

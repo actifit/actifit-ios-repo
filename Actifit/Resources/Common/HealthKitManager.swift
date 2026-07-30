@@ -20,8 +20,15 @@ class HealthKitManager {
             return
         }
 
-        let stepsCount = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.stepCount)!
-        healthStore.requestAuthorization(toShare: [], read: [stepsCount]) { (success, error) in
+        // Read steps plus walking/running distance and active energy so the dashboard can
+        // show real distance/calories (not just a step estimate) when Health has the data.
+        var read: Set<HKObjectType> = []
+        [HKQuantityTypeIdentifier.stepCount,
+         .distanceWalkingRunning,
+         .activeEnergyBurned].forEach {
+            if let t = HKObjectType.quantityType(forIdentifier: $0) { read.insert(t) }
+        }
+        healthStore.requestAuthorization(toShare: [], read: read) { (success, error) in
             completion(success, error)
         }
     }
@@ -49,5 +56,33 @@ class HealthKitManager {
         }
 
         healthStore.execute(query)
+    }
+
+    /// Today's steps plus real distance (metres) and active calories (kcal) from Health.
+    /// distanceMeters / kcal come back as `-1` when Health has no data source for that
+    /// metric today, so callers can fall back to a step-derived estimate (Android parity).
+    func retrieveTodayMetrics(completion: @escaping (_ steps: Double, _ distanceMeters: Double, _ kcal: Double) -> Void) {
+        let now = Date()
+        let startOfDay = Calendar.current.startOfDay(for: now)
+        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: now, options: .strictStartDate)
+
+        var steps = 0.0, distanceMeters = -1.0, kcal = -1.0
+        let group = DispatchGroup()
+
+        func sum(_ id: HKQuantityTypeIdentifier, unit: HKUnit, assign: @escaping (Double) -> Void) {
+            guard let type = HKObjectType.quantityType(forIdentifier: id) else { return }
+            group.enter()
+            let query = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, result, _ in
+                if let s = result?.sumQuantity() { assign(s.doubleValue(for: unit)) }
+                group.leave()
+            }
+            healthStore.execute(query)
+        }
+
+        sum(.stepCount, unit: .count()) { steps = $0 }
+        sum(.distanceWalkingRunning, unit: .meter()) { distanceMeters = $0 }
+        sum(.activeEnergyBurned, unit: .kilocalorie()) { kcal = $0 }
+
+        group.notify(queue: .main) { completion(steps, distanceMeters, kcal) }
     }
 }
