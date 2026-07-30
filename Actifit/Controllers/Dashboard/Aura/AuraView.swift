@@ -20,6 +20,11 @@ final class AuraView: UIView {
     private let stepTrack = CAShapeLayer(), stepProg = CAShapeLayer()
     private let distTrack = CAShapeLayer(), distProg = CAShapeLayer()
     private let calTrack = CAShapeLayer(), calProg = CAShapeLayer()
+    /// Opaque disc painted in the card colour inside the innermost ring, so the
+    /// centre content (step counter) reads on a clean surface instead of over the
+    /// arcs (Android AuraView parity). Nil → no disc (unchanged look).
+    private let centerFill = CAShapeLayer()
+    var centerDiscColor: UIColor? { didSet { setNeedsLayout() } }
     private var animalView: LottieAnimationView?
     private var currentAsset: String?
 
@@ -35,6 +40,8 @@ final class AuraView: UIView {
 
     private func setup() {
         backgroundColor = .clear
+        centerFill.fillColor = UIColor.clear.cgColor
+        layer.addSublayer(centerFill)   // sits inside the rings; rings never overlap it
         [calTrack, distTrack, stepTrack, calProg, distProg, stepProg].forEach {
             $0.fillColor = UIColor.clear.cgColor
             $0.lineCap = kCALineCapRound
@@ -96,12 +103,23 @@ final class AuraView: UIView {
         let middle = outer - gap
         let inner = middle - gap
 
+        // Clean opaque centre in the card colour, filling the clear zone inside the
+        // innermost ring so the overlaid counter text reads crisply.
+        let discRadius = inner - stroke * 0.5
+        if let disc = centerDiscColor, discRadius > 0 {
+            centerFill.path = UIBezierPath(arcCenter: center, radius: discRadius, startAngle: 0, endAngle: 2 * .pi, clockwise: true).cgPath
+            centerFill.fillColor = disc.cgColor
+        } else {
+            centerFill.path = nil
+        }
+
         configureRing(track: stepTrack, progress: stepProg, center: center, radius: outer, stroke: stroke, color: auraColor(), fraction: stepFrac)
         configureRing(track: distTrack, progress: distProg, center: center, radius: middle, stroke: stroke, color: distColor, fraction: distFrac)
         configureRing(track: calTrack, progress: calProg, center: center, radius: inner, stroke: stroke, color: calColor, fraction: calFrac)
 
-        // Animal sized by tier, positioned in the upper part of the ring (count sits below it).
-        let size = R * (0.46 + CGFloat(level) * 0.05)
+        // Animal sized by tier, positioned in the upper part of the ring (count sits
+        // below it). Kept compact so it fits the clear centre without touching the inner ring.
+        let size = R * (0.40 + CGFloat(level) * 0.05)
         let animalCenterY = center.y - R * 0.32
         animalView?.frame = CGRect(x: center.x - size / 2, y: animalCenterY - size / 2, width: size, height: size)
     }
