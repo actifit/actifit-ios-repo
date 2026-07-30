@@ -1068,6 +1068,10 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
     })
     self.navigationController?.setNavigationBarHidden(animated, animated: false)
     self.checkAuthorizationStatusAndStartTracking()
+    // Re-read the companion so a pick made on the Profile screen shows here too. The dashboard
+    // otherwise only resolves it once at build, so it kept rendering the old animal on return.
+    let companionUser = User.current()?.steemit_username.byTrimming(string: "@") ?? ""
+    auraView?.setCompanion(CompanionUtil.resolveCompanion(username: companionUser, isSelf: true))
     displayUserAndRank()
     everyDayChart()
       if !self.viewModel.canPost {
