@@ -2335,7 +2335,7 @@
 				CODE_SIGN_ENTITLEMENTS = Actifit/Actifit.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 127;
+				CURRENT_PROJECT_VERSION = 128;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 2CVNRSPUJG;
 				INFOPLIST_FILE = Actifit/Info.plist;
@@ -2362,7 +2362,7 @@
 				CODE_SIGN_ENTITLEMENTS = Actifit/Actifit.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 127;
+				CURRENT_PROJECT_VERSION = 128;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 2CVNRSPUJG;
 				INFOPLIST_FILE = Actifit/Info.plist;
