@@ -119,52 +119,54 @@ class WavesPopupViewModel {
     }
 
     private func getWaveContent() async {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.loaderSubject.send(true)
-        }
+        // Show the loader immediately (a *delayed* send(true) could fire AFTER a fast
+        // load's send(false) and re-show the spinner forever over loaded content).
+        self.loaderSubject.send(true)
         let waveContent = await HTTPClient().getWave()
         switch waveContent {
         case .success(let success):
             self.hivePosts = success
-            guard let post = success.result.first else { return }
+            guard let post = success.result.first else { self.loaderSubject.send(false); return }
             Task {
                 await self.getWavePostComments(wavePost: post, isSnap: false)
             }
         case .failure(let failure):
             print(failure.localizedDescription)
+            self.loaderSubject.send(false)
         }
     }
 
     private func getSnaps() async {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.loaderSubject.send(true)
-        }
+        self.loaderSubject.send(true)
         let waveContent = await HTTPClient().getSnaps()
         switch waveContent {
         case .success(let success):
             self.snapPost = success
-            guard let post = success.result.first else { return }
+            guard let post = success.result.first else { self.loaderSubject.send(false); return }
             Task {
                 await self.getWavePostComments(wavePost: post, isSnap: true)
             }
         case .failure(let failure):
             print(failure.localizedDescription)
+            self.loaderSubject.send(false)
         }
     }
 
 
     func getPastWaveCommentsOnPagination(isSnap: Bool) {
+        // Guard the index: result[1] force-subscripts and would crash when the account
+        // returned fewer than two posts.
         if isSnap {
-            if let post = self.snapPost?.result[1] {
-                Task {
-                    await getWavePostComments(wavePost: post, isSnap: true)
-                }
+            guard let posts = self.snapPost?.result, posts.count > 1 else { return }
+            let post = posts[1]
+            Task {
+                await getWavePostComments(wavePost: post, isSnap: true)
             }
         } else {
-            if let post = self.hivePosts?.result[1] {
-                Task {
-                    await getWavePostComments(wavePost: post, isSnap: false)
-                }
+            guard let posts = self.hivePosts?.result, posts.count > 1 else { return }
+            let post = posts[1]
+            Task {
+                await getWavePostComments(wavePost: post, isSnap: false)
             }
         }
     }
@@ -186,6 +188,7 @@ class WavesPopupViewModel {
             self.loaderSubject.send(false)
         case .failure(let failure):
             print(failure.localizedDescription)
+            self.loaderSubject.send(false)   // never leave the spinner running on a failed fetch
         }
     }
 

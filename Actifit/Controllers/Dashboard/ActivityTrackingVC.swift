@@ -115,6 +115,9 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var revampGoalLabel: UILabel?
   var revampPctLabel: UILabel?
   var revampBigStepLabel: UILabel?
+  var revampGiftBtn: UIButton?
+  /// Throttles re-fetching the server AFIT estimate as steps change (avoids spamming the endpoint).
+  private var lastEstRewardSteps: Int = -1
   /// Last step count pushed into the revamp hero, so every source (device /
   /// HealthKit / Fitbit) refreshes it while we avoid re-animating on no-op repeats.
   var lastRevampSteps = -1
@@ -479,15 +482,19 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
       if viewModel.shouldScalePrizeButton  {
           viewModel.initializePrizesValues()
       UIView.animate(withDuration: 0.5, delay: 0.0, options: [.repeat, .autoreverse, .allowUserInteraction], animations: {
-        self.giftButton.transform = CGAffineTransform(scaleX: 0.90, y: 0.90)
+        self.giftButton?.transform = CGAffineTransform(scaleX: 0.90, y: 0.90)
+        // The revamp dashboard shows its own gift button (the visible one) — bounce it too.
+        self.revampGiftBtn?.transform = CGAffineTransform(scaleX: 0.90, y: 0.90)
       }, completion: nil)
     }
   }
 
 
   func stopPrizeButtonScaling() {
-    giftButton.layer.removeAllAnimations()
-    giftButton.transform = CGAffineTransform.identity
+    giftButton?.layer.removeAllAnimations()
+    giftButton?.transform = CGAffineTransform.identity
+    revampGiftBtn?.layer.removeAllAnimations()
+    revampGiftBtn?.transform = CGAffineTransform.identity
   }
 
   func stopPostButtonScaling() {
@@ -1746,7 +1753,7 @@ extension ActivityTrackingVC {
         viewModel.votingStatusPublisher.receive(on: DispatchQueue.main).sink { [weak self] model in
             self?.revampVotingLabel?.text = model.status?.isVoting == false ? (model.rewardStart ?? "") : "Rewards cycle in progress…"
         }.store(in: &cancellables)
-        fetchEstimatedReward(steps: initialStepCount)
+        // (Estimate is now fetched via refreshRevampSteps above, and refreshed as steps change.)
         fetchTweets()
         NotificationCenter.default.addObserver(self, selector: #selector(refreshRouteCard), name: RouteRecordingManager.recordingStopped, object: nil)
     }
@@ -2223,6 +2230,7 @@ extension ActivityTrackingVC {
 
     private func buildRevampActionButtons() -> UIView {
         let gift = revampRedActionButton(system: "gift.fill", action: #selector(giftButtonTapped(_:)))
+        revampGiftBtn = gift   // keep a reference so the prize bounce animates the visible button
         let refer = revampRedActionButton(system: "person.badge.plus.fill", action: #selector(referralsBtnTapped(_:)))
         let buy = revampRedActionButton(system: "chart.line.uptrend.xyaxis", action: #selector(exchangeBtnTapped(_:)))
         let waves = revampRedActionButton(system: "bubble.left.and.bubble.right.fill", action: #selector(wavesBtnTapped(_:)))
@@ -2597,6 +2605,12 @@ extension ActivityTrackingVC {
         // Milestone colour (Android parity): brand red until the 10k goal, green once reached.
         revampBigStepLabel?.textColor = steps >= 10000 ? UIColor(red: 0, green: 0.5, blue: 0, alpha: 1) : revampRed
         updateRevampGoal(steps: steps)
+        // Keep the server AFIT estimate fresh as steps accumulate (Android re-fetches on updates);
+        // throttled by step delta so we don't hammer the endpoint on every 2s pedometer tick.
+        if lastEstRewardSteps < 0 || abs(steps - lastEstRewardSteps) >= 250 {
+            lastEstRewardSteps = steps
+            fetchEstimatedReward(steps: steps)
+        }
         guard steps != lastRevampSteps else { return }
         lastRevampSteps = steps
         updateAura(steps: steps)
