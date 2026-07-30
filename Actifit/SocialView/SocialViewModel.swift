@@ -64,7 +64,10 @@ class SocialViewModel: ObservableObject {
             if socialPosts.isEmpty {
                 socialPosts = posts.result
             } else {
-                socialPosts.append(contentsOf: posts.result)
+                // Only append posts we don't already have (keyed by author+permlink) so overlapping
+                // pagination fetches can't duplicate the feed.
+                let existing = Set(socialPosts.map { $0.uid })
+                socialPosts.append(contentsOf: posts.result.filter { !existing.contains($0.uid) })
             }
         case .failure(let failure):
             print(failure.localizedDescription)

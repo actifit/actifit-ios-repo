@@ -17,8 +17,14 @@ struct SocialPostModel: Codable, Equatable {
 
 // Post Model
 struct SocialPost: Codable, Equatable {
+    /// Stable identity. Hive's get_ranked_posts no longer returns a post id, so `postId` is nil for
+    /// every post — comparing on it made every post equal, so `isLastItem` was true for every row and
+    /// each cell's onAppear fired a pagination fetch (API flood + duplicate/out-of-order posts).
+    /// author+permlink is unique per report.
+    var uid: String { "\(author)-\(permlink)" }
+
     static func == (lhs: SocialPost, rhs: SocialPost) -> Bool {
-        return lhs.postId == rhs.postId
+        return lhs.uid == rhs.uid
     }
 
     let activeVotes: [Vote]?
