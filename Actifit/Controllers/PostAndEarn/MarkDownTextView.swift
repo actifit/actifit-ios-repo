@@ -75,11 +75,18 @@ struct TextView: UIViewRepresentable {
         // made the field visibly flicker and jump the cursor while typing.
         if uiView.textColor == .placeholderText && text.isEmpty { return }
         guard uiView.text != text else { return }
+        // An append (e.g. an inserted image/video URL) — the new text starts with what's already shown.
+        let wasAppend = !uiView.text.isEmpty && text.hasPrefix(uiView.text)
         let selectedRange = uiView.selectedTextRange
         uiView.text = text
         uiView.textColor = text.isEmpty ? .placeholderText : .black
-        // Preserve the caret so an external sync doesn't send it to the end.
-        if let selectedRange = selectedRange {
+        if wasAppend {
+            // Move the caret PAST the appended content so the next thing the user adds lands after
+            // it, instead of getting stuck in front of the photo they just inserted.
+            let end = uiView.endOfDocument
+            uiView.selectedTextRange = uiView.textRange(from: end, to: end)
+        } else if let selectedRange = selectedRange {
+            // Otherwise preserve the caret so an external sync doesn't send it to the end.
             uiView.selectedTextRange = selectedRange
         }
     }
