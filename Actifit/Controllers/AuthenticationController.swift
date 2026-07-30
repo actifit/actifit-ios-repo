@@ -139,9 +139,13 @@ class AuthenticationController: NSObject, SFSafariViewControllerDelegate {
                 value = nil
                 parameterScanner.scanUpTo("&", into:&value)
                 parameterScanner.scanString("&", into:nil)
-                if (name != nil && value != nil) {
-                    parameters[name!.removingPercentEncoding!]
-                        = value!.removingPercentEncoding!
+                // Guard the percent-decoding: removingPercentEncoding returns nil on any
+                // malformed "%" sequence, and force-unwrapping it crashed the app right after
+                // the Fitbit OAuth redirect returned. Fall back to the raw value instead.
+                if let rawName = name as String?, let rawValue = value as String? {
+                    let decodedName = rawName.removingPercentEncoding ?? rawName
+                    let decodedValue = rawValue.removingPercentEncoding ?? rawValue
+                    parameters[decodedName] = decodedValue
                 }
             }
         }
