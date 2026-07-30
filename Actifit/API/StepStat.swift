@@ -105,6 +105,47 @@ struct StepStat {
         return dataTask
     }
     
+    /// Builds today's/`forDate`'s datePath and fetches a Fitbit daily "tracker" metric
+    /// ("distance" / "calories"). Distance is returned in the account's metric default (km),
+    /// so the caller converts to metres; calories in kcal. `nil` when unavailable → estimate.
+    static func fetchTodaysTrackerMetric(_ metric: String, forDate: Date, callback: @escaping (Double?) -> Void) -> URLSessionDataTask? {
+        let appdelegate = AFAppDelegate()
+        let today = appdelegate.todayStartDate().toString(dateFormat: "yyyy-MM-dd")
+        let datepassed = forDate.toString(dateFormat: "yyyy-MM-dd")
+        let datePath = (today == datepassed) ? "/today/1d.json" : "/\(datepassed)/1d.json"
+        return fetchTrackerMetric(metric, for: datePath, callback: callback)
+    }
+
+    /// Sums a Fitbit `activities/tracker/<metric>` daily time series (mirror of the Android
+    /// `sumFitbitTrackerMetric`). Returns the summed value, or `nil` if there's no data.
+    static func fetchTrackerMetric(_ metric: String, for datePath: String, callback: @escaping (Double?) -> Void) -> URLSessionDataTask? {
+        guard let session = FitbitAPI.sharedInstance.session,
+            let url = URL(string: "https://api.fitbit.com/1/user/-/activities/tracker/\(metric)/date\(datePath)") else {
+                callback(nil)
+                return nil
+        }
+        let dataTask = session.dataTask(with: url) { (data, response, _) in
+            guard let response = response as? HTTPURLResponse, response.statusCode < 300,
+                let data = data,
+                let dictionary = (try? JSONSerialization.jsonObject(with: data, options: .allowFragments)) as? [String: Any],
+                let arr = dictionary["activities-tracker-\(metric)"] as? [[String: Any]], !arr.isEmpty else {
+                    DispatchQueue.main.async { callback(nil) }
+                    return
+            }
+            var sum = 0.0
+            for entry in arr {
+                if let n = (entry["value"] as? NSNumber)?.doubleValue {
+                    sum += n
+                } else if let s = entry["value"] as? String, let v = Double(s) {
+                    sum += v
+                }
+            }
+            DispatchQueue.main.async { callback(sum) }
+        }
+        dataTask.resume()
+        return dataTask
+    }
+
     static func fetchUser(for datePath: String, callback: @escaping (NSDictionary?, Error?)->Void) -> URLSessionDataTask? {
         guard let session = FitbitAPI.sharedInstance.session,
             let stepURL = URL(string: "https://api.fitbit.com/1/user/-/profile.json") else {

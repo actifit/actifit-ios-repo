@@ -1678,14 +1678,16 @@ extension ActivityTrackingVC: AuthenticationProtocol {
       return
     }
     FitbitAPI.sharedInstance.authorize(with: authToken)
-    let _ = StepStat.fetchTodaysStepStat(forDate: self.activityDateToSave) { [weak self] stepStat, error in
+    let syncDate = self.activityDateToSave
+    let _ = StepStat.fetchTodaysStepStat(forDate: syncDate) { [weak self] stepStat, error in
       guard let self = self else { return }
       let steps = stepStat?.steps ?? 0
       self.initialStepCount = Int(steps)
       self.showStepsCount(count:  self.initialStepCount)
       viewModel.switchSensor(isThirdParty: true)
       self.viewModel.switchToFitbitSensor(steps: Int(stepStat?.steps ?? 0))
-
+      // Also pull Fitbit's real distance + calories for the multi-metric rings (Android PR #83).
+      self.fetchFitbitMetrics(forDate: syncDate)
     }
   }
 }
@@ -2618,12 +2620,36 @@ extension ActivityTrackingVC {
 
     /// Effective distance (metres) + calories for display: the active source's real values
     /// when available, otherwise a step-derived estimate. The booleans say which is which.
+    /// Fitbit's real values live in the view model (fetched on sync); Device/Health set `live*`.
     private func effectiveMetrics(steps: Int) -> (dist: Double, cal: Double, distReal: Bool, calReal: Bool) {
-        let distReal = liveDistanceMeters >= 0
-        let calReal = liveCalories >= 0
-        return (distReal ? liveDistanceMeters : Double(steps) * 0.762,
-                calReal ? liveCalories : Double(steps) * 0.04,
+        let dMeters = (viewModel.trackingMode == .fitbit) ? viewModel.lastFitbitDistanceMeters : liveDistanceMeters
+        let cVal = (viewModel.trackingMode == .fitbit) ? viewModel.lastFitbitCalories : liveCalories
+        let distReal = dMeters >= 0
+        let calReal = cVal >= 0
+        return (distReal ? dMeters : Double(steps) * 0.762,
+                calReal ? cVal : Double(steps) * 0.04,
                 distReal, calReal)
+    }
+
+    /// Pulls Fitbit's own distance + calories (real values) after a sync and refreshes the rings
+    /// if we're currently showing Fitbit. Distance comes back in km → convert to metres.
+    private func fetchFitbitMetrics(forDate date: Date) {
+        _ = StepStat.fetchTodaysTrackerMetric("distance", forDate: date) { [weak self] km in
+            guard let self = self else { return }
+            self.viewModel.lastFitbitDistanceMeters = (km != nil && km! >= 0) ? km! * 1000.0 : -1
+            self.refreshFitbitRingsIfActive()
+        }
+        _ = StepStat.fetchTodaysTrackerMetric("calories", forDate: date) { [weak self] kcal in
+            guard let self = self else { return }
+            self.viewModel.lastFitbitCalories = (kcal != nil && kcal! >= 0) ? kcal! : -1
+            self.refreshFitbitRingsIfActive()
+        }
+    }
+
+    private func refreshFitbitRingsIfActive() {
+        guard viewModel.trackingMode == .fitbit else { return }
+        lastRevampSteps = -1   // force the rings to re-animate with the new real values
+        refreshRevampSteps(viewModel.lastFitbitSteps)
     }
 
     func updateRevampGoal(steps: Int) {
