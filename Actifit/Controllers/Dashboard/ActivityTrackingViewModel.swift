@@ -95,9 +95,10 @@ class ActivityTrackingViewModel {
     if  UserDefaults.standard.getLatestAdDate != Date().currentDay() {
             initializePrizesValues()
     }
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
-        self.loaderSubject.send(true)
-    })
+    // Show the loader immediately, not after a 1s delay. A *delayed* send(true) can fire
+    // AFTER the chain's send(false) calls on a fast/cached load, re-showing the HUD over
+    // already-loaded content until the safety timeout below. (Same fix as WavesPopupViewModel.)
+    self.loaderSubject.send(true)
 
         Task {
             await getNewsBannerAPI()
