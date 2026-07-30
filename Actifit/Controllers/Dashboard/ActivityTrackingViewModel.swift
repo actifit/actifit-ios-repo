@@ -95,9 +95,10 @@ class ActivityTrackingViewModel {
     if  UserDefaults.standard.getLatestAdDate != Date().currentDay() {
             initializePrizesValues()
     }
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
-        self.loaderSubject.send(true)
-    })
+    // Show the loader immediately, not after a 1s delay. A *delayed* send(true) can fire
+    // AFTER the chain's send(false) calls on a fast/cached load, re-showing the HUD over
+    // already-loaded content until the safety timeout below. (Same fix as WavesPopupViewModel.)
+    self.loaderSubject.send(true)
 
         Task {
             await getNewsBannerAPI()
@@ -113,6 +114,15 @@ class ActivityTrackingViewModel {
             } else {
                 await callSurveyAPI()
             }
+            // Ensure the loader is down once the chain finishes (belt-and-suspenders).
+            self.loaderSubject.send(false)
+        }
+
+        // Safety net: the data chain above awaits several requests with no per-request
+        // timeout, so a single hanging call would otherwise trap the user behind the
+        // "Loading" HUD forever. Never keep it up longer than this bound.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+            self.loaderSubject.send(false)
         }
     }
 
