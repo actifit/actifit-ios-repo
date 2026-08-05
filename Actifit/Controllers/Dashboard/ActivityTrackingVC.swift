@@ -2486,7 +2486,7 @@ extension ActivityTrackingVC {
     }
 
     @objc private func revampCommunitySeeAll() {
-        tabBarController?.selectedIndex = 2   // Social tab
+        tabBarController?.selectedIndex = 1   // Social tab (0=Home, 1=Social, 2=Market)
     }
 
     private func fetchCommunity() {
