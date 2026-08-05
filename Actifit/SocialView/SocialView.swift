@@ -30,8 +30,8 @@ struct SocialView: View {
 
                 Spacer()
             }
+            .frame(maxWidth: .infinity)
             .background(Color(UIColor.primaryRedColor()))
-//            .frame(height: 40)
             ScrollView {
                 LazyVStack {
                     // Key on the stable author+permlink uid, NOT postId: Hive's get_ranked_posts no

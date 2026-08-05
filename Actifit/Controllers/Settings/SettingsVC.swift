@@ -178,11 +178,14 @@ class SettingsVC: UIViewController {
   var settings =  Settings.current()
 
   override var preferredStatusBarStyle: UIStatusBarStyle {
-    return .lightContent
+    // White area above the "Settings" title (matches Social/Market/Leaders/History),
+    // so the status bar needs dark content to stay visible.
+    return .darkContent
   }
 
   override func viewDidLoad() {
     super.viewDidLoad()
+    view.backgroundColor = .white
     UIApplication.shared.unregisterForRemoteNotifications()
     UserDefaults.standard.setValue(self.notification, forKey: "notifications")
     if User.current()?.private_posting_key != nil && User.current()?.steemit_username != nil{

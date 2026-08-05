@@ -160,18 +160,67 @@ final class MarketViewController: UIViewController {
         return MarketViewController()
     }
 
+    private let headerBar = UIView()
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Market"
         view.backgroundColor = .white
-        if !hidesCloseButton {
-            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(closeTapped))
-        }
+        setupHeader()
         setupTable()
         loadEverything()
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Use the custom Social-style red header instead of the system nav bar.
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+
     @objc private func closeTapped() { dismiss(animated: true) }
+
+    /// Red header bar matching the Social tab: white bold 18pt title, left-aligned,
+    /// sitting just below the status bar. In the modal case a white close button is
+    /// added on the right (the tab root sets hidesCloseButton = true).
+    private func setupHeader() {
+        headerBar.translatesAutoresizingMaskIntoConstraints = false
+        headerBar.backgroundColor = .primaryRedColor()
+        view.addSubview(headerBar)
+
+        let titleLabel = UILabel()
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.text = "Market"
+        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
+        titleLabel.textColor = .white
+        headerBar.addSubview(titleLabel)
+
+        NSLayoutConstraint.activate([
+            headerBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            headerBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            headerBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+
+            titleLabel.leadingAnchor.constraint(equalTo: headerBar.leadingAnchor, constant: 15),
+            titleLabel.topAnchor.constraint(equalTo: headerBar.topAnchor, constant: 8),
+            titleLabel.bottomAnchor.constraint(equalTo: headerBar.bottomAnchor, constant: -5)
+        ])
+
+        if !hidesCloseButton {
+            let closeButton = UIButton(type: .system)
+            closeButton.translatesAutoresizingMaskIntoConstraints = false
+            closeButton.setImage(UIImage(systemName: "xmark"), for: .normal)
+            closeButton.tintColor = .white
+            closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
+            headerBar.addSubview(closeButton)
+            NSLayoutConstraint.activate([
+                closeButton.trailingAnchor.constraint(equalTo: headerBar.trailingAnchor, constant: -15),
+                closeButton.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor)
+            ])
+        }
+    }
 
     private func setupTable() {
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -182,7 +231,7 @@ final class MarketViewController: UIViewController {
         tableView.register(MarketProductCell.self, forCellReuseIdentifier: "MarketProductCell")
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            tableView.topAnchor.constraint(equalTo: headerBar.bottomAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)

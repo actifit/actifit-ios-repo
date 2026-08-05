@@ -23,7 +23,23 @@ class TabbarController: UITabBarController {
         settingsVC = UIStoryboard(name: "Settings", bundle: nil).instantiateViewController(withIdentifier: "SettingsVC") as! SettingsVC
         trackingHistoryVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "TrackingHistoryVC") as! TrackingHistoryVC
         let dailyLeaderBoardVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "DailyLeaderBoardBVC") as! DailyLeaderBoardBVC
-        let socialController = UIHostingController(rootView: SocialView())
+        // A bare UIHostingController lets SocialView's red header bleed under the status
+        // bar. Wrap it in a white container and pin the SwiftUI content to the container's
+        // SAFE-AREA top, so the header starts below the status bar with white showing above
+        // (matches Market/Leaders/History).
+        let socialHost = UIHostingController(rootView: SocialView())
+        let socialController = UIViewController()
+        socialController.view.backgroundColor = .white
+        socialController.addChildViewController(socialHost)
+        socialController.view.addSubview(socialHost.view)
+        socialHost.view.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            socialHost.view.topAnchor.constraint(equalTo: socialController.view.safeAreaLayoutGuide.topAnchor),
+            socialHost.view.leadingAnchor.constraint(equalTo: socialController.view.leadingAnchor),
+            socialHost.view.trailingAnchor.constraint(equalTo: socialController.view.trailingAnchor),
+            socialHost.view.bottomAnchor.constraint(equalTo: socialController.view.bottomAnchor)
+        ])
+        socialHost.didMove(toParentViewController: socialController)
 
         let market = MarketViewController.create()
         market.hidesCloseButton = true

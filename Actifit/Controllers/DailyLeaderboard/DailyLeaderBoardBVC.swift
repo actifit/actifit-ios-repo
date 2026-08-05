@@ -22,7 +22,9 @@ class DailyLeaderBoardBVC: UIViewController {
     //MARK: VIEW LIFE CYCLE
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
+        // Header now sits below the status bar (white area) to match the Social tab,
+        // so the status bar needs dark content.
+        return .darkContent
     }
     
     override func viewDidLoad() {

@@ -20,7 +20,8 @@ class TrackingHistoryVC: UIViewController {
     //  var activityHistory = "Activity History"
 
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        return .lightContent
+        // Header now sits below the status bar (white area) to match the Social tab.
+        return .darkContent
     }
 
     let viewModel = TrackingHistoryViewModel()
