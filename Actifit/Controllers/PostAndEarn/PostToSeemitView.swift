@@ -37,6 +37,17 @@ struct PostToSeemitView: View {
       case markdown, postTitle, tagInput
   }
   @FocusState var focusedField: FocusedField?
+  @State private var keyboardVisible = false
+
+  /// True while the user is typing in any field (title, tags or content).
+  private var isEditing: Bool { keyboardVisible || focusedField != nil }
+
+  /// Ends editing for every field, including the UIKit content editor that
+  /// clearing focusedField alone does not reach.
+  private func dismissKeyboard() {
+    focusedField = nil
+    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+  }
 
   // MARK: Design tokens (Android parity)
   private let pageBg = Color(red: 245/255, green: 245/255, blue: 245/255)
@@ -72,13 +83,30 @@ struct PostToSeemitView: View {
         }
       }
 
-      if !isEditorExpanded { postFab }
+      // Hide the Post FAB whenever the keyboard is up: it otherwise floats right next
+      // to the keyboard's "Done" button, so users aiming for "Done" overshoot and hit
+      // "Post" (tester report). Fading it out and disabling hit-testing means the two
+      // buttons are never on screen together; dismissing the keyboard brings it back.
+      // Driven by the real keyboard (not just @FocusState) because the iOS 16+ content
+      // editor is a UITextView that never updates focusedField.
+      if !isEditorExpanded {
+        postFab
+          .opacity(isEditing ? 0 : 1)
+          .allowsHitTesting(!isEditing)
+          .animation(.easeInOut(duration: 0.2), value: isEditing)
+      }
+    }
+    .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name.UIKeyboardWillShow)) { _ in
+      keyboardVisible = true
+    }
+    .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name.UIKeyboardWillHide)) { _ in
+      keyboardVisible = false
     }
     .toolbar {
         ToolbarItemGroup(placement: .keyboard) {
           Spacer()
             Button("Done") {
-              focusedField = nil
+              dismissKeyboard()
             }
             .foregroundColor(.blue)
         }
