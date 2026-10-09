@@ -187,15 +187,26 @@ struct SocialView: View {
 
             VStack {
                 if expandedPosts["\(post.author)-\(post.permlink)"] == false || expandedPosts["\(post.author)-\(post.permlink)"] == nil {
-                    AsyncImage(url:URL(string: getImageFromMetadata(metaData: post.jsonMetadata) ?? "")){ image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                    } placeholder: {
-                        ProgressView()
+                    // No image, or one that fails to load, shows nothing rather than a
+                    // spinner that never stops.
+                    if let imageURL = URL(string: headerImage(for: post) ?? "") {
+                        AsyncImage(url: imageURL) { phase in
+                            switch phase {
+                            case .success(let image):
+                                // Fill the card's width at a fixed height, cropping the overflow
+                                // (as the actifit.io cards do) instead of a small letterboxed thumb.
+                                Color.clear
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 200)
+                                    .overlay(image.resizable().scaledToFill())
+                                    .clipped()
+                            case .empty:
+                                ProgressView().frame(maxWidth: .infinity).frame(height: 200)
+                            default:
+                                EmptyView()
+                            }
+                        }
                     }
-                    .frame(height: 100)
-                    .clipShape(Rectangle())
                 }
 
                 DownViewRepresentable(markdownText:  generateMarkdownText(for: post, expandedPosts: expandedPosts, translationManager: translationManager), contentHeight: $estimatedHeigt)
@@ -350,22 +361,111 @@ struct SocialView: View {
     func generateMarkdownText(for post: SocialPost, expandedPosts: [String: Bool], translationManager: TranslationContentManager) -> String {
         let postId = "\(post.author)-\(post.permlink)"
         if let translatedContent = translationManager.translationContent.first(where: { $0.objectId == postId })?.translatedContent {
-               // Return the translated content if expanded, otherwise limit it to 140 characters
-               return expandedPosts[postId] == true ? translatedContent : String(translatedContent.prefix(140))
+               // Return the translated content if expanded, otherwise a short text preview
+               return expandedPosts[postId] == true ? translatedContent : previewText(translatedContent)
            }
 
            // Fallback to the original content if no translation is available
-           return expandedPosts[postId] == true ? post.body : String(post.body.prefix(140))
+           return expandedPosts[postId] == true ? post.body : previewText(post.body)
         }
 
-    func getImageFromMetadata(metaData: Metadata) -> String? {
-        // Match common image types, not just .png — most Actifit reports use .jpg/.gif, which the
-        // old .png-only check missed, leaving a blank image box on the header.
-        let exts = [".png", ".jpg", ".jpeg", ".gif", ".webp"]
-        func firstImage(in arr: [String]?) -> String? {
-            arr?.first { url in exts.contains { url.lowercased().contains(find: $0) } }
+    /// Collapsed-card preview: the first readable text of the post. Cutting the raw body at
+    /// 140 characters left an empty card whenever the body opened with blank lines, HTML or an
+    /// image, because the cut landed mid-tag or mid-URL and rendered as nothing.
+    func previewText(_ body: String) -> String {
+        var text = body
+        let rules: [(String, String)] = [
+            ("!\\[[^\\]]*\\]\\([^)]*\\)", " "),          // markdown images
+            ("\\[([^\\]]*)\\]\\([^)]*\\)", "$1"),        // markdown links -> their text
+            ("<[^>]+>", " "),                                // HTML tags
+            ("https?://\\S+", " "),                         // bare URLs
+            ("\\s+", " ")                                    // collapse whitespace
+        ]
+        for (pattern, replacement) in rules {
+            text = text.replacingOccurrences(of: pattern, with: replacement, options: .regularExpression)
         }
-        return firstImage(in: metaData.images) ?? firstImage(in: metaData.image)
+        text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return text.count > 140 ? String(text.prefix(140)) + "…" : text
+    }
+
+    /// Header image for a feed card: the author's first real image, from the post metadata or,
+    /// for posts that list none there (often those made outside the Actifit apps), from the body.
+    func headerImage(for post: SocialPost) -> String? {
+        return rawHeaderImage(for: post).map(proxiedImageURL)
+    }
+
+    private func rawHeaderImage(for post: SocialPost) -> String? {
+        let meta = post.jsonMetadata
+        // Metadata order is the author's order, so the first real image is their own photo.
+        // The stock Actifit banners every report carries are only used when nothing else exists
+        // (preferring "has a file extension" picked the banner over extension-less iOS uploads).
+        let listed = ((meta.images ?? []) + (meta.image ?? [])).filter { $0.hasPrefix("http") }
+        if let own = listed.first(where: { !isStockBanner($0) }) { return own }
+        let pattern = "!\\[[^\\]]*\\]\\((https?://[^)\\s]+)\\)|<img[^>]+src=[\"'](https?://[^\"']+)[\"']"
+        if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) {
+            let matches = regex.matches(in: post.body, range: NSRange(post.body.startIndex..., in: post.body))
+            for m in matches {
+                for i in 1...2 {
+                    if let r = Range(m.range(at: i), in: post.body), !isStockBanner(String(post.body[r])) {
+                        return String(post.body[r])
+                    }
+                }
+            }
+        }
+        return listed.first
+    }
+
+    /// Actifit's own report-template graphics (banners, separators, the ACTIVITY DATE / COUNT /
+    /// TYPE labels, tracker icons) that every report carries. Ported from the blocklist the
+    /// actifit.io feed uses (excludedImagePatterns in actifit-landingpage/plugins/commonCardMixin.js)
+    /// so a card never shows one of these in place of a real photo.
+    private func isStockBanner(_ url: String) -> Bool {
+        if SocialView.stockImageHashes.contains(where: { url.contains($0) }) { return true }
+        let patterns = ["s3\\.us-east-1\\.amazonaws\\.com/actifit\\.io\\.website/",
+                        "ACTIVITY(DATE|COUNT|TYPE)\\.png", "TRACKM\\.png",
+                        "/(h1|w1a|bd1|w1|t1|c1)\\.png", "/actifit-"]
+        return patterns.contains { url.range(of: $0, options: [.regularExpression, .caseInsensitive]) != nil }
+    }
+
+    private static let stockImageHashes: [String] = [
+        "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"
+    ]
+
+    /// Routes an image through the Hive image proxy, as the actifit.io feed does
+    /// (getResizedImageUrl in actifit-landingpage). The proxy fetches and caches server-side,
+    /// so third-party hosts that throttle or block direct hotlinking (e.g. pixabay.com/get)
+    /// still load. Same exclusions as the web: the proxy can't serve usermedia.actifit.io,
+    /// and gif / leopedia are used directly.
+    private func proxiedImageURL(_ url: String) -> String {
+        let lower = url.lowercased()
+        if !lower.hasPrefix("http") || lower.hasSuffix(".gif") || lower.contains("leopedia.io")
+            || lower.contains("usermedia.actifit.io") || lower.contains("images.hive.blog") {
+            return url
+        }
+        return "https://images.hive.blog/640x0/" + url
     }
 
     func togglePostExpansion(postId: String) {
