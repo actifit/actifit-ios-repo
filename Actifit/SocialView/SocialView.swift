@@ -55,11 +55,16 @@ struct SocialView: View {
                             .foregroundStyle(.thinMaterial)
                     }
                 }
-                .refreshable {
-                    Task {
-                       await viewModel.getSocialPosts(author: "", permlink: "")
-                    }
-                }
+            }
+            // On the ScrollView (not the inner stack) so the pull gesture actually triggers.
+            .refreshable {
+                await viewModel.refreshPosts(replace: true)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .socialTabDidAppear)) { _ in
+                Task { await viewModel.refreshPosts(minInterval: 60) }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name.UIApplicationWillEnterForeground)) { _ in
+                Task { await viewModel.refreshPosts(minInterval: 60) }
             }
             .overlay {
                 if viewModel.showLoader {

@@ -9,6 +9,15 @@ import UIKit
 import SwiftUI
 import SafariServices
 
+/// Hosts SocialView and tells it each time the tab comes on screen, so the feed can reload
+/// (the SwiftUI view is created once at launch and would otherwise never refresh).
+final class SocialTabContainer: UIViewController {
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        NotificationCenter.default.post(name: .socialTabDidAppear, object: nil)
+    }
+}
+
 class TabbarController: UITabBarController {
 
     // Held for routing from the "More" sheet (no longer top-level tabs).
@@ -28,7 +37,7 @@ class TabbarController: UITabBarController {
         // SAFE-AREA top, so the header starts below the status bar with white showing above
         // (matches Market/Leaders/History).
         let socialHost = UIHostingController(rootView: SocialView())
-        let socialController = UIViewController()
+        let socialController = SocialTabContainer()
         socialController.view.backgroundColor = .white
         socialController.addChildViewController(socialHost)
         socialController.view.addSubview(socialHost.view)

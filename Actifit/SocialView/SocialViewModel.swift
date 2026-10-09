@@ -8,6 +8,11 @@
 import Foundation
 import UIKit
 
+extension Notification.Name {
+    /// Posted each time the Social tab comes on screen.
+    static let socialTabDidAppear = Notification.Name("socialTabDidAppear")
+}
+
 class SocialViewModel: ObservableObject {
     enum AlertMessages {
         case successReply
@@ -40,9 +45,34 @@ class SocialViewModel: ObservableObject {
     @Published var showAlert: Bool = false
     @Published var subCommentsArray:[SubComment] = []
   
+    private var lastRefresh = Date()
+    private var isRefreshing = false
+
     init() {
         Task {
            await getSocialPosts()
+        }
+    }
+
+    /// Reloads the newest page of the feed. The feed is otherwise only fetched once at app
+    /// launch, so a long-running app showed nothing newer than its launch time.
+    /// - replace: discard the loaded list (pull-to-refresh). Otherwise new posts are added on
+    ///   top so the reader keeps their place; if nothing overlaps (a long gap) the list is replaced.
+    /// - minInterval: skip if the feed was loaded more recently than this.
+    func refreshPosts(replace: Bool = false, minInterval: TimeInterval = 0) async {
+        guard !isRefreshing, Date().timeIntervalSince(lastRefresh) >= minInterval else { return }
+        isRefreshing = true
+        defer { isRefreshing = false }
+        guard case .success(let page) = await HTTPClient().getSocialPosts(author: nil, permlink: nil) else { return }
+        lastRefresh = Date()
+        await MainActor.run {
+            let existing = Set(socialPosts.map { $0.uid })
+            let fresh = page.result.filter { !existing.contains($0.uid) }
+            if replace || fresh.count == page.result.count {
+                socialPosts = page.result
+            } else if !fresh.isEmpty {
+                socialPosts.insert(contentsOf: fresh, at: 0)
+            }
         }
     }
 
