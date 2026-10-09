@@ -16,6 +16,7 @@ struct SocialView: View {
     @State private var expandedPosts: [String: Bool] = [:]
     @State private var loadedComments: [String: [PostComments]] = [:]
     @State private var estimatedHeigt: CGFloat = 150
+    @State private var contentHeights: [String: CGFloat] = [:]
     @StateObject private var translationManager = TranslationContentManager()
     let networkManager =  HTTPClient()
 
@@ -209,8 +210,14 @@ struct SocialView: View {
                     }
                 }
 
-                DownViewRepresentable(markdownText:  generateMarkdownText(for: post, expandedPosts: expandedPosts, translationManager: translationManager), contentHeight: $estimatedHeigt)
-                    .frame(height:  expandedPosts["\(post.author)-\(post.permlink)"] == true ? estimatedHeigt : 100)
+                // Each post keeps its own measured height. A single shared value meant every
+                // card's web view overwrote it, so an expanded post took whichever height was
+                // reported last and showed a block of empty space under its content.
+                DownViewRepresentable(markdownText:  generateMarkdownText(for: post, expandedPosts: expandedPosts, translationManager: translationManager),
+                                      contentHeight: Binding(get: { contentHeights[post.uid] ?? estimatedHeigt },
+                                                             set: { contentHeights[post.uid] = $0 }),
+                                      measuresContent: expandedPosts["\(post.author)-\(post.permlink)"] == true)
+                    .frame(height:  expandedPosts["\(post.author)-\(post.permlink)"] == true ? (contentHeights[post.uid] ?? estimatedHeigt) : 100)
                     .edgesIgnoringSafeArea(.all)
                     .id(expandedPosts["\(post.author)-\(post.permlink)"] == true ? "expanded-\(post.author)-\(post.permlink)" : "collapsed-\(post.author)-\(post.permlink)")
             }

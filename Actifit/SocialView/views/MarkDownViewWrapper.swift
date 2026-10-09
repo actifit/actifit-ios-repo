@@ -12,6 +12,8 @@ import WebKit
 struct DownViewRepresentable: UIViewRepresentable {
     var markdownText: String
     @Binding var contentHeight: CGFloat  // Bindable property to update height
+    /// Only an expanded card reports its height; collapsed previews use a fixed frame.
+    var measuresContent: Bool = true
 
     func filteredMarkdown(_ markdown: String) -> String {
         let regex = try! NSRegularExpression(pattern: #"(\[.*?\]\()((https?://)?(?:www\.)?unwantedwebsite\.com/.*?)\)"#, options: [])
@@ -61,10 +63,27 @@ struct DownViewRepresentable: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            webView.evaluateJavaScript("document.body.scrollHeight") { [weak self] (height, error) in
-                guard let self = self, let height = height as? CGFloat else { return }
-                DispatchQueue.main.async {
-                    self.parent.contentHeight = height + 20 // Update the height with padding
+            guard parent.measuresContent else { return }
+            // Images can still be arriving when the page reports finished, so measure again
+            // shortly after.
+            for delay in [0.0, 1.0, 3.0] {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self, weak webView] in
+                    guard let webView = webView else { return }
+                    self?.measure(webView)
+                }
+            }
+        }
+
+        private func measure(_ webView: WKWebView) {
+            // The bottom edge of the content itself. document.body.scrollHeight is never less
+            // than the web view's own height, so it could not shrink to fit short content.
+            // (The value already reflects pageZoom; scaling it again adds 50% empty space.)
+            let js = "Math.ceil(document.body.getBoundingClientRect().bottom + window.scrollY)"
+            webView.evaluateJavaScript(js) { [weak self] (height, error) in
+                guard let self = self, let height = height as? CGFloat, height > 0 else { return }
+                let points = height + 20
+                if abs(self.parent.contentHeight - points) > 1 {
+                    self.parent.contentHeight = points
                 }
             }
         }
