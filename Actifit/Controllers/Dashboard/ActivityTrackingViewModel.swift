@@ -47,9 +47,12 @@ class ActivityTrackingViewModel {
     return percentageSubscriber.receive(on: DispatchQueue.main).eraseToAnyPublisher()
   }
 
-  private let bannerImagesSubject = PassthroughSubject<[BannerImageModel], Never> ()
+  // Keeps the latest value: the news request is started in init and usually finishes before
+  // the dashboard subscribes, and a PassthroughSubject dropped that result, leaving the
+  // carousel empty. The empty initial value is filtered out.
+  private let bannerImagesSubject = CurrentValueSubject<[BannerImageModel], Never>([])
   var bannerImagesPublisher: AnyPublisher<[BannerImageModel], Never> {
-    return bannerImagesSubject.receive(on: DispatchQueue.main).eraseToAnyPublisher()
+    return bannerImagesSubject.filter { !$0.isEmpty }.receive(on: DispatchQueue.main).eraseToAnyPublisher()
   }
 
   private let votingStatus = PassthroughSubject<VotingStatusModel, Never>()
