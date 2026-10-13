@@ -460,8 +460,13 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   func openNativeProfile() {
     guard let username = User.current()?.steemit_username else { return }
     let vc = ProfileViewController(username: username, isSelf: true)
-    vc.modalPresentationStyle = .fullScreen
-    present(vc, animated: true)
+    // Pushed (not presented full screen) so the tab bar stays visible.
+    if let nav = navigationController {
+      nav.pushViewController(vc, animated: true)
+    } else {
+      vc.modalPresentationStyle = .fullScreen
+      present(vc, animated: true)
+    }
   }
 
   private func scaleEarnButton() {
@@ -538,10 +543,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
 
   private func openGadgetMarket() {
     dismiss(animated: true) { [weak self] in
-      guard let self = self else { return }
-      let nav = UINavigationController(rootViewController: MarketViewController.create())
-      nav.modalPresentationStyle = .fullScreen
-      self.present(nav, animated: true)
+      self?.showMarket()
     }
   }
 
@@ -906,7 +908,12 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
 
   @IBAction func settingstapped(_ sender: Any) {
     if viewModel.isLoggedIn {
-      self.navigationController?.pushViewController(SettingsVC.instantiateWithStoryboard(appStoryboard: .SB_Main), animated: true)
+      // Open Settings inside the More tab so the tab bar stays visible.
+      if let tabs = tabBarController as? TabbarController {
+        tabs.showSettings()
+      } else {
+        self.navigationController?.pushViewController(SettingsVC.instantiateWithStoryboard(appStoryboard: .SB_Main), animated: true)
+      }
     } else {
       showToast(message: "Please login first")
     }
@@ -1066,7 +1073,8 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
       self.scalePrizeButton()
     })
-    self.navigationController?.setNavigationBarHidden(animated, animated: false)
+    // The dashboard sits in the Home tab's own navigation controller and draws its own header.
+    self.navigationController?.setNavigationBarHidden(true, animated: false)
     self.checkAuthorizationStatusAndStartTracking()
     // Re-read the companion so a pick made on the Profile screen shows here too. The dashboard
     // otherwise only resolves it once at build, so it kept rendering the old animal on return.
@@ -1944,9 +1952,20 @@ extension ActivityTrackingVC {
     }
 
     @objc private func revampEarningsMarketTapped() {
-        let nav = UINavigationController(rootViewController: MarketViewController.create())
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
+        showMarket()
+    }
+
+    /// Opens the Market tab rather than a second, full-screen copy of the Market that would
+    /// cover the tab bar.
+    private func showMarket() {
+        if let tabs = tabBarController {
+            tabs.selectedIndex = 2
+            tabs.delegate?.tabBarController?(tabs, didSelect: tabs.selectedViewController ?? self)
+        } else {
+            let nav = UINavigationController(rootViewController: MarketViewController.create())
+            nav.modalPresentationStyle = .fullScreen
+            present(nav, animated: true)
+        }
     }
 
     private func fetchEstimatedReward(steps: Int) {

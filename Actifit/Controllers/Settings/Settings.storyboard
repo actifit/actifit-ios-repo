@@ -1436,7 +1436,7 @@
                                 </subviews>
                                 <color key="backgroundColor" name="primaryRed"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="80" id="FAD-MV-Xht"/>
+                                    <constraint firstAttribute="height" constant="40" id="FAD-MV-Xht"/>
                                     <constraint firstItem="Xzz-BP-Gg3" firstAttribute="leading" secondItem="xXO-lD-vhQ" secondAttribute="leading" id="Sq5-e8-1bH"/>
                                     <constraint firstAttribute="trailing" secondItem="Xzz-BP-Gg3" secondAttribute="trailing" id="Z2k-rX-SCO"/>
                                     <constraint firstAttribute="bottom" secondItem="Xzz-BP-Gg3" secondAttribute="bottom" id="k9l-x9-zt8"/>
@@ -1447,7 +1447,7 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
                             <constraint firstItem="57D-7B-hNT" firstAttribute="width" secondItem="Ho8-Bw-DL1" secondAttribute="width" id="6sh-0t-Dve"/>
-                            <constraint firstAttribute="top" secondItem="xXO-lD-vhQ" secondAttribute="top" id="ETo-6V-07m"/>
+                            <constraint firstItem="xXO-lD-vhQ" firstAttribute="top" secondItem="xSG-80-7qf" secondAttribute="top" id="ETo-6V-07m"/>
                             <constraint firstItem="57D-7B-hNT" firstAttribute="leading" secondItem="Ho8-Bw-DL1" secondAttribute="leading" id="Lmq-jl-uAv"/>
                             <constraint firstItem="57D-7B-hNT" firstAttribute="trailing" secondItem="Ho8-Bw-DL1" secondAttribute="trailing" id="XYd-6z-If7"/>
                             <constraint firstAttribute="trailing" secondItem="xXO-lD-vhQ" secondAttribute="trailing" id="b19-hw-yeZ"/>
