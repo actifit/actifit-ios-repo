@@ -46,6 +46,9 @@ final class ProfileViewController: UIViewController {
     private let tile3 = ProfileViewController.statTile()
     private let recentStack = UIStackView()
     private let recentEmpty = UILabel()
+    private let badgesHeader = UILabel()
+    private let badgesStack = UIStackView()
+    private let badgesCard = UIView()
 
     init(username: String, isSelf: Bool) {
         self.username = username.byTrimming(string: "@").lowercased()
@@ -64,6 +67,7 @@ final class ProfileViewController: UIViewController {
         loadRank()
         loadRecentActivity()
         loadAvatar()
+        loadArenaBadges()
     }
 
     // MARK: - Layout
@@ -192,8 +196,25 @@ final class ProfileViewController: UIViewController {
         recentEmpty.font = .systemFont(ofSize: 14); recentEmpty.textColor = textSecondary
         recentEmpty.textAlignment = .center; recentEmpty.isHidden = true
 
+        // Arena badges: hidden until the user has earned at least one.
+        badgesHeader.font = .systemFont(ofSize: 16, weight: .bold); badgesHeader.textColor = onSurface
+        badgesHeader.isHidden = true
+        badgesStack.axis = .vertical
+        badgesCard.backgroundColor = .white; badgesCard.layer.cornerRadius = 16
+        badgesCard.isHidden = true
+        badgesStack.isLayoutMarginsRelativeArrangement = true
+        badgesStack.layoutMargins = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
+        badgesStack.translatesAutoresizingMaskIntoConstraints = false
+        badgesCard.addSubview(badgesStack)
+        NSLayoutConstraint.activate([
+            badgesStack.topAnchor.constraint(equalTo: badgesCard.topAnchor),
+            badgesStack.leadingAnchor.constraint(equalTo: badgesCard.leadingAnchor),
+            badgesStack.trailingAnchor.constraint(equalTo: badgesCard.trailingAnchor),
+            badgesStack.bottomAnchor.constraint(equalTo: badgesCard.bottomAnchor)
+        ])
+
         [heroContainer, metricsLegend, tierLabel, usernameLabel, subtitleLabel, companionHint,
-         spacer(8), tilesRow, share, spacer(8), recentHeader, recentCard()].forEach { content.addArrangedSubview($0) }
+         spacer(8), tilesRow, share, spacer(8), badgesHeader, badgesCard, recentHeader, recentCard()].forEach { content.addArrangedSubview($0) }
         content.setCustomSpacing(4, after: tierLabel)
         content.setCustomSpacing(2, after: usernameLabel)
     }
@@ -348,6 +369,27 @@ final class ProfileViewController: UIViewController {
                 if !self.isSelf { self.applyHero() }
             }
         }, failure: { _ in })
+    }
+
+    /// Badges earned in Arena challenges. A badge name is free text chosen by a challenge
+    /// creator, so anything not official is marked "Community".
+    private func loadArenaBadges() {
+        ArenaAPI.badges(user: username) { [weak self] badges, total in
+            guard let self = self, !badges.isEmpty else { return }
+            self.badgesHeader.text = "\(ArenaText.badgesHeader) (\(total))"
+            self.badgesStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            for b in badges {
+                let row = UILabel()
+                row.text = "🏅 " + ArenaText.badgeRow(b.name, b.challengeTitle, community: !b.official)
+                row.font = .systemFont(ofSize: 14); row.textColor = self.onSurface; row.numberOfLines = 0
+                let wrap = UIStackView(arrangedSubviews: [row])
+                wrap.isLayoutMarginsRelativeArrangement = true
+                wrap.layoutMargins = UIEdgeInsets(top: 10, left: 0, bottom: 10, right: 0)
+                self.badgesStack.addArrangedSubview(wrap)
+            }
+            self.badgesHeader.isHidden = false
+            self.badgesCard.isHidden = false
+        }
     }
 
     private func loadAvatar() {

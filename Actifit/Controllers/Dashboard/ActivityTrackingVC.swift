@@ -130,6 +130,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var revampEstRewardLabel: UILabel?
   var revampNudgeCard: UIView?
   var revampCommunityStack: UIStackView?
+  var revampArenaCard: ArenaHomeCardView?
   var revampRouteSummaryLabel: UILabel?
   var revampTweetBanners: [BannerImageModel] = []
   var lastNewsCarouselWidth: CGFloat = 0
@@ -1082,6 +1083,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
     auraView?.setCompanion(CompanionUtil.resolveCompanion(username: companionUser, isSelf: true))
     displayUserAndRank()
     everyDayChart()
+    revampArenaCard?.refresh(user: arenaCurrentUser())
       if !self.viewModel.canPost {
           DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
               self.stopPostButtonScaling()
@@ -1762,6 +1764,7 @@ extension ActivityTrackingVC {
         content.addArrangedSubview(buildRevampHeroCard())
         content.addArrangedSubview(buildRevampNewsCarousel())
         content.addArrangedSubview(buildRevampNudgeCard())
+        content.addArrangedSubview(buildRevampArenaCard())
         content.addArrangedSubview(buildRevampCommunityCard())
         content.addArrangedSubview(buildRevampRouteCard())
         content.addArrangedSubview(buildRevampEarningsCard())
@@ -2543,6 +2546,20 @@ extension ActivityTrackingVC {
         let col = UIStackView(arrangedSubviews: [avatar, name, stepsL]); col.axis = .vertical; col.spacing = 2; col.alignment = .center
         col.widthAnchor.constraint(equalToConstant: 64).isActive = true
         return col
+    }
+
+    /// The user's most urgent Arena challenge, or an invitation to the open ones. A challenge
+    /// opens inside the Home tab; the invitation switches to the Arena tab.
+    private func buildRevampArenaCard() -> UIView {
+        let card = ArenaHomeCardView()
+        card.onOpenChallenge = { [weak self] id in
+            self?.navigationController?.pushViewController(ArenaChallengeViewController(challengeId: id), animated: true)
+        }
+        card.onOpenArena = { [weak self] in
+            (self?.tabBarController as? TabbarController)?.showArena()
+        }
+        revampArenaCard = card
+        return card
     }
 
     private func buildRevampNudgeCard() -> UIView {

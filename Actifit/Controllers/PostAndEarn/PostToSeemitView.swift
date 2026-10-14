@@ -179,7 +179,10 @@ struct PostToSeemitView: View {
       }
 
     }, message: {
-      Text(Messages.success_post)
+      // Uses what the dashboard's Arena card last loaded, so posting makes no extra calls.
+      Text(ArenaHomeCardView.inChallenge(arenaCurrentUser())
+           ? Messages.success_post + "\n\n" + ArenaText.reportCounts
+           : Messages.success_post)
     })
     .alert("", isPresented: $viewModel.showNotReachedMinimumAlert, actions: {
       Button("YES") {

@@ -23,6 +23,7 @@ class TabbarController: UITabBarController {
     // Held for routing from the "More" sheet (no longer top-level tabs).
     private var trackingHistoryVC: UIViewController!
     private var settingsVC: UIViewController!
+    private var dailyLeaderBoardVC: UIViewController!
     /// Hosts the screens opened from the More sheet (History, Settings) inside the More tab,
     /// so the tab bar stays visible on them.
     private let moreNav = UINavigationController()
@@ -38,7 +39,7 @@ class TabbarController: UITabBarController {
         let dashboard = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "ActivityTrackingVC") as! ActivityTrackingVC
         settingsVC = UIStoryboard(name: "Settings", bundle: nil).instantiateViewController(withIdentifier: "SettingsVC") as! SettingsVC
         trackingHistoryVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "TrackingHistoryVC") as! TrackingHistoryVC
-        let dailyLeaderBoardVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "DailyLeaderBoardBVC") as! DailyLeaderBoardBVC
+        dailyLeaderBoardVC = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "DailyLeaderBoardBVC") as! DailyLeaderBoardBVC
         // A bare UIHostingController lets SocialView's red header bleed under the status
         // bar. Wrap it in a white container and pin the SwiftUI content to the container's
         // SAFE-AREA top, so the header starts below the status bar with white showing above
@@ -61,6 +62,11 @@ class TabbarController: UITabBarController {
         market.hidesCloseButton = true
         let marketNav = UINavigationController(rootViewController: market)
 
+        // The Arena took the Leaders tab (as on Android); the Daily Leaderboard moved to More.
+        // Challenge screens are pushed inside this tab so the tab bar stays visible.
+        let arenaNav = UINavigationController(rootViewController: ArenaViewController())
+        arenaNav.setNavigationBarHidden(true, animated: false)
+
         let moreVC = moreNav // tapping the tab opens the More sheet; see shouldSelect
         // These screens (and the history charts pushed from them) draw their own headers and
         // back buttons, so the system navigation bar stays hidden.
@@ -74,10 +80,10 @@ class TabbarController: UITabBarController {
         homeNav.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house.fill"), tag: 0)
         socialController.tabBarItem = UITabBarItem(title: "Social", image: UIImage(named: "social2-icon") ?? UIImage(systemName: "person.2.fill"), tag: 1)
         marketNav.tabBarItem = UITabBarItem(title: "Market", image: UIImage(systemName: "cart.fill"), tag: 2)
-        dailyLeaderBoardVC.tabBarItem = UITabBarItem(title: "Leaders", image: UIImage(systemName: "trophy.fill"), tag: 3)
+        arenaNav.tabBarItem = UITabBarItem(title: ArenaText.title, image: UIImage(systemName: "trophy.fill"), tag: 3)
         moreVC.tabBarItem = UITabBarItem(title: "More", image: UIImage(systemName: "ellipsis"), tag: 4)
 
-        self.viewControllers = [homeNav, socialController, marketNav, dailyLeaderBoardVC, moreVC]
+        self.viewControllers = [homeNav, socialController, marketNav, arenaNav, moreVC]
         self.tabBar.backgroundColor = .white
         if let red = UIColor(named: "primaryRed") { self.tabBar.tintColor = red }
     }
@@ -85,10 +91,12 @@ class TabbarController: UITabBarController {
     fileprivate func presentMoreSheet() {
         // Mirrors the Android "More" menu (bottom_sheet_more_menu.xml), in the same order. Upload
         // Video, Follow Us, Video Tutorial and Community Chat lost their only entry points when the
-        // revamped dashboard covered the legacy bottom menu. Settings is here because, unlike on
-        // Android, it is not otherwise reachable from every tab.
+        // revamped dashboard covered the legacy bottom menu. The Daily Leaderboard moved here when
+        // the Arena took its tab. Settings is here because, unlike on Android, it is not
+        // otherwise reachable from every tab.
         let items: [MoreMenuViewController.Item] = [
             .init(title: "Activity History", systemIcon: "clock.fill") { [weak self] in self?.showInMoreTab(self?.trackingHistoryVC) },
+            .init(title: "Daily Leaderboard", systemIcon: "list.number") { [weak self] in self?.showInMoreTab(self?.dailyLeaderBoardVC) },
             .init(title: "Upload Video", systemIcon: "video.fill") { [weak self] in
                 self?.present(ThreeSpeakVideoViewController.create(), animated: true)
             },
@@ -128,6 +136,13 @@ class TabbarController: UITabBarController {
     /// Also used by the dashboard's settings button, so Settings looks the same from both.
     func showSettings() {
         showInMoreTab(settingsVC)
+    }
+
+    /// Opens the Arena tab on its challenge list (used by the dashboard's Arena card).
+    func showArena() {
+        selectedIndex = 3
+        updateTabTint()
+        (selectedViewController as? UINavigationController)?.popToRootViewController(animated: false)
     }
 
     /// The More tab is tinted green while one of its screens is showing; other tabs stay red.
