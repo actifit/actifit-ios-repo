@@ -24,6 +24,7 @@ class TabbarController: UITabBarController {
     private var trackingHistoryVC: UIViewController!
     private var settingsVC: UIViewController!
     private var dailyLeaderBoardVC: UIViewController!
+    private let friendsVC = FriendsViewController()
     /// Hosts the screens opened from the More sheet (History, Settings) inside the More tab,
     /// so the tab bar stays visible on them.
     private let moreNav = UINavigationController()
@@ -96,6 +97,7 @@ class TabbarController: UITabBarController {
         // otherwise reachable from every tab.
         let items: [MoreMenuViewController.Item] = [
             .init(title: "Activity History", systemIcon: "clock.fill") { [weak self] in self?.showInMoreTab(self?.trackingHistoryVC) },
+            .init(title: FriendsText.title, systemIcon: "person.crop.circle.badge.plus") { [weak self] in self?.showFriends() },
             .init(title: "Daily Leaderboard", systemIcon: "list.number") { [weak self] in self?.showInMoreTab(self?.dailyLeaderBoardVC) },
             .init(title: "Upload Video", systemIcon: "video.fill") { [weak self] in
                 self?.present(ThreeSpeakVideoViewController.create(), animated: true)
@@ -122,6 +124,16 @@ class TabbarController: UITabBarController {
             sp.prefersGrabberVisible = true
         }
         present(sheet, animated: true)
+
+        // Pending received friend requests, as a badge on the Friends row.
+        let user = arenaCurrentUser()
+        if !user.isEmpty, let friendsRow = items.firstIndex(where: { $0.title == FriendsText.title }) {
+            FriendsAPI.requests(of: user) { [weak sheet] requests in
+                guard let count = requests?.received.count, count > 0 else { return }
+                sheet?.setBadge("\(count)", at: friendsRow,
+                                accessibility: count == 1 ? "1 pending friend request" : "\(count) pending friend requests")
+            }
+        }
     }
 
     /// Shows a screen inside the More tab rather than full screen, keeping the tab bar on
@@ -136,6 +148,12 @@ class TabbarController: UITabBarController {
     /// Also used by the dashboard's settings button, so Settings looks the same from both.
     func showSettings() {
         showInMoreTab(settingsVC)
+    }
+
+    /// Opens Friends inside the More tab, optionally on a tab (notification deep links).
+    func showFriends(tab: FriendsViewController.Tab? = nil) {
+        if let tab = tab { friendsVC.show(tab: tab) }
+        showInMoreTab(friendsVC)
     }
 
     /// Opens the Arena tab on its challenge list (used by the dashboard's Arena card).
@@ -202,6 +220,7 @@ final class MoreMenuViewController: UIViewController {
     }
 
     private let items: [Item]
+    private var buttons: [UIButton] = []
 
     init(items: [Item]) {
         self.items = items
@@ -236,6 +255,7 @@ final class MoreMenuViewController: UIViewController {
             b.tag = i
             b.addTarget(self, action: #selector(itemTapped(_:)), for: .touchUpInside)
             stack.addArrangedSubview(b)
+            buttons.append(b)
         }
 
         // Scrollable: the list is taller than the medium detent.
@@ -255,6 +275,27 @@ final class MoreMenuViewController: UIViewController {
             stack.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor),
             stack.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor)
         ])
+    }
+
+    /// A red count pill at the trailing edge of one row.
+    func setBadge(_ text: String, at index: Int, accessibility: String) {
+        guard index < buttons.count else { return }
+        let b = buttons[index]
+        let badge = UILabel()
+        badge.text = "  \(text)  "
+        badge.font = .systemFont(ofSize: 13, weight: .bold)
+        badge.textColor = .white
+        badge.backgroundColor = UIColor(named: "primaryRed") ?? .red
+        badge.layer.cornerRadius = 11
+        badge.clipsToBounds = true
+        badge.translatesAutoresizingMaskIntoConstraints = false
+        b.addSubview(badge)
+        NSLayoutConstraint.activate([
+            badge.trailingAnchor.constraint(equalTo: b.trailingAnchor),
+            badge.centerYAnchor.constraint(equalTo: b.centerYAnchor),
+            badge.heightAnchor.constraint(equalToConstant: 22)
+        ])
+        b.accessibilityValue = accessibility
     }
 
     @objc private func itemTapped(_ sender: UIButton) {

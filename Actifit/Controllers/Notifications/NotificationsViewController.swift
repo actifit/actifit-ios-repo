@@ -89,8 +89,15 @@ extension NotificationsViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "NotificationsCell") as? NotificationsCell
-        cell?.notificationModel = notificationModel.notificationsList[indexPath.row]
+        let notification = notificationModel.notificationsList[indexPath.row]
+        cell?.notificationModel = notification
         cell?.onLinkTapped = { [weak self] url in
+            // Friend notifications open the native Friends screen instead of the web page.
+            if let tabs = self?.tabBarController as? TabbarController,
+               notification.type == "friendship_request" || notification.type == "friendship_acceptance" {
+                tabs.showFriends(tab: notification.type == "friendship_request" ? .requests : .friends)
+                return
+            }
             self?.openLink(url: url)
         }
         return cell!

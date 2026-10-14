@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # Adds an ActifitTests logic-test target (no host app, so no Pods) to Actifit.xcodeproj and a
-# shared ActifitTests scheme to run it. It compiles the Foundation-only Arena sources directly.
+# shared ActifitTests scheme to run it. It compiles the Foundation-only Arena and Friends
+# sources directly.
 # Run before testing (uses the `xcodeproj` gem that ships with CocoaPods), so we never
 # hand-edit project.pbxproj:
 #   ruby ci_scripts/add_unittest_target.rb
@@ -10,11 +11,12 @@ require "xcodeproj"
 
 PROJECT_PATH = "Actifit.xcodeproj"
 TARGET_NAME  = "ActifitTests"
-TEST_FILES   = ["ActifitTests/ArenaLogicTests.swift"]
+TEST_FILES   = ["ActifitTests/ArenaLogicTests.swift", "ActifitTests/FriendsLogicTests.swift"]
 APP_SOURCES  = [
   "Actifit/Controllers/Arena/ArenaLogic.swift",
   "Actifit/Controllers/Arena/ArenaModels.swift",
-  "Actifit/Controllers/Arena/ArenaText.swift"
+  "Actifit/Controllers/Arena/ArenaText.swift",
+  "Actifit/Controllers/Friends/FriendsLogic.swift"
 ]
 
 project = Xcodeproj::Project.open(PROJECT_PATH)

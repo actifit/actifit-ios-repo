@@ -235,6 +235,9 @@
 		AF5EC0DE0000000000000002 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5EC0DE0000000000000001 /* Secrets.swift */; };
 		B79A56C9D011D84F3DCEEBAB /* 1f98d.json in Resources */ = {isa = PBXBuildFile; fileRef = EF8BE1BF06EDC8230774E3BD /* 1f98d.json */; };
 		BA44DDE833EC3CA733B8587E /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69DA7A973191ED7518B29C0F /* ProfileViewController.swift */; };
+		167BCC3D42CF867DFD8EDCF7 /* FriendsLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBAF00DBB35CA5E5B055B40 /* FriendsLogic.swift */; };
+		3BC1B7E063BF7BE319075C7A /* FriendsAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 451AF3F31C283715709DEF36 /* FriendsAPI.swift */; };
+		918BCA782E5763382DBCC14E /* FriendsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A5BA8A69C857161C686CF8 /* FriendsViewController.swift */; };
 		5CFEE988438991EF8102742D /* ArenaLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BFDD869B42B215DD0B5211E /* ArenaLogic.swift */; };
 		F22F3DD028B3E45AF8CE5761 /* ArenaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E14684D3FF95786DF013422 /* ArenaModels.swift */; };
 		78A195AA8E11361B1C3FAA89 /* ArenaAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E2DCDB8047278865426D4EA /* ArenaAPI.swift */; };
@@ -504,6 +507,9 @@
 		65D6CA58CD49BC50CE8898B3 /* RouteMapViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RouteMapViewController.swift; path = Actifit/Controllers/Route/RouteMapViewController.swift; sourceTree = "<group>"; };
 		68417E18D1B82AAF4BD9338F /* 1f981.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f981.json; path = Actifit/Resources/animals/1f981.json; sourceTree = "<group>"; };
 		69DA7A973191ED7518B29C0F /* ProfileViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProfileViewController.swift; path = Actifit/Controllers/Profile/ProfileViewController.swift; sourceTree = "<group>"; };
+		BBBAF00DBB35CA5E5B055B40 /* FriendsLogic.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FriendsLogic.swift; path = Actifit/Controllers/Friends/FriendsLogic.swift; sourceTree = "<group>"; };
+		451AF3F31C283715709DEF36 /* FriendsAPI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FriendsAPI.swift; path = Actifit/Controllers/Friends/FriendsAPI.swift; sourceTree = "<group>"; };
+		49A5BA8A69C857161C686CF8 /* FriendsViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FriendsViewController.swift; path = Actifit/Controllers/Friends/FriendsViewController.swift; sourceTree = "<group>"; };
 		9BFDD869B42B215DD0B5211E /* ArenaLogic.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ArenaLogic.swift; path = Actifit/Controllers/Arena/ArenaLogic.swift; sourceTree = "<group>"; };
 		6E14684D3FF95786DF013422 /* ArenaModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ArenaModels.swift; path = Actifit/Controllers/Arena/ArenaModels.swift; sourceTree = "<group>"; };
 		1E2DCDB8047278865426D4EA /* ArenaAPI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ArenaAPI.swift; path = Actifit/Controllers/Arena/ArenaAPI.swift; sourceTree = "<group>"; };
@@ -1674,6 +1680,9 @@
 				3EA5502112EADAE0051E2F8E /* RouteRecordingManager.swift */,
 				65D6CA58CD49BC50CE8898B3 /* RouteMapViewController.swift */,
 				69DA7A973191ED7518B29C0F /* ProfileViewController.swift */,
+				BBBAF00DBB35CA5E5B055B40 /* FriendsLogic.swift */,
+				451AF3F31C283715709DEF36 /* FriendsAPI.swift */,
+				49A5BA8A69C857161C686CF8 /* FriendsViewController.swift */,
 				9BFDD869B42B215DD0B5211E /* ArenaLogic.swift */,
 				6E14684D3FF95786DF013422 /* ArenaModels.swift */,
 				1E2DCDB8047278865426D4EA /* ArenaAPI.swift */,
@@ -2176,6 +2185,9 @@
 				3A817624B56D1A083266AB0F /* RouteRecordingManager.swift in Sources */,
 				FF2A9FCA34A7E073E0619784 /* RouteMapViewController.swift in Sources */,
 				BA44DDE833EC3CA733B8587E /* ProfileViewController.swift in Sources */,
+				167BCC3D42CF867DFD8EDCF7 /* FriendsLogic.swift in Sources */,
+				3BC1B7E063BF7BE319075C7A /* FriendsAPI.swift in Sources */,
+				918BCA782E5763382DBCC14E /* FriendsViewController.swift in Sources */,
 				5CFEE988438991EF8102742D /* ArenaLogic.swift in Sources */,
 				F22F3DD028B3E45AF8CE5761 /* ArenaModels.swift in Sources */,
 				78A195AA8E11361B1C3FAA89 /* ArenaAPI.swift in Sources */,

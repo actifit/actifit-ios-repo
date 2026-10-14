@@ -49,6 +49,15 @@ final class ProfileViewController: UIViewController {
     private let badgesHeader = UILabel()
     private let badgesStack = UIStackView()
     private let badgesCard = UIView()
+    private let friendButton = UIButton(type: .system)
+    private let mutualHeader = UILabel()
+    private let mutualStack = UIStackView()
+    private let mutualScroll = UIScrollView()
+    private var friendState: FriendState = .none
+    /// The logged-in user looking at this profile ("" for a guest).
+    private let viewer = arenaCurrentUser()
+    /// Friend actions only make sense on someone else's profile, for a logged-in viewer.
+    private var showsFriendship: Bool { return !isSelf && !viewer.isEmpty && viewer != username }
 
     init(username: String, isSelf: Bool) {
         self.username = username.byTrimming(string: "@").lowercased()
@@ -68,6 +77,10 @@ final class ProfileViewController: UIViewController {
         loadRecentActivity()
         loadAvatar()
         loadArenaBadges()
+        if showsFriendship {
+            refreshFriendState()
+            loadMutualFriends()
+        }
     }
 
     // MARK: - Layout
@@ -213,8 +226,36 @@ final class ProfileViewController: UIViewController {
             badgesStack.bottomAnchor.constraint(equalTo: badgesCard.bottomAnchor)
         ])
 
+        // Friend button and mutual friends (someone else's profile only).
+        friendButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        friendButton.setTitleColor(.white, for: .normal)
+        friendButton.layer.cornerRadius = 12
+        friendButton.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        friendButton.addTarget(self, action: #selector(friendTapped), for: .touchUpInside)
+        friendButton.isHidden = !showsFriendship
+        friendButton.isEnabled = false
+        friendButton.backgroundColor = textSecondary
+        friendButton.setTitle("…", for: .normal)
+        friendButton.accessibilityIdentifier = "profileFriendButton"
+        mutualHeader.font = .systemFont(ofSize: 16, weight: .bold); mutualHeader.textColor = onSurface
+        mutualHeader.isHidden = true
+        mutualStack.axis = .horizontal; mutualStack.spacing = 12; mutualStack.alignment = .top
+        mutualStack.translatesAutoresizingMaskIntoConstraints = false
+        mutualScroll.showsHorizontalScrollIndicator = false
+        mutualScroll.isHidden = true
+        mutualScroll.addSubview(mutualStack)
+        NSLayoutConstraint.activate([
+            mutualScroll.heightAnchor.constraint(equalToConstant: 76),
+            mutualStack.topAnchor.constraint(equalTo: mutualScroll.contentLayoutGuide.topAnchor),
+            mutualStack.leadingAnchor.constraint(equalTo: mutualScroll.contentLayoutGuide.leadingAnchor),
+            mutualStack.trailingAnchor.constraint(equalTo: mutualScroll.contentLayoutGuide.trailingAnchor),
+            mutualStack.bottomAnchor.constraint(equalTo: mutualScroll.contentLayoutGuide.bottomAnchor),
+            mutualStack.heightAnchor.constraint(equalTo: mutualScroll.frameLayoutGuide.heightAnchor)
+        ])
+
         [heroContainer, metricsLegend, tierLabel, usernameLabel, subtitleLabel, companionHint,
-         spacer(8), tilesRow, share, spacer(8), badgesHeader, badgesCard, recentHeader, recentCard()].forEach { content.addArrangedSubview($0) }
+         spacer(8), tilesRow, share, friendButton, mutualHeader, mutualScroll, spacer(8),
+         badgesHeader, badgesCard, recentHeader, recentCard()].forEach { content.addArrangedSubview($0) }
         content.setCustomSpacing(4, after: tierLabel)
         content.setCustomSpacing(2, after: usernameLabel)
     }
@@ -390,6 +431,106 @@ final class ProfileViewController: UIViewController {
             self.badgesHeader.isHidden = false
             self.badgesCard.isHidden = false
         }
+    }
+
+    // MARK: - Friendship
+
+    /// Reads the viewer's friends and pending requests, then labels the button to match.
+    private func refreshFriendState() {
+        friendButton.isEnabled = false
+        var friends: [String]?
+        var requests: (received: [String], sent: [String])?
+        var pending = 2
+        let finish = { [weak self] in
+            pending -= 1
+            guard pending == 0, let self = self else { return }
+            // If either read failed the state is unknown, so offer nothing rather than guess.
+            guard let friends = friends, let requests = requests else {
+                self.friendButton.setTitle(FriendsText.failed, for: .normal)
+                return
+            }
+            self.friendState = FriendsLogic.state(of: self.username, friends: friends, received: requests.received, sent: requests.sent)
+            let title: String
+            let color: UIColor
+            switch self.friendState {
+            case .friends: title = FriendsText.profileFriends; color = self.textSecondary
+            case .received: title = FriendsText.profileAccept; color = .primaryGreenColor()
+            case .sent: title = FriendsText.profilePending; color = self.textSecondary
+            case .none: title = FriendsText.profileAdd; color = self.brandRed
+            }
+            self.friendButton.setTitle(title, for: .normal)
+            self.friendButton.backgroundColor = color
+            self.friendButton.isEnabled = true
+        }
+        FriendsAPI.friends(of: viewer) { friends = $0; finish() }
+        FriendsAPI.requests(of: viewer) { requests = $0; finish() }
+    }
+
+    @objc private func friendTapped() {
+        switch friendState {
+        case .friends:
+            let alert = UIAlertController(title: nil, message: FriendsText.confirmUnfriend(username), preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: FriendsText.unfriend, style: .destructive) { [weak self] _ in self?.performFriend(.unfriend) })
+            alert.addAction(UIAlertAction(title: FriendsText.close, style: .cancel))
+            present(alert, animated: true)
+        case .received: performFriend(.accept)
+        case .sent: performFriend(.cancelRequest)
+        case .none: performFriend(.add)
+        }
+    }
+
+    private func performFriend(_ action: FriendsAPI.Action) {
+        friendButton.isEnabled = false
+        FriendsAPI.perform(action, me: viewer, target: username) { [weak self] ok in
+            guard let self = self else { return }
+            self.showToast(message: ok ? (action == .add ? FriendsText.requestSent : FriendsText.done) : FriendsText.failed, width: 280)
+            self.refreshFriendState()
+        }
+    }
+
+    /// Friends this profile shares with the viewer, as a count and tappable avatars.
+    private func loadMutualFriends() {
+        var mine: [String]?
+        var theirs: [String]?
+        var pending = 2
+        let finish = { [weak self] in
+            pending -= 1
+            guard pending == 0, let self = self, let mine = mine, let theirs = theirs else { return }
+            let mutual = FriendsLogic.mutualFriends(mine: mine, theirs: theirs)
+            guard !mutual.isEmpty else { return }
+            self.mutualHeader.text = FriendsText.mutual(mutual.count)
+            self.mutualStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            for user in mutual { self.mutualStack.addArrangedSubview(self.mutualChip(user)) }
+            self.mutualHeader.isHidden = false
+            self.mutualScroll.isHidden = false
+        }
+        FriendsAPI.friends(of: viewer) { mine = $0; finish() }
+        FriendsAPI.friends(of: username) { theirs = $0; finish() }
+    }
+
+    private func mutualChip(_ user: String) -> UIView {
+        let avatar = UIImageView()
+        avatar.backgroundColor = separator
+        avatar.layer.cornerRadius = 24; avatar.clipsToBounds = true; avatar.contentMode = .scaleAspectFill
+        avatar.widthAnchor.constraint(equalToConstant: 48).isActive = true
+        avatar.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        ArenaImageLoader.load(URL(string: "https://images.hive.blog/u/\(user)/avatar/small"), into: avatar)
+        let name = UILabel()
+        name.text = "@" + user; name.font = .systemFont(ofSize: 10); name.textColor = textSecondary
+        name.textAlignment = .center; name.lineBreakMode = .byTruncatingTail
+        let chip = UIStackView(arrangedSubviews: [avatar, name])
+        chip.axis = .vertical; chip.spacing = 4; chip.alignment = .center
+        chip.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        chip.accessibilityIdentifier = user
+        chip.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(mutualTapped(_:))))
+        return chip
+    }
+
+    @objc private func mutualTapped(_ g: UITapGestureRecognizer) {
+        guard let user = g.view?.accessibilityIdentifier else { return }
+        let profile = ProfileViewController(username: user, isSelf: user == viewer)
+        if let nav = navigationController { nav.pushViewController(profile, animated: true) }
+        else { present(profile, animated: true) }
     }
 
     private func loadAvatar() {

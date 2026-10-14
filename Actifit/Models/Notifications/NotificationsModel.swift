@@ -11,4 +11,6 @@ struct NotificationModel: Codable {
     let details: String?
     let date: String?
     let url: String?
+    /// e.g. "friendship_request"; optional so older payloads still decode.
+    let type: String?
 }
