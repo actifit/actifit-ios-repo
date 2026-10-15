@@ -118,7 +118,12 @@ class TabbarController: UITabBarController {
             },
             .init(title: "Settings", systemIcon: "gearshape.fill") { [weak self] in self?.showSettings() }
         ]
-        let sheet = MoreMenuViewController(items: items)
+        // The screen currently open in the More tab gets its row highlighted, as on Android.
+        let screens: [(UIViewController?, String)] = [(trackingHistoryVC, "Activity History"), (friendsVC, FriendsText.title),
+                                                      (dailyLeaderBoardVC, "Daily Leaderboard"), (settingsVC, "Settings")]
+        let current = selectedIndex == TabbarController.moreTabIndex ? moreNav.viewControllers.first : nil
+        let currentTitle = screens.first { $0.0 != nil && $0.0 === current }?.1
+        let sheet = MoreMenuViewController(items: items, highlighted: items.firstIndex { $0.title == currentTitle })
         if let sp = sheet.sheetPresentationController {
             sp.detents = [.medium(), .large()]
             sp.prefersGrabberVisible = true
@@ -220,10 +225,12 @@ final class MoreMenuViewController: UIViewController {
     }
 
     private let items: [Item]
+    private let highlighted: Int?
     private var buttons: [UIButton] = []
 
-    init(items: [Item]) {
+    init(items: [Item], highlighted: Int? = nil) {
         self.items = items
+        self.highlighted = highlighted
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
@@ -275,6 +282,22 @@ final class MoreMenuViewController: UIViewController {
             stack.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor),
             stack.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor)
         ])
+
+        // Light pink band across the full sheet width behind the current screen's row.
+        if let i = highlighted, i < buttons.count {
+            let band = UIView()
+            band.backgroundColor = UIColor.primaryRedColor().withAlphaComponent(0.1)
+            band.translatesAutoresizingMaskIntoConstraints = false
+            band.isUserInteractionEnabled = false
+            scroll.insertSubview(band, belowSubview: stack)
+            NSLayoutConstraint.activate([
+                band.topAnchor.constraint(equalTo: buttons[i].topAnchor),
+                band.bottomAnchor.constraint(equalTo: buttons[i].bottomAnchor),
+                band.leadingAnchor.constraint(equalTo: scroll.frameLayoutGuide.leadingAnchor),
+                band.trailingAnchor.constraint(equalTo: scroll.frameLayoutGuide.trailingAnchor)
+            ])
+            buttons[i].accessibilityTraits |= UIAccessibilityTraitSelected
+        }
     }
 
     /// A red count pill at the trailing edge of one row.
