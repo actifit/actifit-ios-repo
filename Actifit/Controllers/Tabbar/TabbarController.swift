@@ -32,10 +32,13 @@ class TabbarController: UITabBarController {
     /// Post & Earn) inside the Home tab, so the tab bar stays visible on them too.
     private let homeNav = UINavigationController()
     private static let moreTabIndex = 4
+    /// The live tab bar, for routing notification links into it.
+    static weak var current: TabbarController?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         self.delegate = self
+        TabbarController.current = self
 
         let dashboard = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "ActivityTrackingVC") as! ActivityTrackingVC
         settingsVC = UIStoryboard(name: "Settings", bundle: nil).instantiateViewController(withIdentifier: "SettingsVC") as! SettingsVC
@@ -161,11 +164,23 @@ class TabbarController: UITabBarController {
         showInMoreTab(friendsVC)
     }
 
-    /// Opens the Arena tab on its challenge list (used by the dashboard's Arena card).
-    func showArena() {
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        ArenaDeepLink.deliver()   // a notification tapped before the tab bar existed
+    }
+
+    /// Opens the Arena tab on its challenge list (used by the dashboard's Arena card), or on one
+    /// challenge (notification links).
+    func showArena(challengeId: String? = nil) {
+        // A sheet or modal (More, Post & Earn) would otherwise hide the challenge.
+        presentedViewController?.dismiss(animated: false)
         selectedIndex = 3
         updateTabTint()
-        (selectedViewController as? UINavigationController)?.popToRootViewController(animated: false)
+        guard let nav = selectedViewController as? UINavigationController else { return }
+        nav.popToRootViewController(animated: false)
+        if let id = challengeId {
+            nav.pushViewController(ArenaChallengeViewController(challengeId: id), animated: true)
+        }
     }
 
     /// The More tab is tinted green while one of its screens is showing; other tabs stay red.

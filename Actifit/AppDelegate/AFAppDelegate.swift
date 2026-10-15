@@ -313,6 +313,8 @@ extension AFAppDelegate: UNUserNotificationCenterDelegate {
         if response.notification.request.identifier == "Local Notification" {
             print("Handling notifications with the Local Notification Identifier")
         }
+        // Arena pushes open the native challenge screen; this fires once per tap.
+        ArenaDeepLink.open(response.notification.request.content.userInfo["url"] as? String)
         
         completionHandler()
     }

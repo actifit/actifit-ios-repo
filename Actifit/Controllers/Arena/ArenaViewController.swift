@@ -14,6 +14,29 @@ func arenaCurrentUser() -> String {
     return User.current()?.steemit_username.byTrimming(string: "@").lowercased() ?? ""
 }
 
+/// Opens the challenge from an Arena notification link (push or inbox) exactly once. A link
+/// that arrives before the tab bar is on screen (cold launch, login screen) waits here and is
+/// handed over, then forgotten, when the tab bar appears; so nothing reopens it later.
+enum ArenaDeepLink {
+    private static var pendingId: String?
+
+    /// Returns false (and does nothing) when the URL is not an Arena challenge link.
+    @discardableResult
+    static func open(_ url: String?) -> Bool {
+        guard let id = ArenaLogic.challengeId(fromURL: url) else { return false }
+        pendingId = id
+        deliver()
+        return true
+    }
+
+    /// Called again by the tab bar each time it appears.
+    static func deliver() {
+        guard let id = pendingId, let tabs = TabbarController.current, tabs.viewIfLoaded?.window != nil else { return }
+        pendingId = nil
+        tabs.showArena(challengeId: id)
+    }
+}
+
 /// Small in-memory cache for the challenge art and avatars (no image pod in this app).
 enum ArenaImageLoader {
     private static let cache = NSCache<NSURL, UIImage>()

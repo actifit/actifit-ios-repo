@@ -100,6 +100,20 @@ final class ArenaLogicTests: XCTestCase {
         XCTAssertEqual(ArenaLogic.kind(of: nil), .other)
     }
 
+    func testChallengeIdFromNotificationLinks() {
+        XCTAssertEqual(ArenaLogic.challengeId(fromURL: "https://actifit.io/arena/def_weekly_step_league"), "def_weekly_step_league")
+        XCTAssertEqual(ArenaLogic.challengeId(fromURL: "https://actifit.io/arena/def_daily_focus%402026-10-13"), "def_daily_focus@2026-10-13")
+        XCTAssertEqual(ArenaLogic.challengeId(fromURL: "https://www.actifit.io/arena/ch_x/?ref=push"), "ch_x")
+        XCTAssertEqual(ArenaLogic.challengeId(fromURL: "https://actifit.io/arena/ch_x#top"), "ch_x")
+        XCTAssertNil(ArenaLogic.challengeId(fromURL: "https://actifit.io/arena"))
+        XCTAssertNil(ArenaLogic.challengeId(fromURL: "https://actifit.io/arena/"))
+        XCTAssertNil(ArenaLogic.challengeId(fromURL: "https://actifit.io/arena/create"))
+        XCTAssertNil(ArenaLogic.challengeId(fromURL: "https://actifit.io/mcfarhat/wallet"))
+        XCTAssertNil(ArenaLogic.challengeId(fromURL: "https://evil.example/arena/ch_x"))
+        XCTAssertNil(ArenaLogic.challengeId(fromURL: "https://actifit.io.evil.example/arena/ch_x"))
+        XCTAssertNil(ArenaLogic.challengeId(fromURL: nil))
+    }
+
     // MARK: - iOS additions
 
     func testGapIsMeasuredToTheNearestBetterRankNotATiedRow() {
