@@ -84,8 +84,11 @@ final class FriendsViewController: UIViewController {
         if user != me {
             // Another account: nothing from the previous one may stay on screen.
             me = user
-            friends = []; received = []; sent = []; suggested = []
-            dataLoaded = false; suggestLoaded = false; cachedFriendNames = nil
+            friends = []; received = []; sent = []; suggested = []; busy = []
+            dataLoaded = false; suggestLoaded = false; suggestLoading = false; cachedFriendNames = nil
+            // Drop anything still in flight for the previous account.
+            suggestGeneration += 1
+            searchGeneration += 1
         }
         // Also refreshes after coming back from a profile where a request may have changed.
         loadData()
@@ -120,7 +123,7 @@ final class FriendsViewController: UIViewController {
             self.friends = friendNames.map { FriendRow(username: $0, kind: .friend) }
             self.received = requests.received.map { FriendRow(username: $0, kind: .received) }
             self.sent = requests.sent.map { FriendRow(username: $0, kind: .sent) }
-            self.cachedFriendNames = friendNames
+            self.cachedFriendNames = friendNames.map { $0.lowercased() }
             self.pruneSuggestions()
             if self.selectedTab == .suggested && !self.suggestLoaded { self.loadSuggestions() }
             self.render()
@@ -344,7 +347,8 @@ final class FriendsViewController: UIViewController {
         tableView.reloadData()
         let showSpinner = loading && items.isEmpty
         if showSpinner { spinner.startAnimating() } else { spinner.stopAnimating() }
-        let failed = dataFailed && selectedTab != .suggested
+        // Suggestions wait for the friend lists, so their failure is Suggested's failure too.
+        let failed = dataFailed && (selectedTab != .suggested || !suggestLoaded)
         emptyLabel.text = me.isEmpty ? FriendsText.loginNeeded : (failed ? FriendsText.loadError : empty)
         emptyLabel.isHidden = !items.isEmpty || showSpinner || !(ready || failed || me.isEmpty)
         updateFooter()

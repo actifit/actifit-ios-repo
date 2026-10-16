@@ -112,6 +112,18 @@ final class ArenaLogicTests: XCTestCase {
         XCTAssertNil(ArenaLogic.challengeId(fromURL: "https://evil.example/arena/ch_x"))
         XCTAssertNil(ArenaLogic.challengeId(fromURL: "https://actifit.io.evil.example/arena/ch_x"))
         XCTAssertNil(ArenaLogic.challengeId(fromURL: nil))
+        XCTAssertEqual(ArenaLogic.challengeId(fromURL: " https://actifit.io/arena/ch_x\n"), "ch_x")
+    }
+
+    func testUserCreatedChallengesAndBadgesAreMarkedCommunity() {
+        var c = ArenaChallenge(json: ["id": "ch_a", "origin_tier": "community"])
+        XCTAssertEqual(c.tierText, ArenaText.community)
+        c.originTier = "official"
+        XCTAssertNil(c.tierText)
+        c.originTier = ""
+        XCTAssertNil(c.tierText)
+        XCTAssertEqual(ArenaText.badgeRow("Focus", "", community: true), "Focus · Community")
+        XCTAssertEqual(ArenaText.badgeRow("Focus", "Daily Focus Goal", community: false), "Focus · Daily Focus Goal")
     }
 
     // MARK: - iOS additions

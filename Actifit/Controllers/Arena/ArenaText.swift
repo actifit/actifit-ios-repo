@@ -49,6 +49,7 @@ enum ArenaText {
     static let reportNote = "Only posted reports count. Post your daily report so today's activity scores here."
     static let standings = "Standings"
     static let noStandings = "No standings yet. Join and be the first on the board."
+    static let standingsError = "Couldn't load the standings right now."
     static let myLeading = "You are in the lead."
     static let myUnranked = "You are not on the board yet."
     static let reportCounts = "This report counts toward your Arena challenges once it is verified."
@@ -135,7 +136,7 @@ enum ArenaText {
         return "Today on this phone: \(steps) of \(target) steps. They only count once you post your report."
     }
     static func badgeRow(_ badge: String, _ challenge: String, community: Bool) -> String {
-        return community ? "\(badge) · \(challenge) · \(ArenaText.community)" : "\(badge) · \(challenge)"
+        return ([badge, challenge] + (community ? [ArenaText.community] : [])).filter { !$0.isEmpty }.joined(separator: " · ")
     }
 }
 
@@ -150,6 +151,12 @@ extension ArenaChallenge {
     var howItWorksText: String { return howItWorks.isEmpty ? ArenaText.howItWorks(kind) : howItWorks }
     var prizeText: String { return prizeSummary.isEmpty ? ArenaText.prize(kind) : prizeSummary }
     var artURL: URL? { return ArenaLogic.artURL(art: art, type: type) }
+
+    /// "Community" on a challenge a user created, so its free-text title and prizes can't pass
+    /// as an official Actifit award. nil for official ones (and when the tier is unknown).
+    var tierText: String? {
+        return originTier.isEmpty || originTier == "official" ? nil : ArenaText.community
+    }
 
     /// Open for a join or leave right now: the state allows it and the window has not closed.
     var acceptsMembershipChanges: Bool {

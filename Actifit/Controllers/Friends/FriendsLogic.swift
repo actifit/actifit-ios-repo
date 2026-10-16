@@ -74,9 +74,10 @@ enum FriendsLogic {
     }
 
     static func state(of user: String, friends: [String], received: [String], sent: [String]) -> FriendState {
-        if friends.contains(where: { $0.caseInsensitiveCompare(user) == .orderedSame }) { return .friends }
-        if received.contains(user) { return .received }
-        if sent.contains(user) { return .sent }
+        let same: (String) -> Bool = { $0.caseInsensitiveCompare(user) == .orderedSame }
+        if friends.contains(where: same) { return .friends }
+        if received.contains(where: same) { return .received }
+        if sent.contains(where: same) { return .sent }
         return .none
     }
 
@@ -128,6 +129,7 @@ enum FriendsText {
     static let done = "Done"
     static let requestSent = "Friend request sent"
     static let failed = "Something went wrong, please try again"
+    static let stateUnknown = "Couldn't load · tap to retry"
     static let close = "Close"
 
     static let profileAdd = "Add Friend"

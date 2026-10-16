@@ -116,7 +116,11 @@ enum FriendsAPI {
 
     static func perform(_ action: Action, me: String, target: String, completion: @escaping (Bool) -> Void) {
         let token = UserDefaults.standard.authToken
-        guard !me.isEmpty, !target.isEmpty, !token.isEmpty else { return DispatchQueue.main.async { completion(false) } }
+        guard !me.isEmpty, !target.isEmpty, !token.isEmpty else {
+            // The launch-time login may have failed; fetch a token so the next try can work.
+            if token.isEmpty && !me.isEmpty { TokenManager.shared.refreshToken() }
+            return DispatchQueue.main.async { completion(false) }
+        }
         let inner: [String: Any] = ["transaction": action.transaction, "target": target]
         guard let innerData = try? JSONSerialization.data(withJSONObject: inner),
               let innerJson = String(data: innerData, encoding: .utf8) else { return DispatchQueue.main.async { completion(false) } }

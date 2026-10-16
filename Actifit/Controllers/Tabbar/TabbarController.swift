@@ -226,6 +226,7 @@ extension TabbarController: UITabBarControllerDelegate {
 
     func tabBarController(_ tabBarController: UITabBarController, didSelect viewController: UIViewController) {
         updateTabTint()
+        ArenaDeepLink.deliver()   // one that waited for a modal to close
     }
 }
 

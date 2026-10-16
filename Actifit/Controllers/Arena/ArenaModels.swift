@@ -40,6 +40,8 @@ struct ArenaChallenge {
     var title = ""
     var type = ""
     var state = ""
+    /// "official" for Actifit's own challenges; anything else was created by a user.
+    var originTier = ""
     var art: String?
     var recurrence = ""
     var tagline = ""
@@ -63,6 +65,7 @@ struct ArenaChallenge {
         id = str(o["id"])
         type = str(o["type"])
         state = str(o["state"])
+        originTier = str(o["origin_tier"])
         title = str(o["title"])
         if title.isEmpty { title = id }
         let rawArt = str(o["art"])

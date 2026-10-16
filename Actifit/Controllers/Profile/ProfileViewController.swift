@@ -53,7 +53,10 @@ final class ProfileViewController: UIViewController {
     private let mutualHeader = UILabel()
     private let mutualStack = UIStackView()
     private let mutualScroll = UIScrollView()
-    private var friendState: FriendState = .none
+    /// nil until the viewer's friend lists have loaded (or after a failed load).
+    private var friendState: FriendState?
+    /// Bumped per refresh, so a slow earlier answer can't overwrite a newer button state.
+    private var friendGeneration = 0
     /// The logged-in user looking at this profile ("" for a guest).
     private let viewer = arenaCurrentUser()
     /// Friend actions only make sense on someone else's profile, for a logged-in viewer.
@@ -438,21 +441,27 @@ final class ProfileViewController: UIViewController {
     /// Reads the viewer's friends and pending requests, then labels the button to match.
     private func refreshFriendState() {
         friendButton.isEnabled = false
+        friendGeneration += 1
+        let gen = friendGeneration
         var friends: [String]?
         var requests: (received: [String], sent: [String])?
         var pending = 2
         let finish = { [weak self] in
             pending -= 1
-            guard pending == 0, let self = self else { return }
-            // If either read failed the state is unknown, so offer nothing rather than guess.
+            guard pending == 0, let self = self, gen == self.friendGeneration else { return }
+            // If either read failed the state is unknown: don't guess an action, offer a retry.
             guard let friends = friends, let requests = requests else {
-                self.friendButton.setTitle(FriendsText.failed, for: .normal)
+                self.friendState = nil
+                self.friendButton.setTitle(FriendsText.stateUnknown, for: .normal)
+                self.friendButton.backgroundColor = self.textSecondary
+                self.friendButton.isEnabled = true
                 return
             }
-            self.friendState = FriendsLogic.state(of: self.username, friends: friends, received: requests.received, sent: requests.sent)
+            let state = FriendsLogic.state(of: self.username, friends: friends, received: requests.received, sent: requests.sent)
+            self.friendState = state
             let title: String
             let color: UIColor
-            switch self.friendState {
+            switch state {
             case .friends: title = FriendsText.profileFriends; color = self.textSecondary
             case .received: title = FriendsText.profileAccept; color = .primaryGreenColor()
             case .sent: title = FriendsText.profilePending; color = self.textSecondary
@@ -467,7 +476,9 @@ final class ProfileViewController: UIViewController {
     }
 
     @objc private func friendTapped() {
-        switch friendState {
+        // Unknown state (a failed read): the button is a retry, never a guessed action.
+        guard let state = friendState else { return refreshFriendState() }
+        switch state {
         case .friends:
             let alert = UIAlertController(title: nil, message: FriendsText.confirmUnfriend(username), preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: FriendsText.unfriend, style: .destructive) { [weak self] _ in self?.performFriend(.unfriend) })

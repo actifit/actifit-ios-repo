@@ -29,9 +29,17 @@ enum ArenaDeepLink {
         return true
     }
 
-    /// Called again by the tab bar each time it appears.
+    /// Remembers a challenge to open once the user is back in the app, e.g. after logging in
+    /// from that challenge's "Log in to join".
+    static func openAfterLogin(_ challengeId: String) {
+        pendingId = challengeId
+    }
+
+    /// Called again by the tab bar each time it appears or a tab is tapped. Waits while a modal
+    /// other than the More sheet is open, so nothing the user is typing gets thrown away.
     static func deliver() {
-        guard let id = pendingId, let tabs = TabbarController.current, tabs.viewIfLoaded?.window != nil else { return }
+        guard let id = pendingId, let tabs = TabbarController.current, tabs.viewIfLoaded?.window != nil,
+              tabs.presentedViewController == nil || tabs.presentedViewController is MoreMenuViewController else { return }
         pendingId = nil
         tabs.showArena(challengeId: id)
     }
@@ -86,6 +94,10 @@ final class ArenaViewController: UIViewController {
     private var runningLoading = false, runningLoaded = false, runningFailed = false
     private var mineLoading = false, mineLoaded = false, mineFailed = false
     private var resultsLoading = false, resultsLoaded = false, resultsFailed = false
+    /// Detail calls still out for the running cards, and whether any of them failed: until they
+    /// all answer, an empty Mine list means "not known yet"; if one failed, it means "unknown".
+    private var enrichPending = 0
+    private var enrichFailed = false
 
     override var preferredStatusBarStyle: UIStatusBarStyle { return .darkContent }
 
@@ -205,7 +217,7 @@ final class ArenaViewController: UIViewController {
     @objc private func pulled() {
         switch selectedTab {
         case .open: loadRunning()
-        case .mine: loadRunning(); loadMinePast()
+        case .mine: loadRunning()   // also refetches the past list while Mine is showing
         case .results: loadResults()
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in self?.refresh.endRefreshing() }
@@ -217,6 +229,11 @@ final class ArenaViewController: UIViewController {
         let gen = generation
         runningLoading = true
         runningFailed = false
+        enrichPending = 0
+        // What has settled depends on time and on who is logged in, so Mine's past list is
+        // refetched with every reload (as on Android), straight away if Mine is showing.
+        mineLoaded = false
+        if selectedTab == .mine && !mineLoading { loadMinePast() }
         render()
 
         var merged: [ArenaChallenge] = []
@@ -233,6 +250,8 @@ final class ArenaViewController: UIViewController {
             // A failed refresh keeps the list already on screen; it is only an error state
             // when there is nothing to show.
             self.runningFailed = !allOk && !self.runningLoaded
+            // Cards kept from before (or reset by an account switch) may not know membership.
+            self.enrichFailed = !allOk && self.running.contains { $0.participantCount == nil }
             if allOk {
                 self.runningLoaded = true
                 // Soonest to close first: that is the one worth acting on now.
@@ -246,6 +265,8 @@ final class ArenaViewController: UIViewController {
                     c.serverJoined = old.serverJoined
                     return c
                 }
+                self.enrichPending = merged.count
+                self.enrichFailed = false
                 merged.forEach { self.enrich(gen: gen, id: $0.id) }
             }
             self.render()
@@ -257,9 +278,13 @@ final class ArenaViewController: UIViewController {
     /// Fills in the participant count and the viewer's membership for one running card.
     private func enrich(gen: Int, id: String) {
         ArenaAPI.challenge(id: id, viewer: me) { [weak self] detail, _ in
-            guard let self = self, gen == self.generation, let detail = detail,
-                  let i = self.running.firstIndex(where: { $0.id == id }) else { return }
-            self.running[i] = detail
+            guard let self = self, gen == self.generation else { return }
+            self.enrichPending -= 1
+            if let detail = detail, let i = self.running.firstIndex(where: { $0.id == id }) {
+                self.running[i] = detail
+            } else if detail == nil {
+                self.enrichFailed = true
+            }
             self.render()
         }
     }
@@ -324,9 +349,9 @@ final class ArenaViewController: UIViewController {
             current = running.filter { ArenaPendingStore.membership(user: me, challenge: $0).isIn } + minePast
             // Membership comes from the per-card detail calls, so until those land an empty
             // Mine list means "not known yet", not "nothing joined".
-            let membershipPending = !me.isEmpty && running.contains { $0.participantCount == nil }
+            let membershipPending = !me.isEmpty && enrichPending > 0
             loading = (runningLoading && !runningLoaded) || mineLoading || membershipPending
-            failed = runningFailed || mineFailed
+            failed = runningFailed || mineFailed || (!me.isEmpty && enrichFailed)
             emptyText = me.isEmpty ? ArenaText.emptyMineLogin : ArenaText.emptyMine
         case .results:
             current = results
@@ -441,7 +466,7 @@ final class ArenaCardCell: UITableViewCell {
     func configure(_ c: ArenaChallenge, joined: Bool) {
         titleLabel.text = c.title
         taglineLabel.text = c.taglineText
-        var meta = [c.recurrenceText, c.timeText].filter { !$0.isEmpty }
+        var meta = [c.recurrenceText, c.tierText ?? "", c.timeText].filter { !$0.isEmpty }
         if let n = c.participantCount { meta.append(ArenaText.participants(n)) }
         metaLabel.text = meta.joined(separator: "  ·  ")
         metaLabel.textColor = c.endsWithinADay ? .primaryRedColor() : .gray

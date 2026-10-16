@@ -78,6 +78,8 @@ enum ArenaAPI {
     static func send(_ op: ArenaLogic.Op, user: String, challengeId: String, completion: @escaping (Bool) -> Void) {
         let token = UserDefaults.standard.authToken
         guard !user.isEmpty, !challengeId.isEmpty, !token.isEmpty else {
+            // The launch-time login may have failed; fetch a token so the next try can work.
+            if token.isEmpty && !user.isEmpty { TokenManager.shared.refreshToken() }
             return DispatchQueue.main.async { completion(false) }
         }
         let body: [String: Any] = ["op": op.rawValue, "v": 1, "challenge_id": challengeId]
@@ -147,8 +149,8 @@ enum ArenaPendingStore {
         set { UserDefaults.standard.set(newValue, forKey: defaultsKey) }
     }
 
-    static func put(user: String, challengeId: String, op: ArenaLogic.Op) {
-        all[key(user, challengeId)] = ["op": op.rawValue, "at": Date().timeIntervalSince1970]
+    static func put(user: String, challengeId: String, op: ArenaLogic.Op, at: Date = Date()) {
+        all[key(user, challengeId)] = ["op": op.rawValue, "at": at.timeIntervalSince1970]
     }
 
     static func get(user: String, challengeId: String) -> (op: ArenaLogic.Op, at: Date)? {

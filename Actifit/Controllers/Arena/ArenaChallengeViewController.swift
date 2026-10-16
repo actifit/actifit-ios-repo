@@ -21,6 +21,7 @@ final class ArenaChallengeViewController: UIViewController {
     private var challenge: ArenaChallenge?
     private var standings: [ArenaStandingRow]?
     private var standingsAt: Date?
+    private var standingsFailed = false
     private var acting = false
     private var statusOverride: String?
     /// Bumped per load(); an older response arriving late must not overwrite a newer one.
@@ -104,7 +105,9 @@ final class ArenaChallengeViewController: UIViewController {
             guard let self = self, gen == self.loadGeneration else { return }
             // Failed refresh: keep the board we have rather than claim there is none.
             if rows == nil && self.standings != nil { return }
-            self.standings = rows ?? []
+            // A failed first load is an error, not "no standings yet".
+            self.standingsFailed = rows == nil
+            self.standings = rows
             self.standingsAt = computedAt
             if self.challenge != nil { self.renderStandings() }
         }
@@ -128,7 +131,7 @@ final class ArenaChallengeViewController: UIViewController {
         scroll.isHidden = false
 
         ArenaImageLoader.load(c.artURL, into: hero)
-        chipsLabel.text = [c.recurrenceText, c.timeText].filter { !$0.isEmpty }.joined(separator: "  ·  ")
+        chipsLabel.text = [c.recurrenceText, c.tierText ?? "", c.timeText].filter { !$0.isEmpty }.joined(separator: "  ·  ")
         chipsLabel.textColor = c.endsWithinADay ? brandRed : .gray
         titleLabel.text = c.title
         taglineLabel.text = c.taglineText
@@ -198,8 +201,11 @@ final class ArenaChallengeViewController: UIViewController {
     @objc private func actionTapped() {
         guard let c = challenge, !acting else { return }
         guard !me.isEmpty else {
-            // Guests reach the app from the login screen, which sits under the tab bar.
-            dismiss(animated: true)
+            // Guests replaced the login screen with the tab bar ("Skip"), so go back to it the
+            // way logging out does, and reopen this challenge once they are in.
+            ArenaDeepLink.openAfterLogin(c.id)
+            let login = UIStoryboard(name: "Login", bundle: nil).instantiateViewController(withIdentifier: "LoginViewController")
+            (UIApplication.shared.delegate as? AFAppDelegate)?.window?.rootViewController = login
             return
         }
         let leaving = ArenaPendingStore.membership(user: me, challenge: c).isIn
@@ -210,11 +216,17 @@ final class ArenaChallengeViewController: UIViewController {
         statusOverride = nil
         // Stored BEFORE sending: if the user leaves mid-request the op may still land, and the
         // next visit must not offer the same action again.
+        let previous = ArenaPendingStore.get(user: user, challengeId: id)
         ArenaPendingStore.put(user: user, challengeId: id, op: op)
         ArenaHomeCardView.invalidate()   // membership is changing; the dashboard card must refetch
         renderAction()
         ArenaAPI.send(op, user: user, challengeId: id) { [weak self] ok in
-            if !ok { ArenaPendingStore.clear(user: user, challengeId: id) }
+            if !ok {
+                // Back to what was pending before this tap (e.g. a join still being indexed),
+                // so a failed leave can't make the screen offer that join a second time.
+                if let p = previous { ArenaPendingStore.put(user: user, challengeId: id, op: p.op, at: p.at) }
+                else { ArenaPendingStore.clear(user: user, challengeId: id) }
+            }
             guard let self = self else { return }
             self.acting = false
             if !ok { self.statusOverride = ArenaText.actionFailed }
@@ -233,7 +245,13 @@ final class ArenaChallengeViewController: UIViewController {
     private func renderStandings() {
         guard let c = challenge else { return }
         standingsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        guard let rows = standings else { return }   // still loading
+        guard let rows = standings else {   // still loading, or the first load failed
+            standingsEmpty.text = ArenaText.standingsError
+            standingsEmpty.isHidden = !standingsFailed
+            updatedLabel.isHidden = true
+            return
+        }
+        standingsEmpty.text = ArenaText.noStandings
         renderMyStanding(c, rows)
 
         standingsEmpty.isHidden = !rows.isEmpty

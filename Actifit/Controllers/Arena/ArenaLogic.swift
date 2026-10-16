@@ -135,7 +135,7 @@ enum ArenaLogic {
     /// decoded since rolled-over ids carry "@" as %40. nil for any other URL, an empty id, or the
     /// create page. Same rules as Android's ArenaLogic.challengeIdFromUrl.
     static func challengeId(fromURL url: String?) -> String? {
-        guard let url = url,
+        guard let url = url?.trimmingCharacters(in: .whitespacesAndNewlines),
               let m = arenaLink.firstMatch(in: url, range: NSRange(url.startIndex..., in: url)),
               let r = Range(m.range(at: 1), in: url),
               let id = String(url[r]).removingPercentEncoding, !id.isEmpty, id != "create" else { return nil }

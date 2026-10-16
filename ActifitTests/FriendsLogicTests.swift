@@ -61,6 +61,9 @@ final class FriendsLogicTests: XCTestCase {
         XCTAssertEqual(FriendsLogic.state(of: "sergey44", friends: friends, received: req.received, sent: req.sent), .received)
         XCTAssertEqual(FriendsLogic.state(of: "bob", friends: friends, received: req.received, sent: req.sent), .sent)
         XCTAssertEqual(FriendsLogic.state(of: "zed", friends: friends, received: req.received, sent: req.sent), .none)
+        // Pending requests match regardless of case too, so a profile never offers a second Add.
+        XCTAssertEqual(FriendsLogic.state(of: "Sergey44", friends: [], received: req.received, sent: []), .received)
+        XCTAssertEqual(FriendsLogic.state(of: "BOB", friends: [], received: [], sent: req.sent), .sent)
     }
 
     func testMutualFriendsAreTheIntersectionInTheirOrder() {
