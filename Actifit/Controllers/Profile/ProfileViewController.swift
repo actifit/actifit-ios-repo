@@ -420,7 +420,7 @@ final class ProfileViewController: UIViewController {
     private func loadArenaBadges() {
         ArenaAPI.badges(user: username) { [weak self] badges, total in
             guard let self = self, !badges.isEmpty else { return }
-            self.badgesHeader.text = "\(ArenaText.badgesHeader) (\(total))"
+            self.badgesHeader.text = ArenaText.badgesHeader(total)
             self.badgesStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
             for b in badges {
                 let row = UILabel()

@@ -22,6 +22,7 @@ final class ArenaChallengeViewController: UIViewController {
     private var standings: [ArenaStandingRow]?
     private var standingsAt: Date?
     private var standingsFailed = false
+    private var clock: Timer?
     private var acting = false
     private var statusOverride: String?
     /// Bumped per load(); an older response arriving late must not overwrite a newer one.
@@ -73,6 +74,20 @@ final class ArenaChallengeViewController: UIViewController {
         // Re-read the user each time: they may have just come back from logging in.
         me = arenaCurrentUser()
         load()
+        clock?.invalidate()
+        clock = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.renderChips() }
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        clock?.invalidate()
+        clock = nil
+    }
+
+    private func renderChips() {
+        guard let c = challenge else { return }
+        chipsLabel.text = [c.recurrenceText, c.tierText ?? "", c.liveTimeText].filter { !$0.isEmpty }.joined(separator: "  ·  ")
+        chipsLabel.textColor = c.endsWithinADay ? brandRed : .gray
     }
 
     // MARK: - Loading
@@ -131,8 +146,7 @@ final class ArenaChallengeViewController: UIViewController {
         scroll.isHidden = false
 
         ArenaImageLoader.load(c.artURL, into: hero)
-        chipsLabel.text = [c.recurrenceText, c.tierText ?? "", c.timeText].filter { !$0.isEmpty }.joined(separator: "  ·  ")
-        chipsLabel.textColor = c.endsWithinADay ? brandRed : .gray
+        renderChips()
         titleLabel.text = c.title
         taglineLabel.text = c.taglineText
         participantsLabel.text = ArenaText.participants(c.participantCount ?? 0)

@@ -98,9 +98,9 @@ extension NotificationsViewController: UITableViewDataSource {
                 tabs.showFriends(tab: notification.type == "friendship_request" ? .requests : .friends)
                 return
             }
-            // Arena links open the native challenge screen.
-            if let id = ArenaLogic.challengeId(fromURL: url) {
-                self?.navigationController?.pushViewController(ArenaChallengeViewController(challengeId: id), animated: true)
+            // Arena links open the native challenge screen, in the Arena tab so Back leads there.
+            if let tabs = self?.tabBarController as? TabbarController, let id = ArenaLogic.challengeId(fromURL: url) {
+                tabs.showArena(challengeId: id)
                 return
             }
             self?.openLink(url: url)

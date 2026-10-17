@@ -99,6 +99,15 @@ final class ArenaViewController: UIViewController {
     private var enrichPending = 0
     private var enrichFailed = false
 
+    // "Ending soon": the open challenge closing next, with a countdown ticking each second.
+    private let featured = UIView()
+    private let featuredTitle = UILabel()
+    private let featuredSub = UILabel()
+    private let featuredCountdown = UILabel()
+    private var featuredChallenge: ArenaChallenge?
+    private var ticker: Timer?
+    private var ticks = 0
+
     override var preferredStatusBarStyle: UIStatusBarStyle { return .darkContent }
 
     override func viewDidLoad() {
@@ -121,6 +130,30 @@ final class ArenaViewController: UIViewController {
         }
         // Also the first load. Coming back from a challenge, membership may have changed.
         loadRunning()
+        ticker?.invalidate()
+        ticker = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.tick() }
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // No point ticking a countdown nobody can see.
+        ticker?.invalidate()
+        ticker = nil
+    }
+
+    private func tick() {
+        ticks += 1
+        if let c = featuredChallenge {
+            if ArenaLogic.hasEnded(c.end, now: Date()) {
+                // It just closed: the list, and the next one to feature, have changed.
+                featuredChallenge = nil
+                loadRunning()
+            } else {
+                featuredCountdown.text = ArenaFormat.countdown(c.end)
+            }
+        }
+        // The cards say "Ends in 5d 3h": refresh them once a minute.
+        if ticks % 60 == 0 { tableView.reloadData() }
     }
 
     // MARK: - Layout
@@ -159,7 +192,8 @@ final class ArenaViewController: UIViewController {
         segmented.setTitleTextAttributes([NSAttributedStringKey.foregroundColor: UIColor.white], for: .selected)
         segmented.addTarget(self, action: #selector(tabChanged), for: .valueChanged)
 
-        let top = UIStackView(arrangedSubviews: [subtitle, segmented])
+        buildFeatured()
+        let top = UIStackView(arrangedSubviews: [subtitle, segmented, featured])
         top.axis = .vertical
         top.spacing = 10
         top.translatesAutoresizingMaskIntoConstraints = false
@@ -203,6 +237,73 @@ final class ArenaViewController: UIViewController {
             spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             spinner.topAnchor.constraint(equalTo: top.bottomAnchor, constant: 60)
         ])
+    }
+
+    private func buildFeatured() {
+        featured.backgroundColor = UIColor(red: 0.99, green: 0.94, blue: 0.95, alpha: 1)
+        featured.layer.cornerRadius = 12
+        featured.isHidden = true
+        let label = UILabel()
+        label.text = ArenaText.featuredLabel.uppercased()
+        label.font = .systemFont(ofSize: 11, weight: .bold)
+        label.textColor = .primaryRedColor()
+        featuredTitle.font = .systemFont(ofSize: 16, weight: .bold)
+        featuredSub.font = .systemFont(ofSize: 12)
+        featuredSub.textColor = .darkGray
+        featuredSub.numberOfLines = 2
+        // Fixed-width digits, so the clock doesn't jitter as it ticks.
+        featuredCountdown.font = .monospacedDigitSystemFont(ofSize: 20, weight: .bold)
+        featuredCountdown.textColor = .primaryRedColor()
+        featuredCountdown.setContentHuggingPriority(.required, for: .horizontal)
+        featuredCountdown.setContentCompressionResistancePriority(.required, for: .horizontal)
+        let text = UIStackView(arrangedSubviews: [label, featuredTitle, featuredSub])
+        text.axis = .vertical
+        text.spacing = 2
+        let row = UIStackView(arrangedSubviews: [text, featuredCountdown])
+        row.spacing = 10
+        row.alignment = .center
+        row.isLayoutMarginsRelativeArrangement = true
+        row.layoutMargins = UIEdgeInsets(top: 10, left: 12, bottom: 10, right: 12)
+        row.translatesAutoresizingMaskIntoConstraints = false
+        featured.addSubview(row)
+        NSLayoutConstraint.activate([
+            row.topAnchor.constraint(equalTo: featured.topAnchor),
+            row.bottomAnchor.constraint(equalTo: featured.bottomAnchor),
+            row.leadingAnchor.constraint(equalTo: featured.leadingAnchor),
+            row.trailingAnchor.constraint(equalTo: featured.trailingAnchor)
+        ])
+        featured.isAccessibilityElement = true
+        featured.accessibilityTraits = UIAccessibilityTraitButton
+        featured.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(featuredTapped)))
+    }
+
+    @objc private func featuredTapped() {
+        guard let c = featuredChallenge else { return }
+        navigationController?.pushViewController(ArenaChallengeViewController(challengeId: c.id), animated: true)
+    }
+
+    /// The open challenge closing next, preferring one the user hasn't joined (the point is to
+    /// get them in), or else the soonest one they have. Open tab only.
+    private func renderFeatured() {
+        var pick: ArenaChallenge?
+        var joinedPick: ArenaChallenge?
+        if selectedTab == .open {
+            for c in running where ArenaLogic.isJoinable(c.state) && c.end != nil && !ArenaLogic.hasEnded(c.end, now: Date()) {
+                if !ArenaPendingStore.membership(user: me, challenge: c).isIn { pick = c; break }
+                if joinedPick == nil { joinedPick = c }
+            }
+        }
+        let joined = pick == nil && joinedPick != nil
+        featuredChallenge = pick ?? joinedPick
+        guard let c = featuredChallenge else {
+            featured.isHidden = true
+            return
+        }
+        featuredTitle.text = c.title
+        featuredSub.text = joined ? ArenaText.featuredJoined : ArenaText.featuredJoin
+        featuredCountdown.text = ArenaFormat.countdown(c.end)
+        featured.accessibilityLabel = c.title + ", " + ArenaText.endsInClock(ArenaFormat.countdown(c.end))
+        featured.isHidden = false
     }
 
     // MARK: - Loading
@@ -360,6 +461,7 @@ final class ArenaViewController: UIViewController {
             emptyText = ArenaText.emptyResults
         }
         tableView.reloadData()
+        renderFeatured()
 
         let showSpinner = loading && current.isEmpty
         if showSpinner { spinner.startAnimating() } else { spinner.stopAnimating() }

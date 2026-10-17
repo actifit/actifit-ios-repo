@@ -138,8 +138,7 @@ class TabbarController: UITabBarController {
         if !user.isEmpty, let friendsRow = items.firstIndex(where: { $0.title == FriendsText.title }) {
             FriendsAPI.requests(of: user) { [weak sheet] requests in
                 guard let count = requests?.received.count, count > 0 else { return }
-                sheet?.setBadge("\(count)", at: friendsRow,
-                                accessibility: count == 1 ? "1 pending friend request" : "\(count) pending friend requests")
+                sheet?.setBadge("\(count)", at: friendsRow, accessibility: FriendsText.pendingBadge(count))
             }
         }
     }

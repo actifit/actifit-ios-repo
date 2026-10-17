@@ -99,48 +99,58 @@ enum FriendsLogic {
     static func primaryStats(_ row: FriendRow) -> String? {
         var parts: [String] = []
         if let r = row.reports { parts.append(FriendsText.reports(r)) }
-        if let a = row.afit { parts.append(compact(a) + " AFIT") }
+        if let a = row.afit { parts.append(FriendsText.afit(compact(a))) }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 }
 
+/// Friends copy under Android's friends_* / profile_friend_* keys, so the translations are shared
+/// (see Copy in ArenaText.swift); untranslated keys fall back to the English here.
 enum FriendsText {
-    static let title = "Friends"
-    static let tabFriends = "Friends"
-    static let tabRequests = "Requests"
-    static let tabSuggested = "Suggested"
-    static let received = "RECEIVED"
-    static let sent = "SENT"
-    static let accept = "Accept"
-    static let add = "Add"
-    static let cancel = "Cancel"
-    static let unfriend = "Unfriend"
-    static let requestSentShort = "Request sent"
-    static let searchHint = "Search a username to add…"
-    static let searchInvalid = "Enter a valid Actifit username"
-    static let searchSelf = "That's you!"
-    static let emptyFriends = "You don't have any friends yet. Search a username above, or open an Actifitter's profile and send a request!"
-    static let emptyRequests = "No pending friend requests."
-    static let emptySuggested = "No suggestions right now. Try searching for a username above!"
-    static let loadError = "Couldn't load your friends. Pull down to try again."
-    static let loginNeeded = "Please log in to manage friends"
-    static let statsLoading = "Loading details…"
-    static let loadingMore = "Loading more…"
-    static let done = "Done"
-    static let requestSent = "Friend request sent"
-    static let failed = "Something went wrong, please try again"
-    static let stateUnknown = "Couldn't load · tap to retry"
-    static let close = "Close"
+    static var title: String { return Copy.text("friends_title", "Friends") }
+    static var tabFriends: String { return Copy.text("friends_tab_friends", "Friends") }
+    static var tabRequests: String { return Copy.text("friends_tab_requests", "Requests") }
+    static var tabSuggested: String { return Copy.text("friends_tab_suggested", "Suggested") }
+    static var received: String { return Copy.text("friends_received", "RECEIVED") }
+    static var sent: String { return Copy.text("friends_sent", "SENT") }
+    static var accept: String { return Copy.text("friends_action_accept", "Accept") }
+    static var add: String { return Copy.text("friends_action_add", "Add") }
+    static var cancel: String { return Copy.text("friends_action_cancel", "Cancel") }
+    static var unfriend: String { return Copy.text("friends_action_unfriend", "Unfriend") }
+    static var requestSentShort: String { return Copy.text("friends_request_sent_short", "Request sent") }
+    static var searchHint: String { return Copy.text("friends_search_hint", "Search a username to add…") }
+    static var searchInvalid: String { return Copy.text("friends_search_invalid", "Enter a valid Actifit username") }
+    static var searchSelf: String { return Copy.text("friends_search_self", "That's you!") }
+    static var emptyFriends: String { return Copy.text("friends_empty_friends", "You don't have any friends yet. Search a username above, or open an Actifitter's profile and send a request!") }
+    static var emptyRequests: String { return Copy.text("friends_empty_requests", "No pending friend requests.") }
+    static var emptySuggested: String { return Copy.text("friends_empty_suggested", "No suggestions right now. Try searching for a username above!") }
+    static var loadError: String { return Copy.text("friends_load_error", "Couldn't load your friends. Pull down to try again.") }
+    static var loginNeeded: String { return Copy.text("friends_error_login", "Please log in to manage friends") }
+    static var statsLoading: String { return Copy.text("friends_stats_loading", "Loading details…") }
+    static var loadingMore: String { return Copy.text("friends_loading_more", "Loading more…") }
+    static var done: String { return Copy.text("friends_action_done", "Done") }
+    static var requestSent: String { return Copy.text("friends_request_sent", "Friend request sent") }
+    static var failed: String { return Copy.text("friends_action_failed", "Something went wrong, please try again") }
+    static var stateUnknown: String { return Copy.text("friends_state_unknown", "Couldn't load · tap to retry") }
+    static var close: String { return Copy.text("close_button", "Close") }
 
-    static let profileAdd = "Add Friend"
-    static let profilePending = "Request sent · tap to cancel"
-    static let profileAccept = "Accept friend request"
-    static let profileFriends = "Friends ✓"
+    static var profileAdd: String { return Copy.text("profile_friend_add", "Add Friend") }
+    static var profilePending: String { return Copy.text("profile_friend_pending", "Request sent · tap to cancel") }
+    static var profileAccept: String { return Copy.text("profile_friend_accept", "Accept friend request") }
+    static var profileFriends: String { return Copy.text("profile_friend_friends", "Friends ✓") }
 
-    static func confirmUnfriend(_ user: String) -> String { return "Remove @\(user) from your friends?" }
+    static func confirmUnfriend(_ user: String) -> String {
+        return Copy.format("friends_confirm_unfriend", "Remove @%1$@ from your friends?", user)
+    }
     static func requestsTab(_ pending: Int) -> String { return pending > 0 ? "\(tabRequests) (\(pending))" : tabRequests }
     static func reports(_ n: Int) -> String {
-        return n == 1 ? "1 report" : "\(FriendsLogic.compact(Double(n))) reports"
+        return Copy.plural("friends_stat_reports", n, one: "%1$@ report", other: "%1$@ reports", FriendsLogic.compact(Double(n)))
     }
-    static func mutual(_ n: Int) -> String { return n == 1 ? "1 mutual friend" : "\(n) mutual friends" }
+    static func afit(_ amount: String) -> String { return Copy.format("friends_stat_afit", "%1$@ AFIT", amount) }
+    static func mutual(_ n: Int) -> String {
+        return Copy.plural("friends_stat_mutual", n, one: "%1$ld mutual friend", other: "%1$ld mutual friends", n)
+    }
+    static func pendingBadge(_ n: Int) -> String {
+        return Copy.plural("friends_pending_badge_desc", n, one: "%1$ld pending friend request", other: "%1$ld pending friend requests", n)
+    }
 }

@@ -95,6 +95,13 @@ enum ArenaLogic {
         return (minutes / 1440, (minutes % 1440) / 60, minutes % 60)
     }
 
+    /// Time left to the second, for a live countdown; all zero once closed or with no end.
+    static func countdown(until end: Date?, now: Date) -> (days: Int, hours: Int, minutes: Int, seconds: Int) {
+        guard let end = end, end > now else { return (0, 0, 0, 0) }
+        let s = Int(end.timeIntervalSince(now))
+        return (s / 86400, (s % 86400) / 3600, (s % 3600) / 60, s % 60)
+    }
+
     static func hasEnded(_ end: Date?, now: Date) -> Bool {
         guard let end = end else { return false }
         return now >= end

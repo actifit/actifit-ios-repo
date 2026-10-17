@@ -2548,12 +2548,13 @@ extension ActivityTrackingVC {
         return col
     }
 
-    /// The user's most urgent Arena challenge, or an invitation to the open ones. A challenge
-    /// opens inside the Home tab; the invitation switches to the Arena tab.
+    /// The user's most urgent Arena challenge, or an invitation to the open ones. Both open in
+    /// the Arena tab.
     private func buildRevampArenaCard() -> UIView {
         let card = ArenaHomeCardView()
+        // Opened inside the Arena tab, so Back leads to the Arena list (as on Android).
         card.onOpenChallenge = { [weak self] id in
-            self?.navigationController?.pushViewController(ArenaChallengeViewController(challengeId: id), animated: true)
+            (self?.tabBarController as? TabbarController)?.showArena(challengeId: id)
         }
         card.onOpenArena = { [weak self] in
             (self?.tabBarController as? TabbarController)?.showArena()

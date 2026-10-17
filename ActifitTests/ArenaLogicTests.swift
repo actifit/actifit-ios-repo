@@ -64,6 +64,15 @@ final class ArenaLogicTests: XCTestCase {
         XCTAssertFalse(ArenaLogic.hasEnded(nil, now: now))
     }
 
+    func testCountdownBreaksDownToTheSecondAndClampsAtZero() {
+        let end = now.addingTimeInterval(2 * day + 4 * 3600 + 12 * 60 + 9)
+        XCTAssertTrue(ArenaLogic.countdown(until: end, now: now) == (2, 4, 12, 9))
+        XCTAssertTrue(ArenaLogic.countdown(until: now.addingTimeInterval(59.999), now: now) == (0, 0, 0, 59))
+        XCTAssertTrue(ArenaLogic.countdown(until: now, now: now) == (0, 0, 0, 0))
+        XCTAssertTrue(ArenaLogic.countdown(until: now.addingTimeInterval(-1), now: now) == (0, 0, 0, 0))
+        XCTAssertTrue(ArenaLogic.countdown(until: nil, now: now) == (0, 0, 0, 0))
+    }
+
     func testMembershipFollowsTheServerWhenNothingIsPending() {
         XCTAssertEqual(ArenaLogic.membership(serverJoined: true, op: nil, at: epoch, now: now), .joined)
         XCTAssertEqual(ArenaLogic.membership(serverJoined: false, op: nil, at: epoch, now: now), .notJoined)
