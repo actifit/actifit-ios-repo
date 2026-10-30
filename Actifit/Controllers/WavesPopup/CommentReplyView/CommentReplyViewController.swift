@@ -68,6 +68,9 @@ class CommentReplyViewController: UIViewController {
       self.updateTextView(text: imgURL)
 
     }.store(in: &viewModel.cancellables)
+    viewModel.errorPublisher.sink { message in
+      self.showAlertWith(title: nil, message: message)
+    }.store(in: &viewModel.cancellables)
     viewModel.dismissPublisher.sink { shouldDismiss in
       self.showAlertWithOkCompletion(title: "", message: "Comment Sent Successfully!") { finished in
         self.dismiss(animated: true)

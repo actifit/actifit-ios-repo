@@ -4,7 +4,8 @@
 //
 //  Phase 2 — Gadget marketplace (Android MarketActivity parity).
 //  Browse in-game gadgets, evaluate purchase requirements, and buy / activate /
-//  deactivate via the Actifit relay (performTrx / performTrxPost) + confirmation calls.
+//  deactivate: signed on the device and confirmed on the backend's chain-verified routes
+//  (GadgetService).
 //
 
 import UIKit
@@ -321,7 +322,12 @@ final class MarketViewController: UIViewController {
             DispatchQueue.main.async {
                 self.showLoader(false)
                 self.products = parsed
+                // A gadget shown as owned has no purchase left to confirm.
+                for product in parsed where product.ownershipState >= 1 {
+                    GadgetService.clearSettledPurchase(user: self.username, gadgetId: product.id)
+                }
                 self.tableView.reloadData()
+                self.resumePendingActions()
             }
         }, failure: { [weak self] _ in
             DispatchQueue.main.async { self?.showLoader(false) }
@@ -366,74 +372,81 @@ final class MarketViewController: UIViewController {
         product.allReqtsMet = allMet
     }
 
-    // MARK: Transaction helpers
-
-    private func extractTrx(_ info: Any?) -> (refBlockNum: Int, txId: String)? {
-        guard let s = info as? String,
-              let json = (try? JSONSerialization.jsonObject(with: s.utf8Data())) as? [String: Any],
-              json["success"] != nil,
-              let trx = json["trx"] as? [String: Any],
-              let tx = trx["tx"] as? [String: Any],
-              let refBlockNum = tx["ref_block_num"] as? Int,
-              let txId = tx["id"] as? String else { return nil }
-        return (refBlockNum, txId)
-    }
-
-    private func confirmFailedMessage(_ info: Any?) -> String? {
-        // returns nil on success, else an error string
-        guard let s = info as? String,
-              let json = (try? JSONSerialization.jsonObject(with: s.utf8Data())) as? [String: Any] else {
-            return "Please try again"
-        }
-        if let err = json["error"] as? String, !err.isEmpty { return err }
-        if json["error"] != nil { return "Please try again" }
-        return nil
-    }
-
-    private func afterSuccess(_ product: MarketProduct, newState: Int, message: String) {
-        DispatchQueue.main.async {
-            self.showLoader(false)
-            product.ownershipState = newState
-            self.tableView.reloadData()
-            self.showAlertWith(title: "Success", message: message)
-        }
-    }
-
-    private func fail(_ message: String) {
-        DispatchQueue.main.async {
-            self.showLoader(false)
-            self.showToast(message: message)
-        }
-    }
-
     // MARK: Actions
 
+    /// Settles actions an earlier visit left unconfirmed (e.g. the app closed mid-purchase).
+    private func resumePendingActions() {
+        GadgetService.resumePending(user: username) { [weak self] ok, message in
+            if ok { self?.loadEverything() }
+            if let message = message { self?.showAlertWith(title: nil, message: message) }
+        }
+    }
+
+    private func finish(_ product: MarketProduct, ok: Bool, message: String?, newState: Int, success: String) {
+        showLoader(false)
+        if ok {
+            product.ownershipState = newState
+            tableView.reloadData()
+            showAlertWith(title: "Success", message: success)
+            loadEverything()   // balances, boosts and states as the server now sees them
+        } else {
+            tableView.reloadData()
+            showAlertWith(title: nil, message: message ?? GadgetText.failed)
+        }
+    }
+
     private func buyWithAfit(_ product: MarketProduct) {
-        guard product.priceAfit <= afitBalance else { showToast(message: "You don't have enough AFIT"); return }
+        let settling = GadgetService.hasUnresolvedPurchase(user: username, gadgetId: product.id)
+        guard settling || product.priceAfit <= afitBalance else { showToast(message: "You don't have enough AFIT"); return }
         showLoader(true)
-        API().broadcastGadgetOperation(username: username, transaction: "buy-gadget", gadgetId: product.id, benefic: nil, completion: { [weak self] info, _ in
-            guard let self = self else { return }
-            guard let trx = self.extractTrx(info) else { self.fail("Purchase failed, please try again"); return }
-            API().confirmGadgetTransaction(confirmBase: ApiUrls.buyGadgetConfirm, username: self.username, gadgetId: product.id, refBlockNum: trx.refBlockNum, txId: trx.txId, benefic: nil, completion: { [weak self] cinfo, _ in
-                if let err = self?.confirmFailedMessage(cinfo) { self?.fail(err) }
-                else { self?.afterSuccess(product, newState: 1, message: "Gadget purchased. You can now activate it.") }
-            }, failure: { [weak self] e in self?.fail(e.localizedDescription) })
-        }, failure: { [weak self] e in self?.fail(e.localizedDescription) })
+        GadgetService.buyWithAfit(user: username, gadgetId: product.id) { [weak self] ok, message in
+            self?.finish(product, ok: ok, message: message, newState: 1, success: "Gadget purchased. You can now activate it.")
+        }
     }
 
     private func buyWithHive(_ product: MarketProduct) {
         let activeKey = UserDefaults.standard.activeKey
         guard !activeKey.isEmpty else { showToast(message: "Please make sure to set your active key under settings"); return }
+        // An earlier HIVE payment that isn't confirmed yet is settled, never paid again.
+        if GadgetService.hasUnresolvedPurchase(user: username, gadgetId: product.id) {
+            showLoader(true)
+            GadgetService.buyWithHive(user: username, gadgetId: product.id, amount: nil, activeKey: activeKey) { [weak self] ok, message in
+                self?.finish(product, ok: ok, message: message, newState: 1, success: "Gadget purchased. You can now activate it.")
+            }
+            return
+        }
+        // Price it at today's rate, read now: the server checks the payment against its current
+        // rate, so a figure cached when the screen opened could fall short.
         showLoader(true)
-        let priceHive = String(format: "%.3f", product.priceHive)
-        API().buyGadgetWithHive(username: username, gadgetId: product.id, priceHive: priceHive, activeKey: activeKey, completion: { [weak self] info, _ in
+        API().getExchangeAfitPrice(completion: { [weak self] info, _ in
+            let rate = (info as? String).flatMap { (try? JSONSerialization.jsonObject(with: $0.utf8Data())) as? [String: Any] }?["afitHiveLastPrice"] as? Double
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.showLoader(false)
+                guard let r = rate, let amount = GadgetService.hivePrice(priceAfit: product.priceAfit, rate: r) else {
+                    return self.showToast(message: HiveText.network)
+                }
+                self.afitPrice = r
+                self.confirmHivePayment(product, amount: amount, activeKey: activeKey)
+            }
+        }, failure: { [weak self] _ in
+            DispatchQueue.main.async { self?.showLoader(false); self?.showToast(message: HiveText.network) }
+        })
+    }
+
+    /// Real money, signed with the active key: say exactly what will be paid first.
+    private func confirmHivePayment(_ product: MarketProduct, amount: String, activeKey: String) {
+        let alert = UIAlertController(title: GadgetText.hiveConfirmTitle,
+                                      message: GadgetText.hiveConfirm(amount: amount, gadget: product.name), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: GadgetText.hiveConfirmPay, style: .default) { [weak self] _ in
             guard let self = self else { return }
-            guard let trx = self.extractTrx(info) else { self.fail("Purchase failed, please try again"); return }
-            API().confirmGadgetTransaction(confirmBase: ApiUrls.buyGadgetHiveConfirm, username: self.username, gadgetId: product.id, refBlockNum: trx.refBlockNum, txId: trx.txId, benefic: nil, completion: { [weak self] cinfo, _ in
-                if let err = self?.confirmFailedMessage(cinfo) { self?.fail(err) }
-                else { self?.afterSuccess(product, newState: 1, message: "Gadget purchased. You can now activate it.") }
-            }, failure: { [weak self] e in self?.fail(e.localizedDescription) })
-        }, failure: { [weak self] e in self?.fail(e.localizedDescription) })
+            self.showLoader(true)
+            GadgetService.buyWithHive(user: self.username, gadgetId: product.id, amount: amount, activeKey: activeKey) { [weak self] ok, message in
+                self?.finish(product, ok: ok, message: message, newState: 1, success: "Gadget purchased. You can now activate it.")
+            }
+        })
+        present(alert, animated: true)
     }
 
     private func activate(_ product: MarketProduct, benefic: String?) {
@@ -441,26 +454,16 @@ final class MarketViewController: UIViewController {
             showToast(message: "Please enter a friend to reward"); return
         }
         showLoader(true)
-        API().broadcastGadgetOperation(username: username, transaction: "activate-gadget", gadgetId: product.id, benefic: benefic, completion: { [weak self] info, _ in
-            guard let self = self else { return }
-            guard let trx = self.extractTrx(info) else { self.fail("Activation failed, please try again"); return }
-            API().confirmGadgetTransaction(confirmBase: ApiUrls.activateGadgetConfirm, username: self.username, gadgetId: product.id, refBlockNum: trx.refBlockNum, txId: trx.txId, benefic: benefic, completion: { [weak self] cinfo, _ in
-                if let err = self?.confirmFailedMessage(cinfo) { self?.fail(err) }
-                else { self?.afterSuccess(product, newState: 2, message: "Gadget activated") }
-            }, failure: { [weak self] e in self?.fail(e.localizedDescription) })
-        }, failure: { [weak self] e in self?.fail(e.localizedDescription) })
+        GadgetService.activate(user: username, gadgetId: product.id, benefic: benefic ?? "") { [weak self] ok, message in
+            self?.finish(product, ok: ok, message: message, newState: 2, success: "Gadget activated")
+        }
     }
 
     private func deactivate(_ product: MarketProduct) {
         showLoader(true)
-        API().broadcastGadgetOperation(username: username, transaction: "deactivate-gadget", gadgetId: product.id, benefic: nil, completion: { [weak self] info, _ in
-            guard let self = self else { return }
-            guard let trx = self.extractTrx(info) else { self.fail("Deactivation failed, please try again"); return }
-            API().confirmGadgetTransaction(confirmBase: ApiUrls.deactivateGadgetConfirm, username: self.username, gadgetId: product.id, refBlockNum: trx.refBlockNum, txId: trx.txId, benefic: nil, completion: { [weak self] cinfo, _ in
-                if let err = self?.confirmFailedMessage(cinfo) { self?.fail(err) }
-                else { self?.afterSuccess(product, newState: 1, message: "Gadget deactivated") }
-            }, failure: { [weak self] e in self?.fail(e.localizedDescription) })
-        }, failure: { [weak self] e in self?.fail(e.localizedDescription) })
+        GadgetService.deactivate(user: username, gadgetId: product.id) { [weak self] ok, message in
+            self?.finish(product, ok: ok, message: message, newState: 1, success: "Gadget deactivated")
+        }
     }
 }
 

@@ -201,6 +201,7 @@
 "arena_badges_header_one" = "एरीना बैज (%ld)";
 "arena_badges_header_other" = "एरीना बैज (%ld)";
 "arena_closed" = "यह चुनौती समाप्त हो गई है।";
+"arena_countdown_days" = "%1$ld दि %2$02d:%3$02d:%4$02d";
 "arena_duration_days_one" = "%ld दिन";
 "arena_duration_days_other" = "%ld दिन";
 "arena_duration_months_one" = "%ld महीना";
@@ -316,4 +317,8 @@
 "friends_tab_requests" = "अनुरोध";
 "friends_tab_suggested" = "सुझाए गए";
 "friends_title" = "दोस्त";
+"rewards_claim_error" = "आपके पुरस्कार का दावा करने में त्रुटि हुई। कृपया बाद में पुनः प्रयास करें।";
+"rewards_claimed_successfully" = "आपने सफलतापूर्वक अपने पुरस्कार प्राप्त कर लिए हैं!";
+"rewards_note" = "रोज़ाना अतिरिक्त पुरस्कार अर्जित करें";
+"rewards_processing" = "💰 इनाम चक्र प्रगति में - इनाम वितरित किए जा रहे हैं 💰";
 /* END Arena and Friends */

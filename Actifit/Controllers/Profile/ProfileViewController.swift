@@ -492,9 +492,10 @@ final class ProfileViewController: UIViewController {
 
     private func performFriend(_ action: FriendsAPI.Action) {
         friendButton.isEnabled = false
-        FriendsAPI.perform(action, me: viewer, target: username) { [weak self] ok in
+        FriendsAPI.perform(action, me: viewer, target: username) { [weak self] ok, message in
             guard let self = self else { return }
-            self.showToast(message: ok ? (action == .add ? FriendsText.requestSent : FriendsText.done) : FriendsText.failed, width: 280)
+            self.showToast(message: ok ? (action == .add ? FriendsText.requestSent : FriendsText.done) : (message ?? FriendsText.failed),
+                           width: 320, height: 90)
             self.refreshFriendState()
         }
     }

@@ -142,7 +142,6 @@
 		4E7BF4112C66710A00EA95A0 /* NotificationsEndPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7BF4102C66710A00EA95A0 /* NotificationsEndPoint.swift */; };
 		4E7BF4142C667CFF00EA95A0 /* ChainInfoEndPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7BF4132C667CFF00EA95A0 /* ChainInfoEndPoint.swift */; };
 		4E7BF4162C66A35600EA95A0 /* HiveEngineEndPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7BF4152C66A35600EA95A0 /* HiveEngineEndPoint.swift */; };
-		4E7BF4222C6C8E6300EA95A0 /* CreateWaveEndPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7BF4212C6C8E6300EA95A0 /* CreateWaveEndPoint.swift */; };
 		4E7BF4262C6C919700EA95A0 /* CreateWaveModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7BF4252C6C919700EA95A0 /* CreateWaveModel.swift */; };
 		4E7BF42C2C6E9FF000EA95A0 /* GetWavesEndPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7BF42B2C6E9FF000EA95A0 /* GetWavesEndPoint.swift */; };
 		4E7BF42F2C6EA6ED00EA95A0 /* UserPostsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7BF42E2C6EA6ED00EA95A0 /* UserPostsModel.swift */; };
@@ -235,6 +234,11 @@
 		AF5EC0DE0000000000000002 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF5EC0DE0000000000000001 /* Secrets.swift */; };
 		B79A56C9D011D84F3DCEEBAB /* 1f98d.json in Resources */ = {isa = PBXBuildFile; fileRef = EF8BE1BF06EDC8230774E3BD /* 1f98d.json */; };
 		BA44DDE833EC3CA733B8587E /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69DA7A973191ED7518B29C0F /* ProfileViewController.swift */; };
+		E667FBD6D86994182B322D88 /* GadgetRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = F31DF0294CF9825F701EA70F /* GadgetRules.swift */; };
+		9103AF70BD44349EDED1013C /* GadgetService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40A0DB9D1FA433190E63D93A /* GadgetService.swift */; };
+		F668ADDF1ED7381CAAACA507 /* HiveTx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B600DE78A68D6520AD41C52 /* HiveTx.swift */; };
+		19570EA3F68B8AB1C45292AD /* HiveCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 145FCB9D365A74FE309F8A85 /* HiveCrypto.swift */; };
+		7E611CA04BB99E4A37313FFA /* HiveBroadcaster.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25CC94F182955A302D048620 /* HiveBroadcaster.swift */; };
 		167BCC3D42CF867DFD8EDCF7 /* FriendsLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBAF00DBB35CA5E5B055B40 /* FriendsLogic.swift */; };
 		3BC1B7E063BF7BE319075C7A /* FriendsAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 451AF3F31C283715709DEF36 /* FriendsAPI.swift */; };
 		918BCA782E5763382DBCC14E /* FriendsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49A5BA8A69C857161C686CF8 /* FriendsViewController.swift */; };
@@ -424,7 +428,6 @@
 		4E7BF4102C66710A00EA95A0 /* NotificationsEndPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsEndPoint.swift; sourceTree = "<group>"; };
 		4E7BF4132C667CFF00EA95A0 /* ChainInfoEndPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChainInfoEndPoint.swift; sourceTree = "<group>"; };
 		4E7BF4152C66A35600EA95A0 /* HiveEngineEndPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HiveEngineEndPoint.swift; sourceTree = "<group>"; };
-		4E7BF4212C6C8E6300EA95A0 /* CreateWaveEndPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateWaveEndPoint.swift; sourceTree = "<group>"; };
 		4E7BF4252C6C919700EA95A0 /* CreateWaveModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateWaveModel.swift; sourceTree = "<group>"; };
 		4E7BF42B2C6E9FF000EA95A0 /* GetWavesEndPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetWavesEndPoint.swift; sourceTree = "<group>"; };
 		4E7BF42E2C6EA6ED00EA95A0 /* UserPostsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPostsModel.swift; sourceTree = "<group>"; };
@@ -507,6 +510,11 @@
 		65D6CA58CD49BC50CE8898B3 /* RouteMapViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RouteMapViewController.swift; path = Actifit/Controllers/Route/RouteMapViewController.swift; sourceTree = "<group>"; };
 		68417E18D1B82AAF4BD9338F /* 1f981.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f981.json; path = Actifit/Resources/animals/1f981.json; sourceTree = "<group>"; };
 		69DA7A973191ED7518B29C0F /* ProfileViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProfileViewController.swift; path = Actifit/Controllers/Profile/ProfileViewController.swift; sourceTree = "<group>"; };
+		F31DF0294CF9825F701EA70F /* GadgetRules.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GadgetRules.swift; path = Actifit/Hive/GadgetRules.swift; sourceTree = "<group>"; };
+		40A0DB9D1FA433190E63D93A /* GadgetService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GadgetService.swift; path = Actifit/Hive/GadgetService.swift; sourceTree = "<group>"; };
+		4B600DE78A68D6520AD41C52 /* HiveTx.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HiveTx.swift; path = Actifit/Hive/HiveTx.swift; sourceTree = "<group>"; };
+		145FCB9D365A74FE309F8A85 /* HiveCrypto.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HiveCrypto.swift; path = Actifit/Hive/HiveCrypto.swift; sourceTree = "<group>"; };
+		25CC94F182955A302D048620 /* HiveBroadcaster.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HiveBroadcaster.swift; path = Actifit/Hive/HiveBroadcaster.swift; sourceTree = "<group>"; };
 		BBBAF00DBB35CA5E5B055B40 /* FriendsLogic.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FriendsLogic.swift; path = Actifit/Controllers/Friends/FriendsLogic.swift; sourceTree = "<group>"; };
 		451AF3F31C283715709DEF36 /* FriendsAPI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FriendsAPI.swift; path = Actifit/Controllers/Friends/FriendsAPI.swift; sourceTree = "<group>"; };
 		49A5BA8A69C857161C686CF8 /* FriendsViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FriendsViewController.swift; path = Actifit/Controllers/Friends/FriendsViewController.swift; sourceTree = "<group>"; };
@@ -1087,7 +1095,6 @@
 		4E7BF4202C6C8E4F00EA95A0 /* Waves */ = {
 			isa = PBXGroup;
 			children = (
-				4E7BF4212C6C8E6300EA95A0 /* CreateWaveEndPoint.swift */,
 				4E7BF42B2C6E9FF000EA95A0 /* GetWavesEndPoint.swift */,
 			);
 			path = Waves;
@@ -1680,6 +1687,11 @@
 				3EA5502112EADAE0051E2F8E /* RouteRecordingManager.swift */,
 				65D6CA58CD49BC50CE8898B3 /* RouteMapViewController.swift */,
 				69DA7A973191ED7518B29C0F /* ProfileViewController.swift */,
+				F31DF0294CF9825F701EA70F /* GadgetRules.swift */,
+				40A0DB9D1FA433190E63D93A /* GadgetService.swift */,
+				4B600DE78A68D6520AD41C52 /* HiveTx.swift */,
+				145FCB9D365A74FE309F8A85 /* HiveCrypto.swift */,
+				25CC94F182955A302D048620 /* HiveBroadcaster.swift */,
 				BBBAF00DBB35CA5E5B055B40 /* FriendsLogic.swift */,
 				451AF3F31C283715709DEF36 /* FriendsAPI.swift */,
 				49A5BA8A69C857161C686CF8 /* FriendsViewController.swift */,
@@ -2103,7 +2115,6 @@
 				BE222CE52120BAAB00AD025F /* AFTextField.swift in Sources */,
 				4E341EAD2B0819F6002E51C0 /* TransactionTipResponse.swift in Sources */,
 				4E341EA72B06B725002E51C0 /* SendAfitViewModel.swift in Sources */,
-				4E7BF4222C6C8E6300EA95A0 /* CreateWaveEndPoint.swift in Sources */,
 				4EF5914D2C95A16900C26FF8 /* SocialViewModel.swift in Sources */,
 				4E5D92E42CB87ED400A87CB5 /* ShareSheet.swift in Sources */,
 				4E940C912A7C324A00F15CB5 /* DailyTips.swift in Sources */,
@@ -2185,6 +2196,11 @@
 				3A817624B56D1A083266AB0F /* RouteRecordingManager.swift in Sources */,
 				FF2A9FCA34A7E073E0619784 /* RouteMapViewController.swift in Sources */,
 				BA44DDE833EC3CA733B8587E /* ProfileViewController.swift in Sources */,
+				E667FBD6D86994182B322D88 /* GadgetRules.swift in Sources */,
+				9103AF70BD44349EDED1013C /* GadgetService.swift in Sources */,
+				F668ADDF1ED7381CAAACA507 /* HiveTx.swift in Sources */,
+				19570EA3F68B8AB1C45292AD /* HiveCrypto.swift in Sources */,
+				7E611CA04BB99E4A37313FFA /* HiveBroadcaster.swift in Sources */,
 				167BCC3D42CF867DFD8EDCF7 /* FriendsLogic.swift in Sources */,
 				3BC1B7E063BF7BE319075C7A /* FriendsAPI.swift in Sources */,
 				918BCA782E5763382DBCC14E /* FriendsViewController.swift in Sources */,

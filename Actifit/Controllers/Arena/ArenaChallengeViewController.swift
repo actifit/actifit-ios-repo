@@ -234,8 +234,9 @@ final class ArenaChallengeViewController: UIViewController {
         ArenaPendingStore.put(user: user, challengeId: id, op: op)
         ArenaHomeCardView.invalidate()   // membership is changing; the dashboard card must refetch
         renderAction()
-        ArenaAPI.send(op, user: user, challengeId: id) { [weak self] ok in
-            if !ok {
+        ArenaAPI.send(op, user: user, challengeId: id) { [weak self] ok, ambiguous, message in
+            // An unclear broadcast may still land: keep showing it as pending.
+            if !ok && !ambiguous {
                 // Back to what was pending before this tap (e.g. a join still being indexed),
                 // so a failed leave can't make the screen offer that join a second time.
                 if let p = previous { ArenaPendingStore.put(user: user, challengeId: id, op: p.op, at: p.at) }
@@ -243,7 +244,7 @@ final class ArenaChallengeViewController: UIViewController {
             }
             guard let self = self else { return }
             self.acting = false
-            if !ok { self.statusOverride = ArenaText.actionFailed }
+            if !ok { self.statusOverride = message ?? ArenaText.actionFailed }
             self.render()
             // The backend indexes the op within a few blocks; look again so the screen settles
             // on its own. Also after a failure: a timed-out request may have landed.

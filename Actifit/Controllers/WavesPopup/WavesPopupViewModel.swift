@@ -34,6 +34,11 @@ class WavesPopupViewModel {
     }
 
     private let clearTextSubject = PassthroughSubject<Bool, Never>()
+    /// A failed broadcast's reason (signed on the device: wrong key, no RC, network...).
+    private let errorSubject = PassthroughSubject<String, Never>()
+    var errorPublisher: AnyPublisher<String, Never> {
+        return errorSubject.receive(on: DispatchQueue.main).eraseToAnyPublisher()
+    }
     var clearTextPublisher: AnyPublisher<Bool, Never> {
         return clearTextSubject.receive(on: DispatchQueue.main).eraseToAnyPublisher()
     }
@@ -118,6 +123,8 @@ class WavesPopupViewModel {
                 case .success(let success):
                     if success.success {
                         self.clearTextSubject.send(true)
+                    } else {
+                        self.errorSubject.send(success.message ?? HiveText.generic)
                     }
                 case .failure(let failure):
                     print(failure.localizedDescription)

@@ -147,6 +147,7 @@ PODS:
   - Realm/Headers (10.52.1)
   - RealmSwift (10.52.1):
     - Realm (= 10.52.1)
+  - secp256k1.swift (0.1.4)
   - SnapKit (5.7.1)
   - SwiftAlgorithms (1.0.0)
   - TUSKit (3.3)
@@ -166,6 +167,7 @@ DEPENDENCIES:
   - Localizr.swift
   - lottie-ios (~> 4.5)
   - RealmSwift
+  - secp256k1.swift (~> 0.1.4)
   - SnapKit (~> 5.0)
   - TUSKit
 
@@ -199,6 +201,7 @@ SPEC REPOS:
     - PromisesSwift
     - Realm
     - RealmSwift
+    - secp256k1.swift
     - SnapKit
     - SwiftAlgorithms
     - TUSKit
@@ -232,10 +235,11 @@ SPEC CHECKSUMS:
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
   Realm: 5b0f6fe519911831fff94e6e6fba8fd404fa20ed
   RealmSwift: 6963a458f4f5f3f0df5cca69dece5c802c7b7cad
+  secp256k1.swift: a7e7a214f6db6ce5db32cc6b2b45e5c4dd633634
   SnapKit: d612e99e678a2d3b95bf60b0705ed0a35c03484a
   SwiftAlgorithms: 38dda4731d19027fdeee1125f973111bf3386b53
   TUSKit: 48e6357dbaed924829b6321ec36f3f0f01a3599f
 
-PODFILE CHECKSUM: 8a86063d64bb12054155380900be34c634a74f54
+PODFILE CHECKSUM: 5cf51cc65e86436d5207fcc1c20ce2da807e933e
 
 COCOAPODS: 1.17.0

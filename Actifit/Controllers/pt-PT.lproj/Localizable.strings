@@ -357,4 +357,8 @@
 "friends_tab_requests" = "Pedidos";
 "friends_tab_suggested" = "Sugeridos";
 "friends_title" = "Amigos";
+"rewards_claim_error" = "Houve um erro ao reivindicar suas recompensas. Por favor, tente novamente mais tarde.";
+"rewards_claimed_successfully" = "Você reivindicou suas recompensas com sucesso!";
+"rewards_note" = "Ganhe Prêmios Extras Diariamente";
+"rewards_processing" = "Ciclo de Recompensas em Andamento - Distribuindo Recompensas";
 /* END Arena and Friends */

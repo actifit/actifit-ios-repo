@@ -257,7 +257,10 @@ class SettingsVC: UIViewController {
     }
 
     activeKeyTextField.text =   UserDefaults.standard.activeKey
-    fundsPasswordTextField.text =  UserDefaults.standard.fundPassword
+    // The funds password is retired on the backend and must be treated as leaked: wipe any
+    // saved copy and hide its row (the field's stack view sits in the row's container).
+    UserDefaults.standard.fundPassword = ""
+    fundsPasswordTextField.superview?.superview?.isHidden = true
    // self.navigationController?.navigationBar.barTintColor = .primaryRedColor()
 
     if DeviceType.isSmallScreen {
@@ -673,7 +676,6 @@ class SettingsVC: UIViewController {
     UserDefaults.standard.set(self.languageButton.titleLabel?.text ?? "English", forKey: "SelectedLanguage")
     UserDefaults.standard.set(!isDeviceSensorSystemSelected, forKey: "isFitSystemSelected")
     UserDefaults.standard.activeKey = activeKeyTextField.text ?? ""
-    UserDefaults.standard.fundPassword = fundsPasswordTextField.text ?? ""
     UserDefaults.standard.synchronize()
 
 

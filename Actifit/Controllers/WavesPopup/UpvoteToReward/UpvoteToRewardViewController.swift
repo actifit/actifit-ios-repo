@@ -32,6 +32,9 @@ class UpvoteToRewardViewController: UIViewController {
       showLoader ?
       self.showProgressIndicator() : self.hideProgressIndicator()
     }.store(in: &viewModel.cancellables)
+    viewModel.errorPublisher.sink { message in
+      self.showAlertWith(title: nil, message: message)
+    }.store(in: &viewModel.cancellables)
     viewModel.dismissPublisher.sink { dismiss in
       if dismiss {
         self.showAlertWithOkCompletion(title: "", message: "Successfuly Voted!") { finished in

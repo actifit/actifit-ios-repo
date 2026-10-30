@@ -320,4 +320,8 @@
 "friends_tab_requests" = "Verzoeken";
 "friends_tab_suggested" = "Voorgesteld";
 "friends_title" = "Vrienden";
+"rewards_claim_error" = "Er is een fout opgetreden bij het claimen van uw beloningen. Probeer het later opnieuw.";
+"rewards_claimed_successfully" = "U heeft uw beloningen met succes geclaimd!";
+"rewards_note" = "Verdien dagelijks extra prijzen";
+"rewards_processing" = "Beloningscyclus bezig - Beloningen verdelen";
 /* END Arena and Friends */

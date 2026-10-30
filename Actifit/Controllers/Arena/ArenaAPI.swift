@@ -5,10 +5,10 @@
 //  The Arena (challenge engine) backend, ported from Android's ArenaApi.java.
 //
 //  Reads are public GETs. Writes are chain-first: a join/leave is a posting-auth
-//  `custom_json` with id "actifit_arena", broadcast server-side through performTrx with the
-//  login token (the same path as the gadget and tip operations in API.swift). There is NO
-//  second "index" call: the backend tails the chain and applies the op a few seconds later,
-//  so callers keep the new state optimistically (see ArenaPendingStore).
+//  `custom_json` with id "actifit_arena", signed on the device and broadcast straight to Hive
+//  (HiveBroadcaster); the backend no longer signs for the app. There is NO confirm call: the
+//  backend tails the chain and applies the op a few seconds later, so callers keep the new
+//  state optimistically (see ArenaPendingStore).
 //
 //  Every completion runs on the main queue.
 //
@@ -19,7 +19,6 @@ enum ArenaAPI {
 
     static let baseURL = "https://api.actifit.io/"
     private static let readTimeout: TimeInterval = 15
-    private static let broadcastTimeout: TimeInterval = 30
 
     /// Public challenges, optionally filtered by one state and/or a participant.
     /// nil means the request failed, which is not the same as an empty list.
@@ -73,42 +72,24 @@ enum ArenaAPI {
         }
     }
 
-    /// Broadcasts a join or leave. Success means the relay put it on chain, not that the
-    /// backend accepted it: a rejected op is silent, so the pending state just never confirms.
-    static func send(_ op: ArenaLogic.Op, user: String, challengeId: String, completion: @escaping (Bool) -> Void) {
-        let token = UserDefaults.standard.authToken
-        guard !user.isEmpty, !challengeId.isEmpty, !token.isEmpty else {
-            // The launch-time login may have failed; fetch a token so the next try can work.
-            if token.isEmpty && !user.isEmpty { TokenManager.shared.refreshToken() }
-            return DispatchQueue.main.async { completion(false) }
+    /// The signed operation's json, written the same way every time.
+    static func opJson(_ op: ArenaLogic.Op, challengeId: String) -> String {
+        return "{\"op\":" + HiveJSON.string(op.rawValue) + ",\"v\":1,\"challenge_id\":" + HiveJSON.string(challengeId) + "}"
+    }
+
+    /// Signs a join or leave on the device and broadcasts it. ok means it is on chain, not that
+    /// the backend accepted it: a rejected op is silent, so the pending state just never
+    /// confirms. ambiguous: it may still land, so the caller keeps the pending state. message is
+    /// fit to show when !ok.
+    static func send(_ op: ArenaLogic.Op, user: String, challengeId: String,
+                     completion: @escaping (_ ok: Bool, _ ambiguous: Bool, _ message: String?) -> Void) {
+        guard !user.isEmpty, !challengeId.isEmpty else {
+            return DispatchQueue.main.async { completion(false, false, nil) }
         }
-        let body: [String: Any] = ["op": op.rawValue, "v": 1, "challenge_id": challengeId]
-        guard let bodyData = try? JSONSerialization.data(withJSONObject: body),
-              let bodyJson = String(data: bodyData, encoding: .utf8) else {
-            return DispatchQueue.main.async { completion(false) }
+        let operation = HiveOp.postingJson(account: user, id: "actifit_arena", json: opJson(op, challengeId: challengeId))
+        HiveBroadcaster.broadcast([operation], role: .posting) { r in
+            completion(r.ok, r.ambiguous, r.error)
         }
-        let operation: [Any] = ["custom_json", [
-            "required_auths": [String](),
-            "required_posting_auths": [user],
-            "id": "actifit_arena",
-            "json": bodyJson
-        ]]
-        guard let opData = try? JSONSerialization.data(withJSONObject: operation),
-              let opJson = String(data: opData, encoding: .utf8),
-              let url = URL(string: ApiUrls.broadCastQueryAPI + "?user=" + enc(user)
-                            + "&operation=" + enc("[" + opJson + "]") + "&bchain=HIVE") else {
-            return DispatchQueue.main.async { completion(false) }
-        }
-        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: broadcastTimeout)
-        request.addBroadCastHeaderWhenAfitSent()
-        // This GET signs and broadcasts: it is sent exactly once, never retried, because a
-        // retry after a slow response would put a second op on chain.
-        URLSession.shared.dataTask(with: request) { data, _, _ in
-            let doc = data.flatMap { (try? JSONSerialization.jsonObject(with: $0)) as? [String: Any] }
-            let tx = (doc?["trx"] as? [String: Any])?["tx"] as? [String: Any]
-            let ok = doc?["success"] != nil && tx?["ref_block_num"] != nil
-            DispatchQueue.main.async { completion(ok) }
-        }.resume()
     }
 
     /// Data is nil on a transport error or a non-2xx status.
@@ -126,11 +107,7 @@ enum ArenaAPI {
     }
 
     /// Strict query/path encoding: rolled-over ids contain "@", which must not pass through raw.
-    private static func enc(_ s: String) -> String {
-        var allowed = CharacterSet.alphanumerics
-        allowed.insert(charactersIn: "-._~")
-        return s.addingPercentEncoding(withAllowedCharacters: allowed) ?? s
-    }
+    private static func enc(_ s: String) -> String { return HiveURL.component(s) }
 }
 
 /// Remembers a join/leave the user just broadcast, per user and challenge. The backend only

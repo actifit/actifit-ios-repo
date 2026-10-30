@@ -5,13 +5,14 @@
 //  Friend reads and writes against the Actifit backend and Hive, ported from Android's
 //  FriendsApi / FriendsActivity / FriendAccountAdapter.
 //
-//  Every write is TWO steps, reusing the login token (x-acti-token), with no key on the device:
-//    1. Broadcast a posting-auth `custom_json` (id "actifit", {transaction, target}) through
-//       performTrx. The server signs, broadcasts and stores the tx, and returns its id.
-//    2. Call the friend endpoint with that tx id; the backend verifies it against what
-//       performTrx stored.
-//  Once step 1 has succeeded only step 2 is ever retried, with the same tx id: re-broadcasting
-//  would put a duplicate op on chain.
+//  Every write is TWO steps:
+//    1. Sign a posting-auth `custom_json` (id "actifit", {transaction, target}) on this phone
+//       and broadcast it straight to Hive (HiveBroadcaster). The backend no longer signs.
+//    2. Call the friend endpoint's *HiveKeychain variant with the transaction id and the exact
+//       signed operation; the backend finds it on the chain and checks it matches.
+//  Within one attempt, once step 1 has succeeded only step 2 is retried, with the same tx id. If
+//  the confirm still fails, tapping again signs a new op (as on Android): friend ops are
+//  idempotent and cost nothing.
 //
 //  Every completion runs on the main queue.
 //
@@ -32,12 +33,13 @@ enum FriendsAPI {
             }
         }
 
+        /// The chain-verified confirm route.
         var endpoint: String {
             switch self {
-            case .add: return "addFriend"
-            case .accept: return "acceptFriend"
-            case .cancelRequest: return "cancelFriendRequest"
-            case .unfriend: return "dropFriendship"
+            case .add: return "addFriendHiveKeychain"
+            case .accept: return "acceptFriendHiveKeychain"
+            case .cancelRequest: return "cancelFriendRequestHiveKeychain"
+            case .unfriend: return "dropFriendshipHiveKeychain"
             }
         }
     }
@@ -114,52 +116,40 @@ enum FriendsAPI {
 
     // MARK: - Writes
 
-    static func perform(_ action: Action, me: String, target: String, completion: @escaping (Bool) -> Void) {
-        let token = UserDefaults.standard.authToken
-        guard !me.isEmpty, !target.isEmpty, !token.isEmpty else {
-            // The launch-time login may have failed; fetch a token so the next try can work.
-            if token.isEmpty && !me.isEmpty { TokenManager.shared.refreshToken() }
-            return DispatchQueue.main.async { completion(false) }
-        }
-        let inner: [String: Any] = ["transaction": action.transaction, "target": target]
-        guard let innerData = try? JSONSerialization.data(withJSONObject: inner),
-              let innerJson = String(data: innerData, encoding: .utf8) else { return DispatchQueue.main.async { completion(false) } }
-        let operation: [Any] = ["custom_json", [
-            "required_auths": [String](),
-            "required_posting_auths": [me],
-            "id": "actifit",
-            "json": innerJson
-        ]]
-        guard let opData = try? JSONSerialization.data(withJSONObject: operation),
-              let opJson = String(data: opData, encoding: .utf8),
-              let url = URL(string: ApiUrls.broadCastQueryAPI + "?user=" + enc(me)
-                            + "&operation=" + enc("[" + opJson + "]") + "&bchain=HIVE") else {
-            return DispatchQueue.main.async { completion(false) }
-        }
-        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30)
-        request.addBroadCastHeaderWhenAfitSent()
-        // Step 1 is sent once and never retried: a retry could put a second op on chain.
-        URLSession.shared.dataTask(with: request) { data, _, _ in
-            let doc = data.flatMap { (try? JSONSerialization.jsonObject(with: $0)) as? [String: Any] }
-            let tx = (doc?["trx"] as? [String: Any])?["tx"] as? [String: Any]
-            guard doc?["success"] != nil, let trxId = tx?["id"] as? String else {
-                return DispatchQueue.main.async { completion(false) }
-            }
-            // The backend verifies by tx id; the block only fills the route.
-            let block = (tx?["ref_block_num"] as? NSNumber)?.intValue ?? 0
-            let path = action.endpoint + "/" + enc(me) + "/" + enc(target) + "/\(block)/" + enc(trxId) + "/HIVE"
-            index(path, attemptsLeft: 2, completion: completion)
-        }.resume()
+    /// The signed operation's json: the same shape the app has always sent, written the same
+    /// way every time.
+    static func friendJson(_ action: Action, target: String) -> String {
+        return "{\"transaction\":" + HiveJSON.string(action.transaction) + ",\"target\":" + HiveJSON.string(target) + "}"
     }
 
-    /// Step 2, safe to repeat: it carries the same tx id every time.
-    private static func index(_ path: String, attemptsLeft: Int, completion: @escaping (Bool) -> Void) {
-        get(path, timeout: 20) { json in
+    /// Signs and broadcasts the friend op, then confirms it. message is fit to show when !ok.
+    static func perform(_ action: Action, me: String, target: String,
+                        completion: @escaping (_ ok: Bool, _ message: String?) -> Void) {
+        guard !me.isEmpty, !target.isEmpty else { return DispatchQueue.main.async { completion(false, nil) } }
+        let op = HiveOp.postingJson(account: me, id: "actifit", json: friendJson(action, target: target))
+        // Step 1, signed once; HiveBroadcaster re-sends the same signed tx rather than signing a
+        // second one if an earlier attempt's fate was unclear.
+        HiveBroadcaster.broadcast([op], role: .posting) { r in
+            guard r.ok, let txId = r.txId, let opsJson = r.operationsJson else { return completion(false, r.error) }
+            // The routes read the chain from ?bchain= while the verifier uses the path one: send
+            // both, identical. The block number only fills the route.
+            let path = action.endpoint + "/" + enc(me) + "/" + enc(target) + "/\(r.refBlockNum)/" + enc(txId)
+                + "/HIVE?bchain=HIVE&operation=" + enc(opsJson)
+            confirm(path, attemptsLeft: 2) { ok, message in completion(ok, ok ? nil : (message ?? FriendsText.failed)) }
+        }
+    }
+
+    /// Step 2, safe to repeat: it carries the same tx id every time. Retried once, and only when
+    /// no JSON came back at all. The route polls the chain for up to 150 s before answering.
+    private static func confirm(_ path: String, attemptsLeft: Int, completion: @escaping (Bool, String?) -> Void) {
+        get(path, timeout: 175) { json in
             if let doc = json as? [String: Any] {
-                return completion(doc["status"] as? String == "success")
+                // The server's own reason, e.g. "No matching request found".
+                let message = (doc["message"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+                return completion(doc["status"] as? String == "success", message)
             }
-            if attemptsLeft > 1 { index(path, attemptsLeft: attemptsLeft - 1, completion: completion) }
-            else { completion(false) }
+            if attemptsLeft > 1 { confirm(path, attemptsLeft: attemptsLeft - 1, completion: completion) }
+            else { completion(false, nil) }
         }
     }
 
@@ -196,9 +186,5 @@ enum FriendsAPI {
         }.resume()
     }
 
-    private static func enc(_ s: String) -> String {
-        var allowed = CharacterSet.alphanumerics
-        allowed.insert(charactersIn: "-._~")
-        return s.addingPercentEncoding(withAllowedCharacters: allowed) ?? s
-    }
+    private static func enc(_ s: String) -> String { return HiveURL.component(s) }
 }

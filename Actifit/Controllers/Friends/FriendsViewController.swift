@@ -255,11 +255,11 @@ final class FriendsViewController: UIViewController {
         let user = row.username
         busy.insert(user)
         render()
-        FriendsAPI.perform(action, me: me, target: user) { [weak self] ok in
+        FriendsAPI.perform(action, me: me, target: user) { [weak self] ok, message in
             guard let self = self else { return }
             self.busy.remove(user)
             if !ok {
-                self.showToast(message: FriendsText.failed, width: 300)
+                self.showToast(message: message ?? FriendsText.failed, width: 320, height: 90)
                 return self.render()
             }
             if action == .add, let i = self.suggested.firstIndex(where: { $0.username == user }) {

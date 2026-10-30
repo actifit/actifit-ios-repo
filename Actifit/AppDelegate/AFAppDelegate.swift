@@ -136,7 +136,8 @@ class AFAppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func applicationWillEnterForeground(_ application: UIApplication) {
-        // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
+        // Sessions last 24 hours and end when the account logs in elsewhere: renew a stale one.
+        if User.current() != nil { TokenManager.shared.refreshIfStale() }
     }
     
     func applicationDidBecomeActive(_ application: UIApplication) {

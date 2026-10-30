@@ -121,6 +121,7 @@ class LoginViewModel {
           UserDefaults.standard.username = user.userdata.name
           UserDefaults.standard.privatePostingKey = privatePostingKey
           UserDefaults.standard.authToken = user.token
+          UserDefaults.standard.set(Date(), forKey: "authTokenIssuedAt")
         self.proccessSuccessSubject.send(true)
         case .failure(_):
             self.proccessSuccessSubject.send(false)

@@ -132,8 +132,15 @@ extension HTTPClient: MyAppServiceProtocols {
     return await sendRequest(endpoint: HiveEngineEndPoint.hiveEngine(username: username, tableType: tableType), responseModel: HiveEngineBalanceResponse.self)
   }
 
+  /// A wave or snap (a comment op), signed on the device with the posting key and broadcast to
+  /// Hive; the backend no longer signs for the app.
   func createWave(username: String, body: [String : Any], comment: String) async -> Result<CreateWaveModel, RequestError> {
-    return await sendRequest(endpoint: CreateWaveEndPoint.createWave(username: username, comment: comment, params: body), responseModel: CreateWaveModel.self)
+    guard let op = try? HiveOp.from(name: comment, params: body) else { return .failure(.unknown) }
+    return await withCheckedContinuation { continuation in
+      HiveBroadcaster.broadcast([op], role: .posting) { r in
+        continuation.resume(returning: .success(CreateWaveModel(success: r.ok, message: r.error)))
+      }
+    }
   }
 
   func getWave() async -> Result<HivePosts, RequestError> {

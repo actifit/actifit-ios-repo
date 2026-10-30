@@ -17,8 +17,8 @@ from pathlib import Path
 
 # iOS .lproj -> Android values-<qualifier>
 LOCALES = {"ar": "ar", "de": "de", "hi": "hi", "it": "it", "ko": "ko", "nl": "nl", "pt-PT": "pt", "yo": "yo"}
-PREFIXES = ("arena_", "friends_", "profile_friend_")
-EXTRA_KEYS = {"footer_arena", "close_button"}
+PREFIXES = ("arena_", "friends_", "profile_friend_", "signing_", "gadget_", "rewards_")
+EXTRA_KEYS = {"footer_arena", "close_button", "error_performing_operation"}
 
 BEGIN = "/* BEGIN Arena and Friends, imported from Android by ci_scripts/import_android_strings.py. Do not edit by hand. */"
 END = "/* END Arena and Friends */"

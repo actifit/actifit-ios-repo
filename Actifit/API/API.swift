@@ -38,17 +38,30 @@ public class API : NSObject{
   }
 
 
+  /// Decrypts 3Speak's login memo with the posting key on the device (the backend's /memoDecode
+  /// was removed with server-side key handling). Answers in the shape the caller already reads.
   func verifyActifit3SpeakVideoMemo(username: String,body: [String: Any], completion: APICompletionHandler, failure: APIFailureHandler) {
-    let url = "https://api.actifit.io/memoDecode/?user=\(username)&bchain=HIVE"
-    var request = URLRequest.init(url: URL(string: url)!)
-    request.addBasicHeaderFieldsForUpdateSettings()
-    request.appendBodyWith(json: body)
-    forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_POST, completion: completion, failure: failure)
+    let memo = body["memo"] as? String ?? ""
+    DispatchQueue.global(qos: .userInitiated).async {
+      do {
+        let token = try HiveCrypto.decodeMemo(memo, wif: HiveBroadcaster.storedPostingKey)
+        let json = "{\"xcstkn\":" + HiveJSON.string(token) + "}"
+        DispatchQueue.main.async { completion?(json, 200) }
+      } catch {
+        DispatchQueue.main.async {
+          failure?(NSError(domain: "Actifit", code: -1, userInfo: [NSLocalizedDescriptionKey: HiveText.noPostingKey]))
+        }
+      }
+    }
   }
 
   func grab3SpeakCookie(username: String, token: String, completion: APICompletionHandler, failure: APIFailureHandler) {
-    let url = "https://studio.3speak.tv/mobile/login?username=\(username)&access_token=\(token)"
-    let request = URLRequest.init(url: URL(string: url)!)
+    // The token comes from a memo decoded on the device: encode it, and never crash on odd input.
+    guard let url = URL(string: "https://studio.3speak.tv/mobile/login?username=\(HiveURL.component(username))&access_token=\(HiveURL.component(token))") else {
+      failure?(NSError(domain: "Actifit", code: -1, userInfo: [NSLocalizedDescriptionKey: HiveText.generic]))
+      return
+    }
+    let request = URLRequest.init(url: url)
    // request.addBasicHeaderFieldsForUpdateSettings()
     forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure, handleCookies: true)
 
@@ -70,99 +83,47 @@ public class API : NSObject{
 
 
   func sendHiveOrHBDAPI(from: String, to: String, amount: String, memo: String?,completion: APICompletionHandler, failure: APIFailureHandler, blockChain: String, activeKey: String) {
-    //"op_name": "transfer"
-    let params = ["from": from, "to": to, "amount": amount, "memo": memo]
-    let array: [Any] = ["transfer", params]
-    // let params2: [String:Any] = ["0": "transfer","1": params]
+    let op = HiveOp.transfer(from: from, to: to, amount: HiveAmount.normalize(amount), memo: memo ?? "")
+    signAndBroadcast([op], role: .active, key: activeKey, completion: completion, failure: failure)
+  }
 
+  // MARK: - On-device signing
 
-    do {
-      let jsonData = try JSONSerialization.data(withJSONObject: [array], options: .prettyPrinted)
-      if let jsonString = String(data: jsonData, encoding: .utf8) {
-        print("Encoded JSON string: \(jsonString)")
-        let cleanedJsonString = jsonString.replacingOccurrences(of: "\n", with: "")
-        let finalParams: [String: Any] = ["operation": cleanedJsonString,"active": activeKey]
-        let apiURL = ApiUrls.sendBalanceAndHive + "?user=\(from)&bchain=HIVE"
-        let url = URL(string:apiURL)
-        var request = URLRequest.init(url: url!)
-        request.appendBodyWith(json: finalParams)
-        request.addBasicHeaderFieldsForUpdateSettings()
-        forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_POST, completion: completion, failure: failure)
-
+  /// Signs `ops` on the device and broadcasts them to Hive (the backend no longer signs: its
+  /// /performTrx and /performTrxPost are gone). Success is reported in the shape callers already
+  /// read, {"success":true,"trx":{"tx":{"id","ref_block_num"}}}; a failure carries a message fit
+  /// to show. The key never leaves the phone.
+  func signAndBroadcast(_ ops: [HiveOp], role: HiveBroadcaster.KeyRole, key: String? = nil, completion: APICompletionHandler, failure: APIFailureHandler) {
+    HiveBroadcaster.broadcast(ops, role: role, explicitKey: key) { r in
+      if r.ok {
+        completion?("{\"success\":true,\"trx\":{\"tx\":{\"id\":" + HiveJSON.string(r.txId ?? "")
+                    + ",\"ref_block_num\":\(r.refBlockNum)}}}", 200)
+      } else {
+        failure?(NSError(domain: "Actifit", code: -1, userInfo: [NSLocalizedDescriptionKey: r.error ?? HiveText.generic]))
       }
-    }catch let error {
-      print(error.localizedDescription)
     }
   }
-
-
-  func sendAfitAmount(username: String, targetUser: String, amount: String, fundPass: String, note: String, completion: APICompletionHandler, failure: APIFailureHandler) {
-    let paramString = "?user=\(username)&targetUser=\(targetUser)&amount=\(amount)&fundsPass=\(fundPass)&note=\(note)"
-    if let url  = URL(string: ApiUrls.afitAmountSent + paramString) {
-      var request = URLRequest.init(url: url)
-      request.addBasicHeaderFieldsForUpdateSettings()
-      forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure)
-    }
-  }
-
-  func broadCasrtAfitAmountSent(username: String, targetUser: String, amount: String, note: String, completion: APICompletionHandler, failure: APIFailureHandler){
-    let parameters: [String: Any] = [
-      "required_auths": [],
-      "required_posting_auths": [username],
-      "id": "actifit",
-      "json":"{\"action\":\"Tip\",\"amount\":\"\(amount)\",\"recipient\":\"\(targetUser)\",\"note\":\"\(note)\"}"
-    ]
-    let finalizedParams: [Any] = ["custom_json", parameters]
-    var urlString = ApiUrls.broadCastQueryAPI + "?user=\(username)"
-    do {
-      let jsonData = try JSONSerialization.data(withJSONObject: finalizedParams, options: .prettyPrinted)
-      if let jsonString = String(data: jsonData, encoding: .utf8) {
-        print("Encoded JSON string: \(jsonString)")
-        let cleanedJsonString = jsonString.replacingOccurrences(of: "\n", with: "")
-        urlString = urlString + "&operation=[\(cleanedJsonString)]&bchain=HIVE"
-        if let encodedString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
-          let url  = URL(string: encodedString)
-          var request = URLRequest.init(url: url!)
-          request.addBasicHeaderFieldsForUpdateSettings()
-          forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure)
-        }
-      }
-    }catch let error {
-      print(error.localizedDescription)
-    }
-
-  }
-
 
   // MARK: - Phase 1: Wallet parity (Android port)
 
-  /// Shared active-key broadcast wrapper (mirrors Android `Utils.queryAPIPost` → performTrxPost).
-  /// `operation` is a single op array `[opName, params]`; it is wrapped as `[[opName, params]]`.
+  /// Active-key operation `[opName, params]`, signed on the device.
   private func broadcastActiveOperation(user: String, operation: [Any], activeKey: String, completion: APICompletionHandler, failure: APIFailureHandler) {
-    do {
-      let jsonData = try JSONSerialization.data(withJSONObject: [operation], options: [])
-      guard let jsonString = String(data: jsonData, encoding: .utf8) else {
-        failure?(NSError(domain: "Actifit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode operation"]))
-        return
-      }
-      let cleanedJsonString = jsonString.replacingOccurrences(of: "\n", with: "")
-      let finalParams: [String: Any] = ["operation": cleanedJsonString, "active": activeKey]
-      let apiURL = ApiUrls.sendBalanceAndHive + "?user=\(user)&bchain=HIVE"
-      guard let url = URL(string: apiURL) else { return }
-      var request = URLRequest.init(url: url)
-      request.appendBodyWith(json: finalParams)
-      request.addBasicHeaderFieldsForUpdateSettings()
-      forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_POST, completion: completion, failure: failure)
-    } catch let error {
-      print(error.localizedDescription)
-      failure?(error as NSError)
+    guard operation.count == 2, let name = operation[0] as? String, let params = operation[1] as? [String: Any],
+          let op = try? HiveOp.from(name: name, params: params) else {
+      failure?(NSError(domain: "Actifit", code: -1, userInfo: [NSLocalizedDescriptionKey: HiveText.generic]))
+      return
     }
+    signAndBroadcast([op], role: .active, key: activeKey, completion: completion, failure: failure)
   }
 
   /// Send an arbitrary Hive-Engine token (transfer / stake / unstake) via custom_json (active key).
   /// `action` is one of "transfer", "stake", "unstake".
   func hiveEngineTokenOperation(user: String, symbol: String, to: String, quantity: String, memo: String, action: String, activeKey: String, completion: APICompletionHandler, failure: APIFailureHandler) {
-    let json = "{\"contractName\": \"tokens\" , \"contractAction\": \"\(action)\" , \"contractPayload\": {\"symbol\": \"\(symbol)\", \"to\": \"\(to)\",\"quantity\": \"\(quantity)\",\"memo\": \"\(memo)\"}}"
+    // Escaped field by field: a memo with a quote in it must not break the JSON.
+    let j = HiveJSON.string
+    let json = "{\"contractName\":\"tokens\",\"contractAction\":" + j(action) + ",\"contractPayload\":{\"symbol\":"
+      + j(symbol) + ",\"to\":" + j(to) + ",\"quantity\":" + j(quantity)
+      + ",\"memo\":" + j(memo) + "}}"
     let customParams: [String: Any] = [
       "required_auths": [user],
       "required_posting_auths": [],
@@ -192,16 +153,21 @@ public class API : NSObject{
     forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure)
   }
 
-  /// Claim pending rewards. Backend broadcasts with server-held authority; requires JWT (x-acti-token).
+  /// Claims pending rewards: signed on the device with the posting key (the backend's
+  /// /claimRewards is gone). Answers in the shape the caller already reads, {"hive":{"success"}}.
   func claimRewards(username: String, completion: APICompletionHandler, failure: APIFailureHandler) {
-    guard let url = URL(string: ApiUrls.claimRewards + "?user=\(username)") else { return }
-    var request = URLRequest.init(url: url)
-    request.addBroadCastHeaderWhenAfitSent()
-    forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure)
+    HiveBroadcaster.claimRewards(account: username.byTrimming(string: "@").lowercased()) { r in
+      if r.ok && r.txId == nil {
+        failure?(NSError(domain: "Actifit", code: 0, userInfo: [NSLocalizedDescriptionKey:
+          Copy.text("rewards_nothing_to_claim", "You have no rewards to claim right now.")]))
+      } else if r.ok {
+        completion?("{\"hive\":{\"success\":true}}", 200)
+      } else {
+        failure?(NSError(domain: "Actifit", code: -1, userInfo: [NSLocalizedDescriptionKey: r.error ?? HiveText.generic]))
+      }
+    }
   }
 
-  /// Hive transaction history via condenser_api.get_account_history.
-  /// `start` = -1 for the most recent page, or (minSeq - 1) for older pages.
   func getHiveAccountHistory(username: String, start: Int, limit: Int = 1000, completion: APICompletionHandler, failure: APIFailureHandler) {
     guard let url = URL(string: ApiUrls.hiveRPCNode) else { return }
     let body: [String: Any] = [
@@ -253,96 +219,15 @@ public class API : NSObject{
     simpleGet(urlString: urlStr, completion: completion, failure: failure)
   }
 
-  /// Broadcasts an actifit gadget custom_json op (posting auth) via performTrx.
-  /// `transaction` is one of "buy-gadget", "activate-gadget", "deactivate-gadget".
-  func broadcastGadgetOperation(username: String, transaction: String, gadgetId: String, benefic: String?, completion: APICompletionHandler, failure: APIFailureHandler) {
-    var jsonInner = "{\"transaction\": \"\(transaction)\" , \"gadget\": \"\(gadgetId)\""
-    if let benefic = benefic, !benefic.isEmpty {
-      jsonInner += " , \"benefic\": \"\(benefic)\""
-    }
-    jsonInner += "}"
-    let parameters: [String: Any] = [
-      "required_auths": [],
-      "required_posting_auths": [username],
-      "id": "actifit",
-      "json": jsonInner
-    ]
-    let finalizedParams: [Any] = ["custom_json", parameters]
-    var urlString = ApiUrls.broadCastQueryAPI + "?user=\(username)"
-    do {
-      let jsonData = try JSONSerialization.data(withJSONObject: finalizedParams, options: [])
-      guard let jsonString = String(data: jsonData, encoding: .utf8) else {
-        failure?(NSError(domain: "Actifit", code: -1)); return
-      }
-      let cleaned = jsonString.replacingOccurrences(of: "\n", with: "")
-      urlString += "&operation=[\(cleaned)]&bchain=HIVE"
-      guard let encoded = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-            let url = URL(string: encoded) else { return }
-      var request = URLRequest.init(url: url)
-      request.addBroadCastHeaderWhenAfitSent()
-      forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure)
-    } catch let error {
-      failure?(error as NSError)
-    }
-  }
-
-  /// Buys a gadget with HIVE — transfer to actifit.market with memo (active key) via performTrxPost.
-  func buyGadgetWithHive(username: String, gadgetId: String, priceHive: String, activeKey: String, completion: APICompletionHandler, failure: APIFailureHandler) {
-    let params: [String: Any] = ["from": username, "to": ApiUrls.actifitMarketAccount, "amount": "\(priceHive) HIVE", "memo": "buy-gadget:\(gadgetId)"]
-    let operation: [Any] = ["transfer", params]
-    do {
-      let jsonData = try JSONSerialization.data(withJSONObject: [operation], options: [])
-      guard let jsonString = String(data: jsonData, encoding: .utf8) else {
-        failure?(NSError(domain: "Actifit", code: -1)); return
-      }
-      let cleaned = jsonString.replacingOccurrences(of: "\n", with: "")
-      let finalParams: [String: Any] = ["operation": cleaned, "active": activeKey]
-      guard let url = URL(string: ApiUrls.sendBalanceAndHive + "?user=\(username)&bchain=HIVE") else { return }
-      var request = URLRequest.init(url: url)
-      request.appendBodyWith(json: finalParams)
-      request.addBroadCastHeaderWhenAfitSent()
-      forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_POST, completion: completion, failure: failure)
-    } catch let error {
-      failure?(error as NSError)
-    }
-  }
-
-  /// Confirmation GET after a gadget broadcast: {confirmBase}{user}/{id}/{refBlockNum}/{txId}/HIVE[/{benefic}]
-  func confirmGadgetTransaction(confirmBase: String, username: String, gadgetId: String, refBlockNum: Int, txId: String, benefic: String?, completion: APICompletionHandler, failure: APIFailureHandler) {
-    var urlString = confirmBase + "\(username)/\(gadgetId)/\(refBlockNum)/\(txId)/HIVE"
-    if let benefic = benefic, !benefic.isEmpty {
-      urlString += "/\(benefic)"
-    }
-    guard let encoded = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-          let url = URL(string: encoded) else { return }
-    var request = URLRequest.init(url: url)
-    request.addBroadCastHeaderWhenAfitSent()
-    forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure)
-  }
-
+  /// A comment (wave, snap, reply) or vote: `comment` is the op name, `body` its params. Signed
+  /// on the device with the posting key.
   func createWave(body: [String: Any], username: String, comment: String, completion: APICompletionHandler, failure: APIFailureHandler) {
-   // let params: [String:Any] = ["id":1,"jsonrpc":"2.0","method": "comment", "params": body]
-    let array: [Any] = [comment, body]
-    var urlString = ApiUrls.broadCastQueryAPI + "?user=\(username)"
-    do {
-      let jsonData = try JSONSerialization.data(withJSONObject: array, options: .prettyPrinted)
-      if let jsonString = String(data: jsonData, encoding: .utf8) {
-        print("Encoded JSON string: \(jsonString)")
-        let cleanedJsonString = jsonString.replacingOccurrences(of: "\n", with: "")
-        urlString = urlString + "&operation=[\(cleanedJsonString)]&bchain=HIVE"
-        if let encodedString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
-          let url  = URL(string: encodedString)
-          var request = URLRequest.init(url: url!)
-          request.addBasicHeaderFieldsForUpdateSettings()
-          forwardRequest(request: request, httpMethod: HttpMethods.HttpMethod_GET, completion: completion, failure: failure)
-        }
-      }
-    }catch let error {
-      print(error.localizedDescription)
+    guard let op = try? HiveOp.from(name: comment, params: body) else {
+      failure?(NSError(domain: "Actifit", code: -1, userInfo: [NSLocalizedDescriptionKey: HiveText.generic]))
+      return
     }
-
+    signAndBroadcast([op], role: .posting, completion: completion, failure: failure)
   }
-
 
   func getWavesContent(completion: APICompletionHandler, failure: APIFailureHandler) {
     let body: [String: Any] = [
@@ -633,6 +518,9 @@ public class API : NSObject{
 #endif
           //use library to extract data from response json
           if let string = String.init(data: data, encoding: String.Encoding.utf8) {
+            // A session the backend dropped (another device logged in, or it aged out) answers
+            // 200 {success:false}: log in again quietly so the next call works.
+            TokenManager.shared.noteReply(data)
             // do {
 
             completion!(string, statusCode)

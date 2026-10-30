@@ -187,6 +187,7 @@
 "arena_badge_row_community" = "%1$@ — %2$@ · 커뮤니티";
 "arena_badges_header_other" = "아레나 배지 (%ld)";
 "arena_closed" = "이 챌린지는 종료되었습니다.";
+"arena_countdown_days" = "%1$ld일 %2$02d:%3$02d:%4$02d";
 "arena_duration_days_other" = "%ld일";
 "arena_duration_months_other" = "%ld개월";
 "arena_duration_weeks_other" = "%ld주";
@@ -294,4 +295,8 @@
 "friends_tab_requests" = "요청";
 "friends_tab_suggested" = "추천";
 "friends_title" = "친구";
+"rewards_claim_error" = "보상을 청구하는 동안 오류가 발생했습니다. 나중에 다시 시도해주세요.";
+"rewards_claimed_successfully" = "보상을 성공적으로 청구했습니다!";
+"rewards_note" = "매일 추가 상품 받기";
+"rewards_processing" = "보상 주기 진행 중 - 보상 분배";
 /* END Arena and Friends */

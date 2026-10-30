@@ -201,6 +201,7 @@
 "arena_badges_header_one" = "Arena-Abzeichen (%ld)";
 "arena_badges_header_other" = "Arena-Abzeichen (%ld)";
 "arena_closed" = "Diese Challenge ist beendet.";
+"arena_countdown_days" = "%1$ld T. %2$02d:%3$02d:%4$02d";
 "arena_duration_days_one" = "%ld Tag";
 "arena_duration_days_other" = "%ld Tage";
 "arena_duration_months_one" = "%ld Monat";
@@ -316,4 +317,8 @@
 "friends_tab_requests" = "Anfragen";
 "friends_tab_suggested" = "Vorschläge";
 "friends_title" = "Freunde";
+"rewards_claim_error" = "Beim Beanspruchen Ihrer Belohnungen ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.";
+"rewards_claimed_successfully" = "Sie haben Ihre Belohnungen erfolgreich beansprucht!";
+"rewards_note" = "Täglich zusätzliche Preise verdienen";
+"rewards_processing" = "💰 Belohnungszyklus läuft - Belohnungen werden verteilt 💰";
 /* END Arena and Friends */

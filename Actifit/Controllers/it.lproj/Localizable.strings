@@ -205,6 +205,7 @@
 "arena_badges_header_one" = "Badge dell'Arena (%ld)";
 "arena_badges_header_other" = "Badge dell'Arena (%ld)";
 "arena_closed" = "Questa sfida è terminata.";
+"arena_countdown_days" = "%1$ld g %2$02d:%3$02d:%4$02d";
 "arena_duration_days_one" = "%ld giorno";
 "arena_duration_days_other" = "%ld giorni";
 "arena_duration_months_one" = "%ld mese";
@@ -320,4 +321,8 @@
 "friends_tab_requests" = "Richieste";
 "friends_tab_suggested" = "Suggeriti";
 "friends_title" = "Amici";
+"rewards_claim_error" = "Si è verificato un errore durante il ritiro delle tue ricompense. Per favore riprova più tardi.";
+"rewards_claimed_successfully" = "Hai ritirato con successo le tue ricompense!";
+"rewards_note" = "Guadagna Premi Extra Quotidianamente";
+"rewards_processing" = "💰 Ciclo di Ricompense in Corso - Distribuzione delle Ricompense 💰";
 /* END Arena and Friends */

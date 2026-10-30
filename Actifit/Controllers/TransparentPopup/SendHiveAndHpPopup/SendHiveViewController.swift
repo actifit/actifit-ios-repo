@@ -120,7 +120,7 @@ class SendHiveViewController: UIViewController {
                 return
             }
             showLoader(isShowing: true)
-            API().sendHiveOrHBDAPI(from: username, to: receiver, amount: (tokens.formatToThreeDecimalPlaces() ?? "") + " " + selectedBlockChain.rawValue, memo: memoTextField.text, completion: { info, statusCode in
+            API().sendHiveOrHBDAPI(from: username, to: receiver, amount: (try? HiveAmount.format(Double(tokens) ?? 0, symbol: selectedBlockChain.rawValue)) ?? "", memo: memoTextField.text, completion: { info, statusCode in
                 self.showLoader(isShowing: false)
                 if let response = info as? String {
                     let data = response.utf8Data()

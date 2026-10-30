@@ -45,6 +45,9 @@ class WavesPopupViewController: UIViewController {
             self.updateTextView(text: imgURL)
         }.store(in: &viewModel.cancellables)
 
+        viewModel.errorPublisher.sink { [weak self] message in
+            self?.showAlertWith(title: nil, message: message)
+        }.store(in: &viewModel.cancellables)
         viewModel.clearTextPublisher.sink { clearText in
             if clearText {
                 if clearText {

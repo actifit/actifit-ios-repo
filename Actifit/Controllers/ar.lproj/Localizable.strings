@@ -188,6 +188,7 @@
 "arena_badges_header_one" = "شارة الساحة (%ld)";
 "arena_badges_header_other" = "شارات الساحة (%ld)";
 "arena_closed" = "انتهى هذا التحدي.";
+"arena_countdown_days" = "%1$ld ي %2$02d:%3$02d:%4$02d";
 "arena_duration_days_one" = "%ld يوم";
 "arena_duration_days_other" = "%ld أيام";
 "arena_duration_months_one" = "%ld شهر";
@@ -303,4 +304,8 @@
 "friends_tab_requests" = "الطلبات";
 "friends_tab_suggested" = "مقترحون";
 "friends_title" = "الأصدقاء";
+"rewards_claim_error" = "حدث خطأ أثناء المطالبة بالمكافآت. يرجى المحاولة مرة أخرى لاحقًا.";
+"rewards_claimed_successfully" = "لقد استردت مكافآتك بنجاح!";
+"rewards_note" = "اربح جوائز إضافية يوميًا";
+"rewards_processing" = "دورة المكافآت جارية - توزيع المكافآت";
 /* END Arena and Friends */

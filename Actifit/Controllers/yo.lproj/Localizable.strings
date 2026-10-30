@@ -312,4 +312,8 @@
 "friends_tab_requests" = "Àwọn ìbéèrè";
 "friends_tab_suggested" = "Tí a dábàá";
 "friends_title" = "Àwon ọ̀ré";
+"rewards_claim_error" = "Aṣiṣe kan wa ninu gbigba awọn ẹbun rẹ. Jọwọ gbiyanju lẹẹkansi nigbamii.";
+"rewards_claimed_successfully" = "O ti ṣaṣeyọri gba awọn ẹbun rẹ!";
+"rewards_note" = "Gba Awọn Ere Awọn afikun lojoojumọ";
+"rewards_processing" = "Awọn Ere ni Ilọsiwaju - Pipin Awọn Ere";
 /* END Arena and Friends */

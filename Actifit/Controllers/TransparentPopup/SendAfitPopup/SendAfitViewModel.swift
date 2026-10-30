@@ -25,78 +25,10 @@ class SendAfitViewModel {
     }
     init() {}
     
+    /// Sending AFIT went through /tipAccount with the funds password; the backend has paused the
+    /// route and retired the password after the October 2026 security incident.
     func sendAmountAPI(targetUser: String, amount: String, note: String, userAfitAmount: Double) {
-        guard let userName = User.current()?.steemit_username else { return }
-         let fundPassword = UserDefaults.standard.fundPassword
-        guard fundPassword != "" else {
-            self.showToastSubject.send("Please make sure to set your funds password under settings")
-            return
-            
-        }
-       
-        if Int(amount) ?? 0 > 10000  || Int(amount) == 0  || amount == "" {
-            self.showToastSubject.send("Please provide a proper AFIT amount within range (0-10,000)")
-            return
-        }
-        else if(Double(amount) ?? 0.0 > userAfitAmount) {
-            self.showToastSubject.send("Cannot send more than your current balance")
-            return
-        } else if Double(amount) ?? 0.0 < 0 {
-            self.showToastSubject.send("Please provide a proper positive amount within balance")
-            return
-        }
-        if targetUser == userName {
-            self.showToastSubject.send("Cannot send funds to self")
-            return
-        }
-        showLoaderSubject.send(true)
-            //TODO: get fundPass from the settings after integrating it
-            API().sendAfitAmount(username: userName, targetUser: targetUser, amount: amount, fundPass: fundPassword, note: note) { info, statusCode in
-             
-                if let response = info as? String {
-                    let data = response.utf8Data()
-                    let decoder = JSONDecoder()
-                    do {
-                        let transactionTipResponse  = try decoder.decode(TipResponse.self, from: data)
-                        if transactionTipResponse.status == "Success" {
-                            self.broadCastAmountSent(targetUser: targetUser, amount: amount, note: note)
-                        }
-                    }
-                    catch {
-                        print("Error decoding JSON: \(error.localizedDescription)")
-                    }
-                }
-                
-            } failure: { error in
-                print(error.localizedDescription)
-            }
-        }
-    
-    
-    
-    
-
-    
-    
-    func broadCastAmountSent(targetUser: String, amount: String, note: String) {
-        guard let userName = User.current()?.steemit_username else { return }
-        API().broadCasrtAfitAmountSent(username: userName, targetUser: targetUser, amount: amount, note: note) { info, statusCode in
-            self.showLoaderSubject.send(false)
-            self.dismissScreenSubject.send(true)
-            if let response = info as? String {
-                let data = response.utf8Data()
-                let decoder = JSONDecoder()
-                do {
-                    let myData = try decoder.decode(BroadCastAPIResponse.self, from: data)
-                }
-                catch {
-                    print("Error decoding JSON: \(error.localizedDescription)")
-                }
-            }
-        } failure: { error in
-            print(error.localizedDescription)
-        }
-
+        showToastSubject.send(Copy.text("send_afit_paused", "Sending AFIT is paused for now while Actifit completes a security upgrade."))
     }
 }
 

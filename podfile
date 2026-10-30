@@ -18,6 +18,8 @@ pod 'FontAwesome.swift'
 pod 'Google-Mobile-Ads-SDK'
 pod 'TUSKit'
 pod 'lottie-ios', '~> 4.5'
+# secp256k1 (bitcoin-core) with the recovery module: signs Hive transactions on the device.
+pod 'secp256k1.swift', '~> 0.1.4'
 end
 
 post_install do |installer|
