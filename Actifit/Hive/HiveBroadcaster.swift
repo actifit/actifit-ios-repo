@@ -163,7 +163,15 @@ enum HiveBroadcaster {
                     return send(key: key, earlier, role: role, fresh: false)
                 }
                 let settled = settleExpired(key: key, earlier)
-                if settled.ok || settled.ambiguous { return settled }
+                if settled.ok {
+                    // The earlier attempt did land. This tap may be a retry of it or a deliberate
+                    // repeat (the same deposit again), and only the user knows which: say so
+                    // rather than report this tap as sent. The record is cleared, so tapping
+                    // again signs a new one.
+                    return Result(ok: false, txId: nil, refBlockNum: 0, operationsJson: nil,
+                                  error: HiveText.earlierLanded(settled.txId ?? ""), ambiguous: false)
+                }
+                if settled.ambiguous { return settled }
                 // it never landed: sign afresh below
             }
         }
@@ -189,7 +197,11 @@ enum HiveBroadcaster {
             return .fail(HiveText.generic)
         }
         let s = Signed(txJson: tx.json(signature: signature), txId: txId, refBlockNum: Int(tx.refBlockNum),
-                       opsJson: tx.operationsJson, expiresAt: Date().addingTimeInterval(TimeInterval(expirationSeconds)),
+                       opsJson: tx.operationsJson,
+                       // The expiration comes from the node's clock; never treat the transaction
+                       // as expired (and re-signable) before the chain would.
+                       expiresAt: max(Date().addingTimeInterval(TimeInterval(expirationSeconds)),
+                                      Date(timeIntervalSince1970: TimeInterval(expiration))),
                        startBlock: headBlock, expirationSec: expiration)
         setPending(key, s)
         onSigned?(s)
@@ -201,6 +213,10 @@ enum HiveBroadcaster {
     private static func send(key: String?, _ s: Signed, role: KeyRole, fresh: Bool) -> Result {
         var unclear = false
         var refusal: String?
+        // A node could relay the transaction and still answer "insufficient funds". For money
+        // (active key) a refusal only counts once a second node refuses it too.
+        let refusalsNeeded = role == .active ? min(2, nodes.count) : 1
+        var refusals = 0
         for node in nodes {
             guard let res = try? call(node, "condenser_api.broadcast_transaction", "[" + s.txJson + "]") else {
                 unclear = true   // the node may have taken it before the reply was lost
@@ -221,6 +237,9 @@ enum HiveBroadcaster {
                 // but only for a transaction never sent before. A re-sent one may already be in
                 // another node's queue (the balance may have changed since), so it stays open.
                 guard fresh else { return ambiguousResult() }
+                refusals += 1
+                refusal = msg
+                guard refusals >= refusalsNeeded else { continue }
                 setPending(key, nil)
                 return .fail(chainErrorText(msg, role: role))
             }
@@ -229,7 +248,7 @@ enum HiveBroadcaster {
             unclear = unclear || !isAssert(m)
             refusal = msg
         }
-        if fresh && !unclear, let refusal = refusal {
+        if fresh && !unclear && refusals == 0, let refusal = refusal {
             // Every node answered and refused it: it is not on chain.
             setPending(key, nil)
             return .fail(chainErrorText(refusal, role: role))
@@ -389,4 +408,8 @@ enum HiveText {
     static var rc: String { return Copy.text("signing_error_rc", "Your account is out of Resource Credits right now. Try again later.") }
     static var funds: String { return Copy.text("signing_error_funds", "Your account doesn't have enough HIVE for this.") }
     static var generic: String { return Copy.text("signing_error_generic", "The Hive network rejected this transaction. Please try again.") }
+    static func earlierLanded(_ txId: String) -> String {
+        return "An identical earlier transaction already went through (" + String(txId.prefix(12))
+            + "…). Check your wallet history. To send it again, tap again."
+    }
 }

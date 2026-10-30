@@ -372,7 +372,8 @@ enum HiveTime {
     }
 
     static func parse(_ iso: String) -> UInt32? {
-        return formatter.date(from: iso).map { UInt32($0.timeIntervalSince1970) }
+        // A node or proxy could send any date: out of range must not crash the conversion.
+        return formatter.date(from: iso).flatMap { UInt32(exactly: $0.timeIntervalSince1970.rounded(.down)) }
     }
 }
 

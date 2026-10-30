@@ -141,6 +141,12 @@ public class API : NSObject{
 
   /// Power down HP → HIVE (withdraw_vesting, active key). `vests` is a VESTS amount (6dp string).
   func powerDownHive(user: String, vests: String, activeKey: String, completion: APICompletionHandler, failure: APIFailureHandler) {
+    // withdraw_vesting of 0 cancels a running power down; never send it by accident (e.g. when
+    // the chain figures behind the HP-to-VESTS conversion haven't loaded).
+    guard let amount = Double(vests), amount > 0 else {
+      failure?(NSError(domain: "Actifit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Please provide a proper positive amount"]))
+      return
+    }
     let params: [String: Any] = ["account": user, "vesting_shares": "\(vests) VESTS"]
     broadcastActiveOperation(user: user, operation: ["withdraw_vesting", params], activeKey: activeKey, completion: completion, failure: failure)
   }
@@ -520,7 +526,7 @@ public class API : NSObject{
           if let string = String.init(data: data, encoding: String.Encoding.utf8) {
             // A session the backend dropped (another device logged in, or it aged out) answers
             // 200 {success:false}: log in again quietly so the next call works.
-            TokenManager.shared.noteReply(data)
+            if let host = sendRequest.url?.host, host == "actifit.io" || host.hasSuffix(".actifit.io") { TokenManager.shared.noteReply(data) }
             // do {
 
             completion!(string, statusCode)

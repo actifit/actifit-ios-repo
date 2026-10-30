@@ -10,6 +10,7 @@
 
 import Foundation
 import CommonCrypto
+import Security
 import secp256k1
 
 enum HiveCrypto {
@@ -20,7 +21,15 @@ enum HiveCrypto {
     private static let compressed: UInt32 = 0x102
     private static let uncompressed: UInt32 = 0x002
 
-    private static let context: OpaquePointer = secp256k1_context_create(contextSignVerify)!
+    private static let context: OpaquePointer = {
+        let ctx = secp256k1_context_create(contextSignVerify)!
+        // Blinding against side channels, as libsecp256k1 recommends for signing contexts.
+        var seed = [UInt8](repeating: 0, count: 32)
+        if SecRandomCopyBytes(kSecRandomDefault, seed.count, &seed) == errSecSuccess {
+            _ = secp256k1_context_randomize(ctx, seed)
+        }
+        return ctx
+    }()
 
     /// Signs a transaction with a WIF key; returns the 65-byte compact signature as hex.
     static func sign(_ tx: HiveTransaction, wif: String) throws -> String {

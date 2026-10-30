@@ -89,7 +89,8 @@ class SendHiveViewController: UIViewController {
            self.showToast(message: "Please make sure to set your active key under settings")
            return
        }
-        if let tokens =  numberOfTokensTextfield.text, let receiver = receiverTextField.text{
+        if let tokens =  numberOfTokensTextfield.text,
+           let receiver = receiverTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines).byTrimming(string: "@").lowercased() {
             guard let username = User.current()?.steemit_username else { return }
             if username == receiver {
                 self.showToast(message: "Cannot send funds to self")
@@ -146,8 +147,13 @@ class SendHiveViewController: UIViewController {
                     
                     
                 }
-            }, failure: { error in
-                
+            }, failure: { [weak self] error in
+                // Includes "we couldn't confirm this went through": the user must see it, or
+                // they may send the same money again from somewhere else.
+                DispatchQueue.main.async {
+                    self?.showLoader(isShowing: false)
+                    self?.showAlertWithOkCompletion(title: "", message: error.localizedDescription) { _ in }
+                }
             }, blockChain: selectedBlockChain.rawValue, activeKey: activeKey)
             
         } else {

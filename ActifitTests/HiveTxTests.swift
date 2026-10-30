@@ -185,4 +185,11 @@ final class HiveTxTests: XCTestCase {
     func testExpirationRoundTripsAsUtc() {
         XCTAssertEqual(HiveTime.iso(expiration), "2026-10-28T12:00:00")
     }
+
+    func testOutOfRangeNodeTimesAreRejectedNotCrashed() {
+        XCTAssertEqual(HiveTime.parse("2026-10-28T12:00:00"), expiration)
+        XCTAssertNil(HiveTime.parse("1969-12-31T23:59:59"))
+        XCTAssertNil(HiveTime.parse("2200-01-01T00:00:00"))
+        XCTAssertNil(HiveTime.parse("not a date"))
+    }
 }

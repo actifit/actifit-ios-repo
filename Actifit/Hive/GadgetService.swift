@@ -142,6 +142,8 @@ enum GadgetService {
             }
             if let k = key, let e = earlier {
                 message = settle(key: k, action: Action(rawValue: k.components(separatedBy: "|")[0]) ?? action, pending: e)
+                // An activation naming a different friend: the earlier one is what went through.
+                if message == nil && !isBuy && e.url != url { message = GadgetText.earlierActivation }
             } else if let k = key, isHiveBuy(k), all()[k] != nil {
                 message = dropUnreadable(k)   // a HIVE payment record we can't read: report it, don't pay
             } else if let op = op {
@@ -368,6 +370,7 @@ enum GadgetText {
     static func hiveConfirm(amount: String, gadget: String) -> String {
         return Copy.format("gadget_hive_confirm_msg", "Pay %1$@ to buy %2$@? This is a transfer signed with your active key.", amount, gadget)
     }
+    static var earlierActivation: String { return "Your earlier request for this gadget went through, with the friend you chose then. Refresh your gadgets to see it." }
     static var hiveConfirmTitle: String { return Copy.text("gadget_hive_confirm_title", "Buy with HIVE") }
     static var hiveConfirmPay: String { return Copy.text("gadget_hive_confirm_pay", "Pay") }
 }
