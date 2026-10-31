@@ -3,47 +3,37 @@
 **Goal:** bring the iOS app up to functional parity with the Android app (`c:\mo\coding\actifit\android`).
 **Only intentional exclusion:** Health Connect (Android-only). iOS covers tracking via CoreMotion `CMPedometer` (primary) + HealthKit + Fitbit; where Android sourced distance/calories from Health Connect, iOS will source the equivalent from **HealthKit** (distance / active energy).
 
-Both apps share the same Actifit backend (REST + JWT) and the **server-side broadcast model** (private keys sent to `api.actifit.io` endpoints such as `performTrx` / `performTrxPost` / `tipAccount`; iOS does **not** sign Hive transactions locally). Most gaps are therefore **client-side screens to build**, not new backend infrastructure.
+Both apps share the same Actifit backend (REST + JWT). Since 1.1.0 (build 131) **both apps sign Hive transactions on the device** (`Actifit/Hive/HiveBroadcaster.swift`); the backend's *Keychain routes only verify the transaction on chain.
 
-_Last updated: 2026-07-23. Source: dual deep-dive of both codebases._
+_Last updated: 2026-10-31, after a fresh comparison with Android `origin/develop` (v0.15.0)._
 
 ---
 
 ## ✅ At parity (already in both)
 
-- Posting-key login + Skip/guest (iOS also adds Face ID + Keychain — ahead of Android)
-- Dashboard: live steps, pie + hourly/daily bar charts
-- Post & Earn (daily report: markdown, images, 3Speak embed, activity types, body measurements, charity)
-- Wallet core balances (AFIT / HIVE / HBD / HP / BLURT)
-- Social feed (upvote / comment / voters / share)
-- Waves microblog (create / upvote / comment) — Android also folds in LEO Threads (minor)
-- Leaderboard; Notifications (in-app + FCM push); Referrals
-- Exchanges / Buy AFIT list
-- Settings (payout mode, charity, language, daily reminder, keys, per-type notifications)
-- 3Speak upload (TUS); Polls / Surveys; Chat (WebView); AdMob rewarded ads (4 tiers)
-- Send AFIT; Send HIVE/HBD
+- Posting-key login + guest; QR scan of keys (iOS also has Face ID + Keychain)
+- Dashboard: live steps, Aura companion, charts, month heatmap + streak, X/Twitter cards
+- Post & Earn (markdown, images, 3Speak, activity types, body measurements, charity)
+- Native Profile ("Living Fitness Identity")
+- GPS route recording and replay (MapKit + CoreLocation)
+- Wallet: balances, send AFIT / HIVE / HBD / Hive-Engine tokens, power up/down, stake/unstake, claim rewards, Hive history
+- Gadget market: buy with AFIT or HIVE, activate / deactivate (signed on device)
+- Arena (challenges, countdowns, notifications) and Friends
+- Social feed, Waves, Leaderboard, Notifications, Referrals, Chat, Surveys, AdMob tiers
+- **AI Workout Wizard** (2026-10-31, branch `feature/workout-wizard`): Gemini plans for a 300 AFIT fee signed on device, saved workouts, edit, exercise search over the bundled 873-exercise library, exercise details
 
 ---
 
-## ❌ Gap backlog (Android has → iOS missing/partial)
+## ❌ Gap backlog (Android has → iOS missing)
 
-| # | Feature (Android) | iOS status | Effort | Notes / iOS mapping |
-|---|---|---|---|---|
-| 1 | **AI Workout Wizard** — Gemini/Gemma generation, saved workouts, edit, exercise search, exercise detail, local exercise DB | ❌ Missing | Large | 4 screens + AI service + assets. Pay-per-generate via on-chain AFIT (backend exists) |
-| 2 | **GPS Route recording** (`RouteMapActivity` + recording service, osmdroid) | ❌ Missing | Large | Live + replay → **MapKit + CoreLocation** |
-| 3 | **Native Profile screen** ("Living Fitness Identity": AuraView companion, activity rings, tiers, streak, lifetime tiles) | ❌ Missing (iOS opens web profile in Safari) | Large | Includes Lottie companion animal |
-| 4 | **Wallet: staking / unstaking** (power up/down HIVE, stake/unstake HE tokens) | ❌ Missing | Medium | Backend `perform_trx` exists |
-| 5 | **Wallet: claim rewards** (pending HIVE / HBD / BLURT) | ❌ Missing | Medium | `/claim_rewards` endpoint exists |
-| 6 | **Wallet: send arbitrary Hive-Engine tokens + Hive tx history** | ⚠️ Partial (iOS sends only AFIT + HIVE/HBD; shows AFIT tx only) | Medium | Android does full HE send + `condenser_api.get_account_history` |
-| 7 | **Gadget marketplace purchase** (requirement evaluation, spend AFIT) | ⚠️ Partial (iOS shows gadgets/info; Android has full `MarketActivity` buy flow) | Medium | Confirm whether iOS can actually purchase |
-| 8 | **AI feed translation** + **AI dashboard motivational insight** | ❌ Missing | Small–Med | Same Gemini service as #1 |
-| 9 | **QR scan** of posting / active key | ❌ Missing | Small | AVFoundation |
-| 10 | **Backup / restore settings** (JSON export/import) | ❌ Missing | Small | SAF → iOS document picker |
-| 11 | **Dashboard month heatmap + streak strip** | ⚠️ Partial | Small–Med | iOS has charts but no heatmap/streak |
-| 12 | **Share Achievement card** (render PNG + share) | ❌ Missing | Small | |
-| 13 | **Local milestone notifications** (5k/10k) + streak tracking | ⚠️ Likely missing | Small | |
-| 14 | Governance nudge (DHF proposal vote), free-signup-link claiming, dark mode toggle | ❌ Missing (minor) | Small | Low priority |
-| 15 | **Dashboard Twitter/X cards** — latest 2 posts in news carousel | ❌ Missing | Small | Android calls backend endpoint **`latestXPost`** (server-proxied, not Twitter API). Response `{ tweets: [{ tweetText, tweetUrl, tweetTimestamp, tweetImageUrl }] }`, takes `min(2, …)`, prepends to news ViewPager. iOS: same endpoint → prepend to dashboard news banner carousel |
+| # | Feature (Android) | Effort | Notes / iOS mapping |
+|---|---|---|---|
+| 1 | **Body Metrics screen** (`BodyMetricsActivity`: weight / body fat charts over time) | Medium | iOS only has the measurement fields in Post & Earn |
+| 2 | **AI feed translation** + **AI dashboard insight** (`AiService.translateText`, `generateDashboardInsight`) | Small–Med | Reuse `WorkoutService`'s Gemini call |
+| 3 | **Share Achievement card** (`ShareAchievementActivity`: 5k/10k PNG to share) | Small | iOS shares text only |
+| 4 | **Settings backup / restore** + **dark mode** toggle (`SettingsActivity`) | Small | Document picker for the JSON file |
+| 5 | **Step milestone notifications** (5k / 10k) | Small | iOS has only the daily reminder |
+| 6 | **DHF proposal vote prompt** (`DhfVotePromptManager`) | Small | Low priority |
 
 ---
 
@@ -69,7 +59,10 @@ Design tokens to mirror (from the spec): `colorPrimary #FF112D`, `colorBackgroun
 
 ## 🗺️ Phasing
 
-- **Phase 1 — Wallet completeness** (#4, #5, #6): highest value, backend already there, self-contained. **← IN PROGRESS**
+- Phases 1–4 (wallet, market, profile, heatmap, routes, workout wizard) are done.
+- **Next:** Body Metrics, Share Achievement, AI translation/insight, then the small items.
+- _Old phase plan below kept for history._
+- **Phase 1 — Wallet completeness** (#4, #5, #6): done.
 - **Phase 2 — Store/gadget purchase + Profile + streak/heatmap/achievements** (#7, #3, #11, #12, #13): identity/engagement layer.
 - **Phase 3 — AI Workout Wizard + AI translation/insight** (#1, #8): biggest new surface, modular.
 - **Phase 4 — GPS Routes** (#2): most platform-specific (MapKit/CoreLocation).

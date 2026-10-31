@@ -1767,6 +1767,7 @@ extension ActivityTrackingVC {
         content.addArrangedSubview(buildRevampArenaCard())
         content.addArrangedSubview(buildRevampCommunityCard())
         content.addArrangedSubview(buildRevampRouteCard())
+        content.addArrangedSubview(buildRevampWorkoutCard())
         content.addArrangedSubview(buildRevampEarningsCard())
         content.addArrangedSubview(buildRevampActionButtons())
         content.addArrangedSubview(buildRevampChartCard())
@@ -1886,6 +1887,43 @@ extension ActivityTrackingVC {
     private func startRouteRecording(_ type: String) {
         RouteRecordingManager.shared.start(activityType: type)
         present(RouteMapViewController.create(mode: .live, activityType: type), animated: true)
+    }
+
+    // MARK: Workout Wizard card (Android btn_start_workout_section)
+
+    private func buildRevampWorkoutCard() -> UIView {
+        let card = revampCard()
+        card.backgroundColor = UIColor(red: 0.99, green: 0.94, blue: 0.95, alpha: 1)
+        let icon = UILabel(); icon.text = "🏋️"; icon.font = .systemFont(ofSize: 16); icon.setContentHuggingPriority(.required, for: .horizontal)
+        let title = UILabel(); title.text = WorkoutText.screenTitle; title.font = .systemFont(ofSize: 16, weight: .bold); title.textColor = UIColor(white: 0.13, alpha: 1)
+        let header = UIStackView(arrangedSubviews: [icon, title]); header.axis = .horizontal; header.spacing = 8; header.alignment = .center
+        let subtitle = UILabel()
+        subtitle.text = WorkoutText.cardSubtitle
+        subtitle.font = .systemFont(ofSize: 14)
+        subtitle.textColor = UIColor(white: 0.35, alpha: 1)
+        subtitle.numberOfLines = 0
+        let startBtn = UIButton(type: .system)
+        startBtn.setTitle("💪  " + WorkoutText.startWorkout, for: .normal)
+        startBtn.setTitleColor(.white, for: .normal)
+        startBtn.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        startBtn.backgroundColor = revampRed
+        startBtn.layer.cornerRadius = 24
+        startBtn.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        startBtn.accessibilityIdentifier = "startWorkout"
+        startBtn.addTarget(self, action: #selector(workoutWizardTapped), for: .touchUpInside)
+        let vstack = UIStackView(arrangedSubviews: [header, subtitle, startBtn])
+        vstack.axis = .vertical; vstack.spacing = 12
+        vstack.isLayoutMarginsRelativeArrangement = true
+        vstack.layoutMargins = UIEdgeInsets(top: 14, left: 16, bottom: 14, right: 16)
+        vstack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(vstack)
+        pinToEdges(vstack, card)
+        return card
+    }
+
+    @objc private func workoutWizardTapped() {
+        guard User.current() != nil else { return showToast(message: WorkoutText.loginFirst) }
+        navigationController?.pushViewController(WorkoutWizardViewController(), animated: true)
     }
 
     // MARK: Community strip

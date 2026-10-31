@@ -12,14 +12,15 @@ require "xcodeproj"
 PROJECT_PATH = "Actifit.xcodeproj"
 TARGET_NAME  = "ActifitTests"
 TEST_FILES   = ["ActifitTests/ArenaLogicTests.swift", "ActifitTests/FriendsLogicTests.swift", "ActifitTests/HiveTxTests.swift",
-                "ActifitTests/GadgetRulesTests.swift"]
+                "ActifitTests/GadgetRulesTests.swift", "ActifitTests/WorkoutLogicTests.swift"]
 APP_SOURCES  = [
   "Actifit/Controllers/Arena/ArenaLogic.swift",
   "Actifit/Controllers/Arena/ArenaModels.swift",
   "Actifit/Controllers/Arena/ArenaText.swift",
   "Actifit/Controllers/Friends/FriendsLogic.swift",
   "Actifit/Hive/HiveTx.swift",
-  "Actifit/Hive/GadgetRules.swift"
+  "Actifit/Hive/GadgetRules.swift",
+  "Actifit/Controllers/Workout/WorkoutLogic.swift"
 ]
 
 project = Xcodeproj::Project.open(PROJECT_PATH)

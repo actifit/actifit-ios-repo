@@ -30,6 +30,11 @@ enum GadgetOps {
                             json: "{\"transaction\": \"deactivate-gadget\" , \"gadget\": \"\(gadgetId)\"}")
     }
 
+    /// The AI workout fee; the backend charges the AFIT when it finds this on chain.
+    static func generateWorkout(user: String) -> HiveOp {
+        return .postingJson(account: user, id: "actifit", json: "{\"transaction\": \"generate-workout-wizard\"}")
+    }
+
     /// amount: e.g. "12.346 HIVE" (see HiveAmount.format).
     static func buyWithHive(user: String, market: String, gadgetId: String, amount: String) -> HiveOp {
         return .transfer(from: user, to: market, amount: amount, memo: "buy-gadget:" + gadgetId)

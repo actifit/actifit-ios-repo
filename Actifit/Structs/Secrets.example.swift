@@ -21,4 +21,7 @@ enum Secrets {
 
     /// Authorization token for usermedia.actifit.io image uploads.
     static let imageUploadToken = "YOUR_IMAGE_UPLOAD_TOKEN"
+
+    /// Google Gemini API key (AI workout plans), the same key as Android's gemini.api.key.
+    static let geminiApiKey = "YOUR_GEMINI_API_KEY"
 }

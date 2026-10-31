@@ -20,6 +20,10 @@
 //     not to pay again.
 //   - Only one action per gadget at a time.
 //
+//  The AI workout fee (300 AFIT, Android GadgetApi.payWorkout) rides the same flow under the
+//  pseudo gadget id "workout". Once it is confirmed, a per-user "paid" flag lets the wizard
+//  generate without paying again until a plan is generated.
+//
 
 import Foundation
 
@@ -29,7 +33,7 @@ enum GadgetService {
     typealias Done = (_ ok: Bool, _ message: String?) -> Void
 
     private enum Action: String {
-        case buy, buyHive = "buyhive", activate, deactivate
+        case buy, buyHive = "buyhive", activate, deactivate, workout
         var role: HiveBroadcaster.KeyRole { return self == .buyHive ? .active : .posting }
     }
 
@@ -41,6 +45,8 @@ enum GadgetService {
     /// The server accepts a transaction for 7 hours; stop re-confirming a little before.
     private static let pendingMaxAge: TimeInterval = 6 * 60 * 60
     private static let defaultsKey = "gadgetPending"
+    private static let workoutId = "workout"
+    private static let workoutPaidKey = "workoutPaid|"
 
     private static let queue = DispatchQueue(label: "io.actifit.gadgets", attributes: .concurrent)
     private static let lock = NSLock()
@@ -95,12 +101,35 @@ enum GadgetService {
               url: base + "deactivateGadgetKeychain/" + enc(user) + "/" + enc(gadgetId) + "/{tx}/HIVE", key: nil, done: done)
     }
 
+    /// Signs the workout fee on the device; the backend charges the AFIT once it finds it on chain.
+    /// Settles an earlier unconfirmed fee instead of paying again. Check the balance first.
+    static func payWorkout(user: String, done: @escaping Done) {
+        start(.workout, user: user, gadgetId: workoutId, op: GadgetOps.generateWorkout(user: user),
+              url: base + "generateWorkoutKeychain/" + enc(user) + "/{tx}/HIVE", key: nil, done: done)
+    }
+
+    /// A workout fee is signed but not confirmed: payWorkout settles it rather than paying again.
+    static func hasPendingWorkout(user: String) -> Bool {
+        return all()[Action.workout.rawValue + "|" + user + "|" + workoutId] != nil
+    }
+
+    /// The fee is paid but its workout isn't generated yet: generate without paying.
+    static func workoutPaid(user: String) -> Bool {
+        return UserDefaults.standard.bool(forKey: workoutPaidKey + user)
+    }
+
+    /// Call once the paid-for workout has been generated.
+    static func clearWorkoutPaid(user: String) {
+        UserDefaults.standard.removeObject(forKey: workoutPaidKey + user)
+    }
+
     /// Settles every remembered action for this user (e.g. a HIVE payment whose confirm never got
     /// through because the app was closed). done runs once per action that ended.
     static func resumePending(user: String, done: @escaping Done) {
         for key in all().keys {
             let parts = key.components(separatedBy: "|")
-            guard parts.count == 3, parts[1] == user, let action = Action(rawValue: parts[0]) else { continue }
+            // The workout fee is settled from the wizard, which then generates the workout.
+            guard parts.count == 3, parts[1] == user, let action = Action(rawValue: parts[0]), action != .workout else { continue }
             let lockKey = user + "|" + parts[2]
             guard claim(lockKey) else { continue }
             queue.async {
@@ -124,7 +153,8 @@ enum GadgetService {
                               key activeKey: String?, done: @escaping Done) {
         // The gadget id and beneficiary go into the signed JSON as is (it must match the web byte
         // for byte), so only plain ids and Hive account names are accepted.
-        guard gadgetId.range(of: "^[0-9a-f]{24}$", options: .regularExpression) != nil else {
+        guard (action == .workout && gadgetId == workoutId)
+                || gadgetId.range(of: "^[0-9a-f]{24}$", options: .regularExpression) != nil else {
             return done(false, GadgetText.failed)
         }
         let lockKey = user + "|" + gadgetId
@@ -136,7 +166,8 @@ enum GadgetService {
             // either currency's purchase counts, so the other button can't buy twice.
             let key = isBuy ? unresolvedBuyKey(user: user, gadgetId: gadgetId) : action.rawValue + "|" + user + "|" + gadgetId
             var earlier = key.flatMap(load)
-            if let k = key, let e = earlier, expired(e), !isHiveBuy(k) {
+            // (A workout fee is never re-paid this way: settle() still checks the old one.)
+            if let k = key, let e = earlier, expired(e), !isHiveBuy(k), !isWorkout(k) {
                 forget(k)   // nothing was charged and the server won't take it any more
                 earlier = nil
             }
@@ -184,7 +215,7 @@ enum GadgetService {
             forget(key)
             return nil
         }
-        if expired(p) {
+        if expired(p) && !isWorkout(key) {
             // Past the server's window: it can no longer confirm this. Never drop a HIVE payment
             // silently (even one never seen accepted, it may have landed): the user needs the id.
             forget(key)
@@ -206,6 +237,7 @@ enum GadgetService {
     /// Confirms a broadcast action and decides whether to keep remembering it. Blocking.
     private static func confirmAndSettle(key: String, pending p: Pending, resumed: Bool) -> String? {
         let paidOnChain = isHiveBuy(key)
+        let workout = isWorkout(key)
         // The routes read the chain from ?bchain= while the verifier uses the path one: send both.
         let url = p.url.replacingOccurrences(of: "{tx}", with: enc(p.signed.txId)) + "?bchain=HIVE&operation=" + enc(p.signed.opsJson)
         var reply: [String: Any]?
@@ -222,7 +254,7 @@ enum GadgetService {
         }
         let kind = GadgetReply.classify(doc)
         if kind == .ok {
-            forget(key)
+            if workout { forgetAsPaid(key) } else { forget(key) }
             return nil
         }
         let errText = doc["error"] as? String ?? ""
@@ -236,16 +268,26 @@ enum GadgetService {
         if GadgetReply.alreadyProcessed(errText) || ((resumed || retried) && kind == .failed) {
             // The server has already used this transaction (most likely an earlier attempt of
             // ours went through). It won't process it again, so stop retrying it.
+            // For the workout fee that means it was paid: let the wizard generate the workout.
+            if workout {
+                forgetAsPaid(key)
+                return nil
+            }
             forget(key)
             return GadgetText.alreadyProcessed(p.signed.txId)
         }
         // AFIT is only charged when the confirm succeeds; none of these charged anything.
-        forget(key)
+        // A workout fee refused before the server looked at it (session, gate, busy) is kept,
+        // so the next try confirms this same transaction instead of paying again.
+        let refusedUpFront = kind == .session || kind == .gate || kind == .busy
+        if !(workout && refusedUpFront) { forget(key) }
         switch kind {
         case .gate: return gateMessage(doc)
         case .insufficientAfit: return GadgetText.insufficientAfit
         case .busy: return GadgetText.busy
-        case .unavailable: return key.hasPrefix(Action.activate.rawValue + "|") ? GadgetText.activateUnavailable : GadgetText.buyUnavailable
+        case .unavailable:
+            if workout { return GadgetText.workoutUnavailable }
+            return key.hasPrefix(Action.activate.rawValue + "|") ? GadgetText.activateUnavailable : GadgetText.buyUnavailable
         case .session: return GadgetText.sessionExpired
         default: return GadgetText.failed
         }
@@ -285,6 +327,12 @@ enum GadgetService {
         UserDefaults.standard.set(d, forKey: defaultsKey)
     }
 
+    /// Forgets a workout fee that went through and marks it paid.
+    private static func forgetAsPaid(_ key: String) {
+        forget(key)
+        UserDefaults.standard.set(true, forKey: workoutPaidKey + key.components(separatedBy: "|")[1])
+    }
+
     /// Drops a record that can't be read; for a HIVE payment, tells the user to contact support.
     private static func dropUnreadable(_ key: String) -> String {
         forget(key)
@@ -302,6 +350,8 @@ enum GadgetService {
     }
 
     private static func isHiveBuy(_ key: String) -> Bool { return key.hasPrefix(Action.buyHive.rawValue + "|") }
+
+    private static func isWorkout(_ key: String) -> Bool { return key.hasPrefix(Action.workout.rawValue + "|") }
 
     private static func expired(_ p: Pending) -> Bool { return Date().timeIntervalSince(p.created) > pendingMaxAge }
 
@@ -348,6 +398,7 @@ enum GadgetText {
     static var busy: String { return Copy.text("gadget_buy_busy", "Another AFIT action is in progress. Wait a moment and try again; you were not charged.") }
     static var activateUnavailable: String { return Copy.text("gadget_activate_unavailable", "This gadget can't be activated right now. Refresh the market to see its current state.") }
     static var buyUnavailable: String { return Copy.text("gadget_buy_unavailable", "This gadget can't be bought right now. You were not charged.") }
+    static var workoutUnavailable: String { return Copy.text("workout_fee_unavailable", "Workout generation is temporarily unavailable. You were not charged.") }
     static var sessionExpired: String { return Copy.text("gadget_session_expired", "Your session has expired. Log out and log in again, then retry.") }
     static func stillChecking(_ tx: String) -> String {
         return Copy.format("gadget_still_checking", "Still checking whether your earlier transaction (%1$@) reached the chain. Please try again in a couple of minutes.", tx)

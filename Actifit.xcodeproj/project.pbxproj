@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9A9B3D7E06DB7C9298417E02 /* exercises.json in Resources */ = {isa = PBXBuildFile; fileRef = 5E6604572C846938CC16B0A5 /* exercises.json */; };
+		9874F4A1BD7A97C78205A133 /* EditWorkoutViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92D2711BDD3FED88C26E725 /* EditWorkoutViewController.swift */; };
+		7B4C41FF9434DF3972E31185 /* ExerciseSearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0E0E78403ABB7666DB73F0 /* ExerciseSearchViewController.swift */; };
+		4590F32F72A969DEA4B43EDE /* WorkoutPlanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5A6DE0E2EEED4F857A5D6B /* WorkoutPlanViewController.swift */; };
+		D78FB965EB58324AB8C4613C /* WorkoutWizardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 455EE8094D95E89B30689D4A /* WorkoutWizardViewController.swift */; };
+		1AC5F85BEF4697406D17B2D2 /* WorkoutUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30DAC5E26D2514E3742633CE /* WorkoutUI.swift */; };
+		F11136F6743AD1BA398772F6 /* WorkoutText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223E523E0122B09F35149C81 /* WorkoutText.swift */; };
+		61795A0D0C482632624F3D2E /* WorkoutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4AA3CE079C80D38BC5C9E20 /* WorkoutService.swift */; };
+		4BB395A5B1ADC0D4023E0EBD /* WorkoutLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B5D80C0DB3A63AEB0D21934 /* WorkoutLogic.swift */; };
 		0254ACCAAF5A4A83DE8B61C4 /* 1f405.json in Resources */ = {isa = PBXBuildFile; fileRef = EA76E0B414AC4B21ECBA3A37 /* 1f405.json */; };
 		0A3D16E363B8BD09871F577A /* 1f42c.json in Resources */ = {isa = PBXBuildFile; fileRef = E7002F7230473461DD4398F3 /* 1f42c.json */; };
 		0EA53C22242273ED0004C480 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE3D8FF4212F569200178152 /* HealthKit.framework */; };
@@ -295,6 +304,15 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5E6604572C846938CC16B0A5 /* exercises.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; name = exercises.json; path = Actifit/Resources/exercises.json; sourceTree = "<group>"; };
+		E92D2711BDD3FED88C26E725 /* EditWorkoutViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EditWorkoutViewController.swift; path = Actifit/Controllers/Workout/EditWorkoutViewController.swift; sourceTree = "<group>"; };
+		AE0E0E78403ABB7666DB73F0 /* ExerciseSearchViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExerciseSearchViewController.swift; path = Actifit/Controllers/Workout/ExerciseSearchViewController.swift; sourceTree = "<group>"; };
+		ED5A6DE0E2EEED4F857A5D6B /* WorkoutPlanViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutPlanViewController.swift; path = Actifit/Controllers/Workout/WorkoutPlanViewController.swift; sourceTree = "<group>"; };
+		455EE8094D95E89B30689D4A /* WorkoutWizardViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutWizardViewController.swift; path = Actifit/Controllers/Workout/WorkoutWizardViewController.swift; sourceTree = "<group>"; };
+		30DAC5E26D2514E3742633CE /* WorkoutUI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutUI.swift; path = Actifit/Controllers/Workout/WorkoutUI.swift; sourceTree = "<group>"; };
+		223E523E0122B09F35149C81 /* WorkoutText.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutText.swift; path = Actifit/Controllers/Workout/WorkoutText.swift; sourceTree = "<group>"; };
+		D4AA3CE079C80D38BC5C9E20 /* WorkoutService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutService.swift; path = Actifit/Controllers/Workout/WorkoutService.swift; sourceTree = "<group>"; };
+		3B5D80C0DB3A63AEB0D21934 /* WorkoutLogic.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutLogic.swift; path = Actifit/Controllers/Workout/WorkoutLogic.swift; sourceTree = "<group>"; };
 		08FA911569DCA346490DC311 /* 1f985.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f985.json; path = Actifit/Resources/animals/1f985.json; sourceTree = "<group>"; };
 		0D545FA9AB620EA7A577F894 /* 1f407.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f407.json; path = Actifit/Resources/animals/1f407.json; sourceTree = "<group>"; };
 		162F962E2205DB4E008227EF /* AuthenticationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationController.swift; sourceTree = "<group>"; };
@@ -1702,6 +1720,15 @@
 				C4612E734DEB353132D9345D /* ArenaViewController.swift */,
 				3EE400F1DF4EAA07F4EB964D /* ArenaChallengeViewController.swift */,
 				F7345831A4C0CB80175A60E3 /* ArenaHomeCardView.swift */,
+				3B5D80C0DB3A63AEB0D21934 /* WorkoutLogic.swift */,
+				D4AA3CE079C80D38BC5C9E20 /* WorkoutService.swift */,
+				223E523E0122B09F35149C81 /* WorkoutText.swift */,
+				30DAC5E26D2514E3742633CE /* WorkoutUI.swift */,
+				455EE8094D95E89B30689D4A /* WorkoutWizardViewController.swift */,
+				ED5A6DE0E2EEED4F857A5D6B /* WorkoutPlanViewController.swift */,
+				AE0E0E78403ABB7666DB73F0 /* ExerciseSearchViewController.swift */,
+				E92D2711BDD3FED88C26E725 /* EditWorkoutViewController.swift */,
+				5E6604572C846938CC16B0A5 /* exercises.json */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1843,6 +1870,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9A9B3D7E06DB7C9298417E02 /* exercises.json in Resources */,
 				BE222CF721237BDB00AD025F /* ActivityTypeTableViewCell.xib in Resources */,
 				4E7C54C12A69770E00C023FF /* TransparetPopup.storyboard in Resources */,
 				4E8C2A802A8C0E3400393142 /* BodyCell.xib in Resources */,
@@ -1985,6 +2013,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9874F4A1BD7A97C78205A133 /* EditWorkoutViewController.swift in Sources */,
+				7B4C41FF9434DF3972E31185 /* ExerciseSearchViewController.swift in Sources */,
+				4590F32F72A969DEA4B43EDE /* WorkoutPlanViewController.swift in Sources */,
+				D78FB965EB58324AB8C4613C /* WorkoutWizardViewController.swift in Sources */,
+				1AC5F85BEF4697406D17B2D2 /* WorkoutUI.swift in Sources */,
+				F11136F6743AD1BA398772F6 /* WorkoutText.swift in Sources */,
+				61795A0D0C482632624F3D2E /* WorkoutService.swift in Sources */,
+				4BB395A5B1ADC0D4023E0EBD /* WorkoutLogic.swift in Sources */,
 				4E5D92DE2CB4872300A87CB5 /* UpvoteToReward.swift in Sources */,
 				4EC431742C3F345200271C05 /* HealthKitManager.swift in Sources */,
 				4E7BF40A2C5C382100EA95A0 /* TranslationModel.swift in Sources */,

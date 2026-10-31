@@ -19,6 +19,9 @@ from pathlib import Path
 LOCALES = {"ar": "ar", "de": "de", "hi": "hi", "it": "it", "ko": "ko", "nl": "nl", "pt-PT": "pt", "yo": "yo"}
 PREFIXES = ("arena_", "friends_", "profile_friend_", "signing_", "gadget_", "rewards_")
 EXTRA_KEYS = {"footer_arena", "close_button", "error_performing_operation"}
+# The Workout Wizard (WorkoutText.swift): every key it looks up.
+WORKOUT_KEYS_FILE = Path(__file__).resolve().parent.parent / "Actifit" / "Controllers" / "Workout" / "WorkoutText.swift"
+EXTRA_KEYS |= set(re.findall(r'Copy\.(?:text|format)\("([a-z0-9_]+)"', WORKOUT_KEYS_FILE.read_text(encoding="utf-8")))
 
 BEGIN = "/* BEGIN Arena and Friends, imported from Android by ci_scripts/import_android_strings.py. Do not edit by hand. */"
 END = "/* END Arena and Friends */"
@@ -70,6 +73,7 @@ def placeholders(s):
 def main(res):
     res = Path(res)
     english = load(res / "values" / "strings.xml")
+    english.update(load(res / "values" / "workout_strings.xml"))   # some workout English lives here
     for ios, android in LOCALES.items():
         entries = load(res / ("values-" + android) / "strings.xml")
         # A translation whose placeholders differ from the English (say %s where a number is
