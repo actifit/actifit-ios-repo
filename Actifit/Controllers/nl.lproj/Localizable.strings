@@ -293,6 +293,13 @@
 "confirm_remove_exercise_message" = "Weet u zeker dat u \"%1$@\" uit deze workout wilt verwijderen?";
 "confirm_remove_exercise_title" = "Oefening Verwijderen?";
 "current_exercises" = "Huidige Oefeningen";
+"dhf_vote_btn_hivesigner" = "Stem in 1 tik (Hivesigner)";
+"dhf_vote_btn_later" = "Misschien later";
+"dhf_vote_btn_peakd" = "Lees & stem (PeakD)";
+"dhf_vote_btn_vote_now" = "Nu stemmen";
+"dhf_vote_message" = "Een stem met één tik op ons voorstel helpt ons voortdurende werk op Hive te ondersteunen — en het kost je niets.";
+"dhf_vote_thanks" = "Bedankt voor je steun aan Actifit! 🙏";
+"dhf_vote_title" = "Steun ons werk 💪";
 "dialog_button_cancel" = "Annuleren";
 "dialog_button_ok" = "OK";
 "dialog_button_remove" = "Verwijderen";

@@ -271,6 +271,13 @@
 "confirm_remove_exercise_message" = "이 루틴에서 \"%1$@\"을(를) 제거하시겠습니까?";
 "confirm_remove_exercise_title" = "운동 제거?";
 "current_exercises" = "현재 운동";
+"dhf_vote_btn_hivesigner" = "한 번의 탭으로 투표 (Hivesigner)";
+"dhf_vote_btn_later" = "나중에";
+"dhf_vote_btn_peakd" = "읽고 투표하기 (PeakD)";
+"dhf_vote_btn_vote_now" = "지금 투표하기";
+"dhf_vote_message" = "저희 제안에 한 번의 탭으로 투표하시면 Hive에서 계속되는 저희 활동을 지원하는 데 도움이 됩니다 — 비용은 전혀 들지 않습니다.";
+"dhf_vote_thanks" = "Actifit를 응원해 주셔서 감사합니다! 🙏";
+"dhf_vote_title" = "저희 활동을 응원해 주세요 💪";
 "dialog_button_cancel" = "취소";
 "dialog_button_ok" = "확인";
 "dialog_button_remove" = "제거";

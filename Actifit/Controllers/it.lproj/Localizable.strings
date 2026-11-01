@@ -294,6 +294,13 @@
 "confirm_remove_exercise_message" = "Sei sicuro di voler rimuovere \"%1$@\" da questo allenamento?";
 "confirm_remove_exercise_title" = "Rimuovere Esercizio?";
 "current_exercises" = "Esercizi Correnti";
+"dhf_vote_btn_hivesigner" = "Vota in 1 tocco (Hivesigner)";
+"dhf_vote_btn_later" = "Forse più tardi";
+"dhf_vote_btn_peakd" = "Leggi e vota (PeakD)";
+"dhf_vote_btn_vote_now" = "Vota ora";
+"dhf_vote_message" = "Un voto con un tocco sulla nostra proposta aiuta a sostenere il nostro lavoro continuo su Hive — e non ti costa nulla.";
+"dhf_vote_thanks" = "Grazie per aver sostenuto Actifit! 🙏";
+"dhf_vote_title" = "Sostieni il nostro lavoro 💪";
 "dialog_button_cancel" = "Annulla";
 "dialog_button_ok" = "OK";
 "dialog_button_remove" = "Rimuovi";

@@ -280,6 +280,7 @@
 		BE222D002123A14300AD025F /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE222CFF2123A14300AD025F /* API.swift */; };
 		BE272632211452890020E32D /* AFAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE272631211452890020E32D /* AFAppDelegate.swift */; };
 		BE272634211452890020E32D /* ActivityTrackingVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE272633211452890020E32D /* ActivityTrackingVC.swift */; };
+		D4F0A1B2C3D4E5F6A7B8C902 /* DhfVotePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F0A1B2C3D4E5F6A7B8C901 /* DhfVotePrompt.swift */; };
 		BE272637211452890020E32D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BE272635211452890020E32D /* Main.storyboard */; };
 		BE272639211452940020E32D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BE272638211452940020E32D /* Assets.xcassets */; };
 		BE27263C211452940020E32D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BE27263A211452940020E32D /* LaunchScreen.storyboard */; };
@@ -597,6 +598,7 @@
 		BE27262E211452890020E32D /* Actifit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Actifit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE272631211452890020E32D /* AFAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AFAppDelegate.swift; sourceTree = "<group>"; };
 		BE272633211452890020E32D /* ActivityTrackingVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityTrackingVC.swift; sourceTree = "<group>"; };
+		D4F0A1B2C3D4E5F6A7B8C901 /* DhfVotePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DhfVotePrompt.swift; sourceTree = "<group>"; };
 		BE272636211452890020E32D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		BE272638211452940020E32D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BE27263B211452940020E32D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -1471,6 +1473,7 @@
 			isa = PBXGroup;
 			children = (
 				BE272633211452890020E32D /* ActivityTrackingVC.swift */,
+				D4F0A1B2C3D4E5F6A7B8C901 /* DhfVotePrompt.swift */,
 				4E7C54C72A6A497B00C023FF /* ActivityTrackingViewModel.swift */,
 				4E7C54CC2A6A592200C023FF /* BannerImageCell.swift */,
 				4E7C54CD2A6A592200C023FF /* BannerImageCell.xib */,
@@ -2069,6 +2072,7 @@
 				BE0AB433211CE5EA000E9AEA /* UIDevice+Extension.swift in Sources */,
 				4E697BD02BEAB29E00F3E588 /* FontAwesomeButtonCodes.swift in Sources */,
 				BE272634211452890020E32D /* ActivityTrackingVC.swift in Sources */,
+				D4F0A1B2C3D4E5F6A7B8C902 /* DhfVotePrompt.swift in Sources */,
 				4EC431CF2C454B1E00271C05 /* PostToSeemitView.swift in Sources */,
 				4EB9B2D92A9FE7E6000F7B5A /* MarketExchangeModel.swift in Sources */,
 				4E940C9A2A819BDD00F15CB5 /* ProductsModel.swift in Sources */,

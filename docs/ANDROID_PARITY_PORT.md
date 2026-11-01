@@ -21,6 +21,7 @@ _Last updated: 2026-10-31, after a fresh comparison with Android `origin/develop
 - Arena (challenges, countdowns, notifications) and Friends
 - Social feed, Waves, Leaderboard, Notifications, Referrals, Chat, Surveys, AdMob tiers
 - **AI Workout Wizard** (2026-10-31, branch `feature/workout-wizard`): Gemini plans for a 300 AFIT fee signed on device, saved workouts, edit, exercise search over the bundled 873-exercise library, exercise details
+- **DHF proposal vote prompt** (2026-11-01): app-open / after-post prompt + dashboard card asking for a vote on proposal **391** (`Actifit/Controllers/Dashboard/DhfVotePrompt.swift`, `proposalId`). Android still points at 360 (`DhfVotePromptManager.PROPOSAL_ID`)
 
 ---
 
@@ -33,7 +34,6 @@ _Last updated: 2026-10-31, after a fresh comparison with Android `origin/develop
 | 3 | **Share Achievement card** (`ShareAchievementActivity`: 5k/10k PNG to share) | Small | iOS shares text only |
 | 4 | **Settings backup / restore** + **dark mode** toggle (`SettingsActivity`) | Small | Document picker for the JSON file |
 | 5 | **Step milestone notifications** (5k / 10k) | Small | iOS has only the daily reminder |
-| 6 | **DHF proposal vote prompt** (`DhfVotePromptManager`) | Small | Low priority |
 
 ---
 

@@ -524,6 +524,7 @@ class PostToSeemitViewModel2: ObservableObject {
             self.selectedVideo = nil
             self.postState = .success
             UserDefaults.standard.postContent = ""
+            UserDefaults.standard.set(true, forKey: DhfVotePrompt.justPostedKey)
             if let currentUser =  User.current() {
                 
                 currentUser.updateUser(steemit_username: currentUser.steemit_username, private_posting_key: currentUser.private_posting_key, last_post_date: self.activityDateToSave)

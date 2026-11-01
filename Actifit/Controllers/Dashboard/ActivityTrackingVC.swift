@@ -129,6 +129,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var revampVotingLabel: UILabel?
   var revampEstRewardLabel: UILabel?
   var revampNudgeCard: UIView?
+  var dhfVoteCard: DhfVoteCard?
   var revampCommunityStack: UIStackView?
   var revampArenaCard: ArenaHomeCardView?
   var revampRouteSummaryLabel: UILabel?
@@ -1084,6 +1085,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
     displayUserAndRank()
     everyDayChart()
     revampArenaCard?.refresh(user: arenaCurrentUser())
+    DhfVotePrompt.onDashboardAppear(from: self) { [weak self] in self?.dhfVoteCard?.refresh() }
       if !self.viewModel.canPost {
           DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
               self.stopPostButtonScaling()
@@ -1764,6 +1766,9 @@ extension ActivityTrackingVC {
         content.addArrangedSubview(buildRevampHeroCard())
         content.addArrangedSubview(buildRevampNewsCarousel())
         content.addArrangedSubview(buildRevampNudgeCard())
+        let dhfCard = DhfVoteCard(host: self)
+        dhfVoteCard = dhfCard
+        content.addArrangedSubview(dhfCard)
         content.addArrangedSubview(buildRevampArenaCard())
         content.addArrangedSubview(buildRevampCommunityCard())
         content.addArrangedSubview(buildRevampRouteCard())
@@ -1789,6 +1794,11 @@ extension ActivityTrackingVC {
         // (Estimate is now fetched via refreshRevampSteps above, and refreshed as steps change.)
         fetchTweets()
         NotificationCenter.default.addObserver(self, selector: #selector(refreshRouteCard), name: RouteRecordingManager.recordingStopped, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(dhfReturnedFromWeb), name: Notification.Name.UIApplicationWillEnterForeground, object: nil)
+    }
+
+    @objc private func dhfReturnedFromWeb() {
+        DhfVotePrompt.onReturnFromWeb(from: self) { [weak self] in self?.dhfVoteCard?.refresh() }
     }
 
     // MARK: Route Tracking card

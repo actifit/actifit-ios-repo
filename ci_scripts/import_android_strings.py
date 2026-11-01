@@ -17,7 +17,7 @@ from pathlib import Path
 
 # iOS .lproj -> Android values-<qualifier>
 LOCALES = {"ar": "ar", "de": "de", "hi": "hi", "it": "it", "ko": "ko", "nl": "nl", "pt-PT": "pt", "yo": "yo"}
-PREFIXES = ("arena_", "friends_", "profile_friend_", "signing_", "gadget_", "rewards_")
+PREFIXES = ("arena_", "friends_", "profile_friend_", "signing_", "gadget_", "rewards_", "dhf_")
 EXTRA_KEYS = {"footer_arena", "close_button", "error_performing_operation"}
 # The Workout Wizard (WorkoutText.swift): every key it looks up.
 WORKOUT_KEYS_FILE = Path(__file__).resolve().parent.parent / "Actifit" / "Controllers" / "Workout" / "WorkoutText.swift"

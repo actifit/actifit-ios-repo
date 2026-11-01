@@ -290,6 +290,13 @@
 "confirm_remove_exercise_message" = "क्या आप वाकई \"%1$@\" को इस वर्कआउट से हटाना चाहते हैं?";
 "confirm_remove_exercise_title" = "व्यायाम हटाएं?";
 "current_exercises" = "वर्तमान व्यायाम";
+"dhf_vote_btn_hivesigner" = "1 टैप में वोट करें (Hivesigner)";
+"dhf_vote_btn_later" = "शायद बाद में";
+"dhf_vote_btn_peakd" = "पढ़ें और वोट करें (PeakD)";
+"dhf_vote_btn_vote_now" = "अभी वोट करें";
+"dhf_vote_message" = "हमारे प्रस्ताव पर एक टैप में वोट देने से Hive पर हमारे चल रहे काम को समर्थन मिलता है — और इसका आपको कोई खर्च नहीं आता।";
+"dhf_vote_thanks" = "Actifit का समर्थन करने के लिए धन्यवाद! 🙏";
+"dhf_vote_title" = "हमारे काम का समर्थन करें 💪";
 "dialog_button_cancel" = "रद्द करें";
 "dialog_button_ok" = "ठीक है";
 "dialog_button_remove" = "हटाएं";

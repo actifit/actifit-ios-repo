@@ -277,6 +277,13 @@
 "confirm_remove_exercise_message" = "هل أنت متأكد أنك تريد إزالة \"%1$@\" من هذا التمرين؟";
 "confirm_remove_exercise_title" = "إزالة التمرين؟";
 "current_exercises" = "التمارين الحالية";
+"dhf_vote_btn_hivesigner" = "صوّت بضغطة واحدة (Hivesigner)";
+"dhf_vote_btn_later" = "ربما لاحقًا";
+"dhf_vote_btn_peakd" = "اقرأ وصوّت (PeakD)";
+"dhf_vote_btn_vote_now" = "صوّت الآن";
+"dhf_vote_message" = "تصويت واحد بضغطة واحدة على اقتراحنا يساعد في دعم عملنا المستمر على هايف — ولا يكلفك شيئًا.";
+"dhf_vote_thanks" = "شكرًا لدعمك أكتيفت! 🙏";
+"dhf_vote_title" = "ادعم عملنا 💪";
 "dialog_button_cancel" = "إلغاء";
 "dialog_button_ok" = "حسنًا";
 "dialog_button_remove" = "إزالة";

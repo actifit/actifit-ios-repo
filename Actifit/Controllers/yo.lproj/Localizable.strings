@@ -288,6 +288,13 @@
 "confirm_remove_exercise_message" = "Ṣe o da ọ loju pe o fẹ yọ \"%1$@\" kuro ninu idaraya yii?";
 "confirm_remove_exercise_title" = "Yọ Adaṣe Kuro?";
 "current_exercises" = "Awọn adaṣe Lọwọlọwọ";
+"dhf_vote_btn_hivesigner" = "Dìbò ní ìfọwọ́kàn 1 (Hivesigner)";
+"dhf_vote_btn_later" = "Bóyá nígbà mìíràn";
+"dhf_vote_btn_peakd" = "Ka àti dìbò (PeakD)";
+"dhf_vote_btn_vote_now" = "Dìbò nísinsìnyí";
+"dhf_vote_message" = "Ìdìbò kan pẹ̀lú ìfọwọ́kàn kan lórí ìdábàá wa ń ràn wá lọ́wọ́ láti ṣe àtìlẹyìn iṣẹ́ wa tí ń lọ lórí Hive — kò sì ná ọ ohunkóhun.";
+"dhf_vote_thanks" = "A dúpẹ́ fún àtìlẹyìn Actifit! 🙏";
+"dhf_vote_title" = "Ṣe àtìlẹyìn iṣẹ́ wa 💪";
 "dialog_button_cancel" = "Fagilé";
 "dialog_button_ok" = "OK";
 "dialog_button_remove" = "Yọ kuro";

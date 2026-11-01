@@ -167,7 +167,7 @@ enum FriendsAPI {
     }
 
     /// A Hive JSON-RPC call tried across the nodes until one returns a `result`.
-    private static func rpc(_ method: String, params: [Any], timeout: TimeInterval, node: Int = 0,
+    static func rpc(_ method: String, params: Any, timeout: TimeInterval, node: Int = 0,
                             completion: @escaping (Any?) -> Void) {
         guard node < hiveNodes.count, let url = URL(string: hiveNodes[node]) else {
             return DispatchQueue.main.async { completion(nil) }
