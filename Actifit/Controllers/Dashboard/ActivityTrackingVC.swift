@@ -243,10 +243,27 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
     case .health:
       syncHealthSteps()
     case .fitbit:
-      self.authenticationController = AuthenticationController(delegate: self)
-      self.authenticationController?.login(fromParentViewController: self)
+      // the Fitbit login no longer works (legacy API retired); offer Apple Health instead
+      showFitbitRetiredAlert(onUseAppleHealth: { [weak self] in self?.switchToAppleHealth() })
     case .device:
       break   // device mode auto-syncs; no manual sync needed
+    }
+  }
+
+  private func switchToAppleHealth() {
+    viewModel.trackingMode = .health
+    liveDistanceMeters = -1
+    liveCalories = -1
+    applyTrackingModeUI()
+    syncHealthSteps()
+  }
+
+  override func viewDidAppear(_ animated: Bool) {
+    super.viewDidAppear(animated)
+    if viewModel.trackingMode == .fitbit && !FitbitRetired.shownThisLaunch {
+      FitbitRetired.shownThisLaunch = showFitbitRetiredAlert(onUseAppleHealth: { [weak self] in
+        self?.switchToAppleHealth()
+      })
     }
   }
 

@@ -566,10 +566,10 @@ class SettingsVC: UIViewController {
   }
 
   @IBAction func fitBitSystemBtnAction(_ sender : UIButton) {
-    self.isDeviceSensorSystemSelected = false
-    self.selectDeviceSensorSystem(select: false)
-    self.selectFitBitSystem(select: true)
-    applyFinihingTouchToUIElements()
+    // Fitbit login is retired by Google: explain and keep the device option instead
+    showFitbitRetiredAlert(onUseAppleHealth: { [weak self] in
+      self?.deviceSensorSystemBtnAction(sender)
+    })
   }
 
   @IBAction func sbdSPPaySystemBtnAction(_ sender : UIButton) {

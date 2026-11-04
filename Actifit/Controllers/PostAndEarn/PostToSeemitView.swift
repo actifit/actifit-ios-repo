@@ -22,6 +22,7 @@ struct PostToSeemitView: View {
   @StateObject private var authManager = FitBitAuthenticationManager()
   @StateObject var coordinator: Coordinator
   @State var showSyncSheet = false
+  @State private var showFitbitRetired = false
   @State private var showFitbitLogin = false
   @State var showImagePicker = false
   @State private var isPickerPresented = false
@@ -44,6 +45,15 @@ struct PostToSeemitView: View {
 
   /// Ends editing for every field, including the UIKit content editor that
   /// clearing focusedField alone does not reach.
+  private func syncFromAppleHealth() {
+    UserDefaults.standard.isThirdPartySensor = false
+    if viewModel.isToday {
+      viewModel.btnTodayTapped()
+    } else {
+      viewModel.btnYesterdayTapped()
+    }
+  }
+
   private func dismissKeyboard() {
     focusedField = nil
     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -121,22 +131,24 @@ struct PostToSeemitView: View {
         title: Text("Sync your data from"),
         message: Text("Please Select an Option"),
         buttons: [
+          // the Fitbit login no longer works (legacy API retired); explain and offer Apple Health
           .default(Text("FitBit")) {
-            authManager.login()
+            showFitbitRetired = true
           },
           .default(Text("Watch/Health App")) {
-            UserDefaults.standard.isThirdPartySensor = false
-            if viewModel.isToday {
-              viewModel.btnTodayTapped()
-            } else {
-              viewModel.btnYesterdayTapped()
-            }
+            syncFromAppleHealth()
           },
 
           .cancel()
         ]
       )
     }
+    .alert(FitbitRetired.title, isPresented: $showFitbitRetired, actions: {
+      Button(FitbitRetired.useAppleHealth) { syncFromAppleHealth() }
+      Button("Later", role: .cancel) {}
+    }, message: {
+      Text(FitbitRetired.message)
+    })
     .alert("", isPresented: $viewModel.showMinStepsAlert, actions: {
       Button("OK") {
         viewModel.showMinStepsAlert = false

@@ -261,7 +261,8 @@ class ActivityTrackingViewModel {
 
   @discardableResult
   func cycleTrackingMode() -> TrackingMode {
-    let next = TrackingMode(rawValue: (trackingMode.rawValue + 1) % 3) ?? .device
+    // Fitbit is retired (Google turned off its legacy API), so the cycle is device <-> Apple Health
+    let next: TrackingMode = (trackingMode == .device) ? .health : .device
     trackingMode = next
     return next
   }
