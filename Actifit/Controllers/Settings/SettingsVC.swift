@@ -203,7 +203,7 @@ class SettingsVC: UIViewController {
     if let settings = self.settings {
       self.isMetricSystemSelected = settings.measurementSystem == MeasurementSystem.metric.rawValue
       self.isDonateToCharitySelected = settings.isDonatingCharity
-      self.isDeviceSensorSystemSelected = settings.isDeviceSensorSystemSelected
+      self.isDeviceSensorSystemSelected = true   // Fitbit is retired, so a saved Fitbit choice shows as device
       self.fitBitMeasurement = settings.fitBitMeasurement
       self.isReminderSelected = settings.isReminderSelected
       self.isSbdSPPaySystemSelected = settings.isSbdSPPaySystemSelected
@@ -566,10 +566,10 @@ class SettingsVC: UIViewController {
   }
 
   @IBAction func fitBitSystemBtnAction(_ sender : UIButton) {
-    // Fitbit login is retired by Google: explain and keep the device option instead
-    showFitbitRetiredAlert(onUseAppleHealth: { [weak self] in
-      self?.deviceSensorSystemBtnAction(sender)
-    })
+    // Fitbit login is retired by Google: keep the device option selected and offer Apple Health
+    // (the dashboard switches and syncs when it next appears)
+    deviceSensorSystemBtnAction(sender)
+    showFitbitRetiredAlert(onUseAppleHealth: { ActivityTrackingViewModel.storedTrackingMode = .health })
   }
 
   @IBAction func sbdSPPaySystemBtnAction(_ sender : UIButton) {

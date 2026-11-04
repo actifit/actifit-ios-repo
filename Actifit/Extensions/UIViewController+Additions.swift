@@ -219,7 +219,7 @@ enum FitbitRetired {
 
     To keep earning from your Fitbit steps:
     1. In the Google Health (Fitbit) app, open Connections → Apps and services and add Apple Health.
-    2. In Actifit, use Apple Health as your tracking source.
+    2. Tap Use Apple Health below and allow Actifit to read your steps.
     """
   static let useAppleHealth = "Use Apple Health"
 
@@ -228,23 +228,18 @@ enum FitbitRetired {
 }
 
 extension UIViewController {
-  /// - Parameter onUseAppleHealth: switches to Apple Health; nil when no switch is needed
-  ///   (then the alert only has OK).
+  /// - Parameter onUseAppleHealth: switches to Apple Health.
   /// - Returns: false when the alert could not be presented right now.
   @discardableResult
-  func showFitbitRetiredAlert(onUseAppleHealth: (() -> Void)? = nil) -> Bool {
+  func showFitbitRetiredAlert(onUseAppleHealth: @escaping () -> Void) -> Bool {
     // UIKit drops a present() made while another controller is showing or before the view is on screen
     guard view.window != nil, presentedViewController == nil else { return false }
     let alert = UIAlertController(title: FitbitRetired.title, message: FitbitRetired.message,
                                   preferredStyle: .alert)
-    if let onUseAppleHealth = onUseAppleHealth {
-      alert.addAction(UIAlertAction(title: FitbitRetired.useAppleHealth, style: .default) { _ in
-        onUseAppleHealth()
-      })
-      alert.addAction(UIAlertAction(title: "Later", style: .cancel))
-    } else {
-      alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-    }
+    alert.addAction(UIAlertAction(title: FitbitRetired.useAppleHealth, style: .default) { _ in
+      onUseAppleHealth()
+    })
+    alert.addAction(UIAlertAction(title: "Later", style: .cancel))
     present(alert, animated: true)
     return true
   }

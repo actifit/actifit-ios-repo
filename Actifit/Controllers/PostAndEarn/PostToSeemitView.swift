@@ -43,10 +43,8 @@ struct PostToSeemitView: View {
   /// True while the user is typing in any field (title, tags or content).
   private var isEditing: Bool { keyboardVisible || focusedField != nil }
 
-  /// Ends editing for every field, including the UIKit content editor that
-  /// clearing focusedField alone does not reach.
+  /// Reloads the post's steps from this device / Apple Health.
   private func syncFromAppleHealth() {
-    UserDefaults.standard.isThirdPartySensor = false
     if viewModel.isToday {
       viewModel.btnTodayTapped()
     } else {
@@ -54,6 +52,8 @@ struct PostToSeemitView: View {
     }
   }
 
+  /// Ends editing for every field, including the UIKit content editor that
+  /// clearing focusedField alone does not reach.
   private func dismissKeyboard() {
     focusedField = nil
     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -133,7 +133,11 @@ struct PostToSeemitView: View {
         buttons: [
           // the Fitbit login no longer works (legacy API retired); explain and offer Apple Health
           .default(Text("FitBit")) {
-            showFitbitRetired = true
+            // after the sheet has closed: SwiftUI can drop an alert started while it is dismissing
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+              FitbitRetired.shownThisLaunch = true   // no repeat on the dashboard
+              showFitbitRetired = true
+            }
           },
           .default(Text("Watch/Health App")) {
             syncFromAppleHealth()
@@ -144,7 +148,10 @@ struct PostToSeemitView: View {
       )
     }
     .alert(FitbitRetired.title, isPresented: $showFitbitRetired, actions: {
-      Button(FitbitRetired.useAppleHealth) { syncFromAppleHealth() }
+      Button(FitbitRetired.useAppleHealth) {
+        ActivityTrackingViewModel.storedTrackingMode = .health   // the dashboard follows too
+        syncFromAppleHealth()
+      }
       Button("Later", role: .cancel) {}
     }, message: {
       Text(FitbitRetired.message)

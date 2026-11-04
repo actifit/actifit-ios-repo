@@ -245,6 +245,12 @@ class ActivityTrackingViewModel {
   private static let trackingModeKey = "actifitTrackingMode"
 
   var trackingMode: TrackingMode {
+    get { return Self.storedTrackingMode }
+    set { Self.storedTrackingMode = newValue }
+  }
+
+  /// The saved mode, usable without a view model (whose init starts network requests).
+  static var storedTrackingMode: TrackingMode {
     get {
       // Migrate from the legacy boolean the first time.
       if UserDefaults.standard.object(forKey: Self.trackingModeKey) == nil {
