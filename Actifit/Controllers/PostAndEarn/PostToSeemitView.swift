@@ -11,7 +11,6 @@
 //
 
 import SwiftUI
-import SafariServices
 import _PhotosUI_SwiftUI
 import Combine
 import MarkdownUI
@@ -19,11 +18,9 @@ import MarkdownUI
 struct PostToSeemitView: View {
   @State private var isVideoPickerPresented = false
   @ObservedObject var viewModel = PostToSeemitViewModel2()
-  @StateObject private var authManager = FitBitAuthenticationManager()
   @StateObject var coordinator: Coordinator
   @State private var showFitbitRetired = false
   @State private var showFitbitHelp = false
-  @State private var showFitbitLogin = false
   @State var showImagePicker = false
   @State private var isPickerPresented = false
   @State private var selectedImage: UIImage?
@@ -206,16 +203,8 @@ struct PostToSeemitView: View {
       Text("You have not reached the minimum 5,000 activity count yet to earn rewards. Post anyway?")
     })
 
-    .sheet(isPresented: $authManager.showSafari) {
-      SafariView(url: URL(string: "https://www.fitbit.com/oauth2/authorize?response_type=token&client_id=" + AppCenter.clientID + "&redirect_uri=" + AppCenter.redirectURI + "&scope=" + AppCenter.defaultScope + "&expires_in=604800")!)
-    }
     .sheet(isPresented: $isPickerPresented) {
       PhotoPicker(isPresented: $isPickerPresented, selectedImage: $selectedImage)
-    }
-    .onChange(of: authManager.isAuthorized) { newValue in
-      if let authenticationToken = authManager.authenticationToken {
-        viewModel.authorizationDidFinish(authToken: authenticationToken, fitbitId: authManager.fitBitUserId)
-      }
     }
     .onChange(of: selectedImage, perform: { value in
             if let image = value {
@@ -814,14 +803,4 @@ struct MarkdownComponent: Hashable {
         case subheadline   // If you need another text style
         // You can add more styles as needed
     }
-}
-
-struct SafariView: UIViewControllerRepresentable {
-    let url: URL
-
-    func makeUIViewController(context: Context) -> SFSafariViewController {
-        return SFSafariViewController(url: url)
-    }
-
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
 }

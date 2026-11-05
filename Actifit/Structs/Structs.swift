@@ -76,9 +76,6 @@ struct Messages {
 //MARK: AppCenter Secrets
 struct AppCenter {
     static let SecretKey = Secrets.appCenterSecret
-    static let redirectURI = "actifitcb%3A%2F%2Ffitbitcallback"//"redirectURI"
-    static let clientID = "22D54N"
-    static let defaultScope = "activity%20heartrate%20location%20profile%20weight"
 }
 
 //MARK: Activity Model Keys

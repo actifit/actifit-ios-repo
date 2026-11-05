@@ -674,7 +674,6 @@ class SettingsVC: UIViewController {
     //metric system
     self.updateLanguage(self.selectedIndex)
     UserDefaults.standard.set(self.languageButton.titleLabel?.text ?? "English", forKey: "SelectedLanguage")
-    UserDefaults.standard.set(!isDeviceSensorSystemSelected, forKey: "isFitSystemSelected")
     UserDefaults.standard.activeKey = activeKeyTextField.text ?? ""
     UserDefaults.standard.synchronize()
 
@@ -1022,15 +1021,10 @@ class SettingsVC: UIViewController {
 
     }
 
-    if !self.isDeviceSensorSystemSelected{
-      fitBitSettingView.isHidden = false
-      fitBitSettingHeightCons.constant = 100
-      updateViewConstraints()
-    }else{
-      fitBitSettingView.isHidden = true
-      fitBitSettingHeightCons.constant = 0
-      updateViewConstraints()
-    }
+    // Fitbit options (fetch measurements) are gone with the retired Fitbit login
+    fitBitSettingView.isHidden = true
+    fitBitSettingHeightCons.constant = 0
+    updateViewConstraints()
 
     if self.isFirstNotificationSelected {
       self.firstNotificationBtn.isSelected = true

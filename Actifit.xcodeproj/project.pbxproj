@@ -20,9 +20,6 @@
 		0A3D16E363B8BD09871F577A /* 1f42c.json in Resources */ = {isa = PBXBuildFile; fileRef = E7002F7230473461DD4398F3 /* 1f42c.json */; };
 		0EA53C22242273ED0004C480 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BE3D8FF4212F569200178152 /* HealthKit.framework */; };
 		11C121D15AF1323DB9A9C3FF /* 1f422.json in Resources */ = {isa = PBXBuildFile; fileRef = 8EC8E441FE6071DD9BBE80A8 /* 1f422.json */; };
-		162F962F2205DB4E008227EF /* AuthenticationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162F962E2205DB4E008227EF /* AuthenticationController.swift */; };
-		162F96312205E080008227EF /* FitbitAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162F96302205E080008227EF /* FitbitAPI.swift */; };
-		162F96332205EA7A008227EF /* StepStat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 162F96322205EA7A008227EF /* StepStat.swift */; };
 		163EF95F21F8E15D00E52B5C /* DayAxisValueFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163EF95E21F8E15D00E52B5C /* DayAxisValueFormatter.swift */; };
 		166EEA7621F3D9CB00ECF8F9 /* ActifitAlbum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166EEA7521F3D9CB00ECF8F9 /* ActifitAlbum.swift */; };
 		166EEA7821F3D9FD00ECF8F9 /* ReportPreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166EEA7721F3D9FD00ECF8F9 /* ReportPreView.swift */; };
@@ -41,7 +38,6 @@
 		4E0144562BD5A19B005E130F /* CommentReplyViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0144552BD5A19B005E130F /* CommentReplyViewModel.swift */; };
 		4E0A98592A8BA5BF00D5E6F3 /* AdsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0A98582A8BA5BF00D5E6F3 /* AdsViewController.swift */; };
 		4E0AC4382C493CF500703583 /* SwiftUIImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0AC4372C493CF500703583 /* SwiftUIImagePicker.swift */; };
-		4E0E38F42C485477004CB0C3 /* FitBitAuthenticationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0E38F32C485477004CB0C3 /* FitBitAuthenticationManager.swift */; };
 		4E0E38F62C485C16004CB0C3 /* Coordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E0E38F52C485C16004CB0C3 /* Coordinator.swift */; };
 		4E12DC0B2C90ED220022BC04 /* LeaderboardEndPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E12DC0A2C90ED220022BC04 /* LeaderboardEndPoint.swift */; };
 		4E12DC0E2C91E6BE0022BC04 /* LeaderboardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E12DC0D2C91E6BE0022BC04 /* LeaderboardModel.swift */; };
@@ -316,9 +312,6 @@
 		3B5D80C0DB3A63AEB0D21934 /* WorkoutLogic.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = WorkoutLogic.swift; path = Actifit/Controllers/Workout/WorkoutLogic.swift; sourceTree = "<group>"; };
 		08FA911569DCA346490DC311 /* 1f985.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f985.json; path = Actifit/Resources/animals/1f985.json; sourceTree = "<group>"; };
 		0D545FA9AB620EA7A577F894 /* 1f407.json */ = {isa = PBXFileReference; includeInIndex = 1; name = 1f407.json; path = Actifit/Resources/animals/1f407.json; sourceTree = "<group>"; };
-		162F962E2205DB4E008227EF /* AuthenticationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationController.swift; sourceTree = "<group>"; };
-		162F96302205E080008227EF /* FitbitAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitbitAPI.swift; sourceTree = "<group>"; };
-		162F96322205EA7A008227EF /* StepStat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepStat.swift; sourceTree = "<group>"; };
 		163EF95E21F8E15D00E52B5C /* DayAxisValueFormatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DayAxisValueFormatter.swift; sourceTree = "<group>"; };
 		166EEA7521F3D9CB00ECF8F9 /* ActifitAlbum.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActifitAlbum.swift; sourceTree = "<group>"; };
 		166EEA7721F3D9FD00ECF8F9 /* ReportPreView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReportPreView.swift; sourceTree = "<group>"; };
@@ -339,7 +332,6 @@
 		4E0144552BD5A19B005E130F /* CommentReplyViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentReplyViewModel.swift; sourceTree = "<group>"; };
 		4E0A98582A8BA5BF00D5E6F3 /* AdsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdsViewController.swift; sourceTree = "<group>"; };
 		4E0AC4372C493CF500703583 /* SwiftUIImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIImagePicker.swift; sourceTree = "<group>"; };
-		4E0E38F32C485477004CB0C3 /* FitBitAuthenticationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitBitAuthenticationManager.swift; sourceTree = "<group>"; };
 		4E0E38F52C485C16004CB0C3 /* Coordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Coordinator.swift; sourceTree = "<group>"; };
 		4E12DC0A2C90ED220022BC04 /* LeaderboardEndPoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardEndPoint.swift; sourceTree = "<group>"; };
 		4E12DC0D2C91E6BE0022BC04 /* LeaderboardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardModel.swift; sourceTree = "<group>"; };
@@ -1301,7 +1293,6 @@
 				4EC431D02C454BDE00271C05 /* PostToSeemitViewModel2.swift */,
 				4EF033DF2C456C6B00DA8517 /* NewActivityTypesView.swift */,
 				4EF033E12C4841D300DA8517 /* MarkDownView.swift */,
-				4E0E38F32C485477004CB0C3 /* FitBitAuthenticationManager.swift */,
 				4E0E38F52C485C16004CB0C3 /* Coordinator.swift */,
 				4E0AC4372C493CF500703583 /* SwiftUIImagePicker.swift */,
 				4EC44B602C49CA06003D1213 /* ThreeSpeakVideoWrapper.swift */,
@@ -1593,7 +1584,6 @@
 				BE272635211452890020E32D /* Main.storyboard */,
 				8AC2C84222D3771100AA2F81 /* DayHistroyVC.swift */,
 				16B1FFC721F7C5FB00CD8234 /* HistoryChartVC.swift */,
-				162F962E2205DB4E008227EF /* AuthenticationController.swift */,
 				1D8DAFB22338D6880078253F /* Localizable.strings */,
 			);
 			path = Controllers;
@@ -1666,8 +1656,6 @@
 			isa = PBXGroup;
 			children = (
 				BE222CFF2123A14300AD025F /* API.swift */,
-				162F96302205E080008227EF /* FitbitAPI.swift */,
-				162F96322205EA7A008227EF /* StepStat.swift */,
 			);
 			path = API;
 			sourceTree = "<group>";
@@ -2040,7 +2028,6 @@
 				BE0AB435211EB22F000E9AEA /* Structs.swift in Sources */,
 				AF5EC0DE0000000000000002 /* Secrets.swift in Sources */,
 				1D8AF8422362167A00B6DF29 /* L102Language.swift in Sources */,
-				162F962F2205DB4E008227EF /* AuthenticationController.swift in Sources */,
 				4E12DC102C91E6EB0022BC04 /* DailyLeaderboardViewModel.swift in Sources */,
 				4E79AB4B2BFA589600056B45 /* Videos.swift in Sources */,
 				4E198E2E2AC61FC300DFF427 /* PollTextCell.swift in Sources */,
@@ -2052,7 +2039,6 @@
 				4E41EDDF2BC0A89200C6A9D0 /* WaveCell.swift in Sources */,
 				4E8C2A882A8C849000393142 /* ApplicationHelper.swift in Sources */,
 				4E2B8EEC2C075E04006D3648 /* PostToSeemitViewModel.swift in Sources */,
-				4E0E38F42C485477004CB0C3 /* FitBitAuthenticationManager.swift in Sources */,
 				4E341EBC2B0D07C8002E51C0 /* BlurtResponse.swift in Sources */,
 				4EE746422CF11D660034F623 /* GetSnapEndPoint.swift in Sources */,
 				4E0AC4382C493CF500703583 /* SwiftUIImagePicker.swift in Sources */,
@@ -2111,7 +2097,6 @@
 				4E341EB62B0C0AB2002E51C0 /* AllHiveEngineTokenResponse.swift in Sources */,
 				4EC44B612C49CA06003D1213 /* ThreeSpeakVideoWrapper.swift in Sources */,
 				4E0E38F62C485C16004CB0C3 /* Coordinator.swift in Sources */,
-				162F96312205E080008227EF /* FitbitAPI.swift in Sources */,
 				4E940C932A7C3C4E00F15CB5 /* TipPopupViewController.swift in Sources */,
 				4E12DC0E2C91E6BE0022BC04 /* LeaderboardModel.swift in Sources */,
 				4E68D1882C18F4C8009C9F80 /* DailyTipsEndPoint.swift in Sources */,
@@ -2220,7 +2205,6 @@
 				4EC9172E2BD6FDA90088DFDD /* VotersCell.swift in Sources */,
 				4EE421972C7E678F001F8C75 /* PostActivityModel.swift in Sources */,
 				4E68D1842C18F26D009C9F80 /* AccountDataEndPoint.swift in Sources */,
-				162F96332205EA7A008227EF /* StepStat.swift in Sources */,
 				4E79E51D2A706119000F2458 /* NotificationsCell.swift in Sources */,
 				4E6A61A62C4AC6B2008EF7D3 /* MarkDownInfoView.swift in Sources */,
 				4E79AB472BFA3F1D00056B45 /* ThreeSpeakLoginModel.swift in Sources */,
