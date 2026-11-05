@@ -90,7 +90,7 @@
 "percent_lbl"  = "%";
 "activity_source_lbl"  = "Activity Data Source";
 "device_sensors_option_lbl"  = "Phone Sensors";
-"fitbit_option_lbl"  = "3rd Party";
+"fitbit_option_lbl"  = "Fitbit";
 "background_move_track_lbl"  = "Background Movement Tracking";
 "enable_agg_mode_checkbox"  = "Enable Aggressive Background Tracking*";
 "fitbit_settings_lbl"  = "Fitbit Settings";

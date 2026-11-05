@@ -21,8 +21,8 @@ struct PostToSeemitView: View {
   @ObservedObject var viewModel = PostToSeemitViewModel2()
   @StateObject private var authManager = FitBitAuthenticationManager()
   @StateObject var coordinator: Coordinator
-  @State var showSyncSheet = false
   @State private var showFitbitRetired = false
+  @State private var showFitbitHelp = false
   @State private var showFitbitLogin = false
   @State var showImagePicker = false
   @State private var isPickerPresented = false
@@ -50,6 +50,11 @@ struct PostToSeemitView: View {
     } else {
       viewModel.btnYesterdayTapped()
     }
+  }
+
+  private func useAppleHealth() {
+    ActivityTrackingViewModel.storedTrackingMode = .health   // the dashboard follows too
+    syncFromAppleHealth()
   }
 
   /// Ends editing for every field, including the UIKit content editor that
@@ -126,35 +131,21 @@ struct PostToSeemitView: View {
       viewModel.postTitle =  "\(Messages.default_post_title)\(viewModel.todayDateStringWithFormat(format: "MMMM d yyyy"))"
       viewModel.getInitialMarkdownContent()
     }
-    .actionSheet(isPresented: $showSyncSheet) {
-      ActionSheet(
-        title: Text("Sync your data from"),
-        message: Text("Please Select an Option"),
-        buttons: [
-          // the Fitbit login no longer works (legacy API retired); explain and offer Apple Health
-          .default(Text("FitBit")) {
-            // after the sheet has closed: SwiftUI can drop an alert started while it is dismissing
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-              FitbitRetired.shownThisLaunch = true   // no repeat on the dashboard
-              showFitbitRetired = true
-            }
-          },
-          .default(Text("Watch/Health App")) {
-            syncFromAppleHealth()
-          },
-
-          .cancel()
-        ]
-      )
-    }
     .alert(FitbitRetired.title, isPresented: $showFitbitRetired, actions: {
-      Button(FitbitRetired.useAppleHealth) {
-        ActivityTrackingViewModel.storedTrackingMode = .health   // the dashboard follows too
-        syncFromAppleHealth()
+      Button(FitbitRetired.useAppleHealth) { useAppleHealth() }
+      Button(FitbitRetired.showMeHow) {
+        // after this alert has closed: SwiftUI can drop an alert started while one is dismissing
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { showFitbitHelp = true }
       }
       Button("Later", role: .cancel) {}
     }, message: {
       Text(FitbitRetired.message)
+    })
+    .alert(FitbitRetired.helpTitle, isPresented: $showFitbitHelp, actions: {
+      Button(FitbitRetired.useAppleHealth) { useAppleHealth() }
+      Button("Close", role: .cancel) {}
+    }, message: {
+      Text(FitbitRetired.helpMessage)
     })
     .alert("", isPresented: $viewModel.showMinStepsAlert, actions: {
       Button("OK") {
@@ -370,7 +361,8 @@ struct PostToSeemitView: View {
           .background(inputBg)
           .overlay(RoundedRectangle(cornerRadius: 12).stroke(separator, lineWidth: 1))
           .clipShape(RoundedRectangle(cornerRadius: 12))
-        Button(action: { showSyncSheet = true }, label: {
+        // Fitbit is no longer a separate source: steps come from this phone and Apple Health
+        Button(action: { syncFromAppleHealth() }, label: {
           Text("SYNC DATA")
             .font(.system(size: 14, weight: .semibold))
             .foregroundStyle(.white)
@@ -381,6 +373,15 @@ struct PostToSeemitView: View {
         })
         Spacer()
       }
+      Button(action: {
+        FitbitRetired.shownThisLaunch = true   // no repeat on the dashboard
+        showFitbitRetired = true
+      }, label: {
+        Text("Using a Fitbit? See how to sync it")
+          .underline()   // Text.underline works on iOS 15; the View version needs iOS 16
+          .font(.system(size: 14, weight: .semibold))
+          .foregroundStyle(brandRed)
+      })
     }
   }
 
