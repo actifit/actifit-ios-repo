@@ -213,15 +213,31 @@ extension UIViewController {
 /// longer work. The Google Health (Fitbit) app syncs Fitbit data into Apple Health (v5.05+), so we
 /// point Fitbit users there instead of starting the dead login.
 enum FitbitRetired {
-  static let title = "Fitbit now syncs through Apple Health"
+  static let title = "Get your Fitbit steps through Apple Health"
   static let message = """
-    Google retired Fitbit's old connection for partner apps like Actifit on October 30, 2026.
+    Actifit can no longer connect to Fitbit directly, but your Fitbit steps can still reach Actifit through Apple Health. It takes about a minute:
 
-    To keep earning from your Fitbit steps:
-    1. In the Google Health (Fitbit) app, open Connections → Apps and services and add Apple Health.
-    2. Tap Use Apple Health below and allow Actifit to read your steps.
+    1. Update the Google Health app (the new name of the Fitbit app).
+    2. In Google Health, tap Connections → Apps and services → Apple Health, and turn on Steps.
+    3. Come back here, tap Use Apple Health, and allow Steps.
+
+    New steps can take a few minutes to appear. Open Google Health first to sync your Fitbit.
     """
   static let useAppleHealth = "Use Apple Health"
+  static let showMeHow = "Show me how"
+  static let helpTitle = "Fitbit setup help"
+  static let helpMessage = """
+    Can't find Connections or Apple Health?
+    Update Google Health from the App Store. Apple Health sync needs version 5.05 or newer.
+
+    Steps not showing in Actifit?
+    Open the iPhone Health app → Sharing → Apps → Actifit and turn on Steps. Check Google Health there too, and allow it to write Steps.
+
+    Steps counted twice?
+    In the Health app, open Steps → Data Sources & Access → Edit, and drag Google Health to the top.
+
+    Open Google Health now and then so your Fitbit keeps syncing.
+    """
 
   /// show the dashboard reminder once per app launch
   static var shownThisLaunch = false
@@ -239,8 +255,25 @@ extension UIViewController {
     alert.addAction(UIAlertAction(title: FitbitRetired.useAppleHealth, style: .default) { _ in
       onUseAppleHealth()
     })
+    alert.addAction(UIAlertAction(title: FitbitRetired.showMeHow, style: .default) { [weak self] _ in
+      // wait for this alert to finish closing, or the next present() is dropped
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+        self?.showFitbitHelpAlert(onUseAppleHealth: onUseAppleHealth)
+      }
+    })
     alert.addAction(UIAlertAction(title: "Later", style: .cancel))
     present(alert, animated: true)
     return true
+  }
+
+  private func showFitbitHelpAlert(onUseAppleHealth: @escaping () -> Void) {
+    guard view.window != nil, presentedViewController == nil else { return }
+    let alert = UIAlertController(title: FitbitRetired.helpTitle, message: FitbitRetired.helpMessage,
+                                  preferredStyle: .alert)
+    alert.addAction(UIAlertAction(title: FitbitRetired.useAppleHealth, style: .default) { _ in
+      onUseAppleHealth()
+    })
+    alert.addAction(UIAlertAction(title: "Close", style: .cancel))
+    present(alert, animated: true)
   }
 }
