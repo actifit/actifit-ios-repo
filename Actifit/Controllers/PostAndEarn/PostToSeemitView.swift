@@ -22,6 +22,7 @@ struct PostToSeemitView: View {
   @StateObject private var authManager = FitBitAuthenticationManager()
   @StateObject var coordinator: Coordinator
   @State var showSyncSheet = false
+  @State private var showFitbitRetired = false
   @State private var showFitbitLogin = false
   @State var showImagePicker = false
   @State private var isPickerPresented = false
@@ -41,6 +42,15 @@ struct PostToSeemitView: View {
 
   /// True while the user is typing in any field (title, tags or content).
   private var isEditing: Bool { keyboardVisible || focusedField != nil }
+
+  /// Reloads the post's steps from this device / Apple Health.
+  private func syncFromAppleHealth() {
+    if viewModel.isToday {
+      viewModel.btnTodayTapped()
+    } else {
+      viewModel.btnYesterdayTapped()
+    }
+  }
 
   /// Ends editing for every field, including the UIKit content editor that
   /// clearing focusedField alone does not reach.
@@ -121,22 +131,31 @@ struct PostToSeemitView: View {
         title: Text("Sync your data from"),
         message: Text("Please Select an Option"),
         buttons: [
+          // the Fitbit login no longer works (legacy API retired); explain and offer Apple Health
           .default(Text("FitBit")) {
-            authManager.login()
+            // after the sheet has closed: SwiftUI can drop an alert started while it is dismissing
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+              FitbitRetired.shownThisLaunch = true   // no repeat on the dashboard
+              showFitbitRetired = true
+            }
           },
           .default(Text("Watch/Health App")) {
-            UserDefaults.standard.isThirdPartySensor = false
-            if viewModel.isToday {
-              viewModel.btnTodayTapped()
-            } else {
-              viewModel.btnYesterdayTapped()
-            }
+            syncFromAppleHealth()
           },
 
           .cancel()
         ]
       )
     }
+    .alert(FitbitRetired.title, isPresented: $showFitbitRetired, actions: {
+      Button(FitbitRetired.useAppleHealth) {
+        ActivityTrackingViewModel.storedTrackingMode = .health   // the dashboard follows too
+        syncFromAppleHealth()
+      }
+      Button("Later", role: .cancel) {}
+    }, message: {
+      Text(FitbitRetired.message)
+    })
     .alert("", isPresented: $viewModel.showMinStepsAlert, actions: {
       Button("OK") {
         viewModel.showMinStepsAlert = false

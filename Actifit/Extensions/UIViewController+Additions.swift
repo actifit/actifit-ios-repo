@@ -206,3 +206,41 @@ extension UIViewController {
    }
 }
 
+
+// MARK: - Fitbit retired
+
+/// Google turned off the legacy Fitbit Web API (Oct 30 2026), so the in-app Fitbit login can no
+/// longer work. The Google Health (Fitbit) app syncs Fitbit data into Apple Health (v5.05+), so we
+/// point Fitbit users there instead of starting the dead login.
+enum FitbitRetired {
+  static let title = "Fitbit now syncs through Apple Health"
+  static let message = """
+    Google retired Fitbit's old connection for partner apps like Actifit on October 30, 2026.
+
+    To keep earning from your Fitbit steps:
+    1. In the Google Health (Fitbit) app, open Connections → Apps and services and add Apple Health.
+    2. Tap Use Apple Health below and allow Actifit to read your steps.
+    """
+  static let useAppleHealth = "Use Apple Health"
+
+  /// show the dashboard reminder once per app launch
+  static var shownThisLaunch = false
+}
+
+extension UIViewController {
+  /// - Parameter onUseAppleHealth: switches to Apple Health.
+  /// - Returns: false when the alert could not be presented right now.
+  @discardableResult
+  func showFitbitRetiredAlert(onUseAppleHealth: @escaping () -> Void) -> Bool {
+    // UIKit drops a present() made while another controller is showing or before the view is on screen
+    guard view.window != nil, presentedViewController == nil else { return false }
+    let alert = UIAlertController(title: FitbitRetired.title, message: FitbitRetired.message,
+                                  preferredStyle: .alert)
+    alert.addAction(UIAlertAction(title: FitbitRetired.useAppleHealth, style: .default) { _ in
+      onUseAppleHealth()
+    })
+    alert.addAction(UIAlertAction(title: "Later", style: .cancel))
+    present(alert, animated: true)
+    return true
+  }
+}

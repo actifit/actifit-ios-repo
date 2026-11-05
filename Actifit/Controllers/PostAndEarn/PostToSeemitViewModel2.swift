@@ -66,17 +66,8 @@ class PostToSeemitViewModel2: ObservableObject {
         selectedActivities.joined(separator: ", ")
     }
 
-    var isFitbitSensor: Bool {
-        return UserDefaults.standard.isThirdPartySensor ?? false
-    }
-
     init() {
         self.activityDate = AppDelegate.todayStartDate().dateString()
-        if isFitbitSensor {
-            let fitbitSteps = UserDefaults.standard.lastSynchronizedSteps
-            isFitBit = true
-            stepCount = String(fitbitSteps)
-        }
         self.btnTodayTapped()
 
         // Drive the preview off a debounced copy of the editor text and persist
@@ -211,21 +202,19 @@ class PostToSeemitViewModel2: ObservableObject {
 
     func btnTodayTapped() {
         isToday = true
-        if !isFitbitSensor {
-            stepCount = "\(0)"
+        stepCount = "\(0)"
 
-            // Get today's start date
-            let todayStartDate = AppDelegate.todayStartDate()
+        // Get today's start date
+        let todayStartDate = AppDelegate.todayStartDate()
 
-            // Filter and find the activity for today
-            if let activity = Activity.allWithoutCountZero().first(where: { resetTime(date: $0.date) == resetTime(date: todayStartDate) }) {
-                stepCount = "\(activity.steps)"
-                isFitBit = false
-                self.activityDateToSave = todayStartDate
-                self.makeTodayAllEnteriesAsDetailedActivityString()
-            } else {
-                self.getHealthKitPermission()
-            }
+        // Filter and find the activity for today
+        if let activity = Activity.allWithoutCountZero().first(where: { resetTime(date: $0.date) == resetTime(date: todayStartDate) }) {
+            stepCount = "\(activity.steps)"
+            isFitBit = false
+            self.activityDateToSave = todayStartDate
+            self.makeTodayAllEnteriesAsDetailedActivityString()
+        } else {
+            self.getHealthKitPermission()
         }
     }
 
@@ -292,29 +281,27 @@ class PostToSeemitViewModel2: ObservableObject {
 
 
     func getHealthKitPermission() {
-        if !isFitbitSensor {
-            //TODO: use healthkit Manager
-            guard HKHealthStore.isHealthDataAvailable() else {
-                print("Health kit is unavailable")
-                return
+        //TODO: use healthkit Manager
+        guard HKHealthStore.isHealthDataAvailable() else {
+            print("Health kit is unavailable")
+            return
+        }
+        let stepsCount = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.stepCount)!
+        self.healthStore.requestAuthorization(toShare: [], read: [stepsCount]) { (success, error) in
+            if success {
+                self.retrieveStepCount { (steps) in
+                    DispatchQueue.main.async{
+                        self.isHealthStore = true
+                        self.stepCount = String(Int(steps))
+                        self.isFitBit = false
+                    }
+                }
             }
-            let stepsCount = HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.stepCount)!
-            self.healthStore.requestAuthorization(toShare: [], read: [stepsCount]) { (success, error) in
-                if success {
-                    self.retrieveStepCount { (steps) in
-                        DispatchQueue.main.async{
-                            self.isHealthStore = true
-                            self.stepCount = String(Int(steps))
-                            self.isFitBit = false
-                        }
-                    }
+            else {
+                if error != nil {
+                    print(error ?? "")
                 }
-                else {
-                    if error != nil {
-                        print(error ?? "")
-                    }
-                    print("Permission denied.")
-                }
+                print("Permission denied.")
             }
         }
     }

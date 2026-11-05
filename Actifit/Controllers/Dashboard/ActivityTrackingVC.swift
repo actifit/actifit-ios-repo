@@ -130,6 +130,8 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   var revampEstRewardLabel: UILabel?
   var revampNudgeCard: UIView?
   var dhfVoteCard: DhfVoteCard?
+  /// The tracking mode the dashboard last drew, to notice a change made on another screen.
+  var appliedTrackingMode: TrackingMode?
   var revampCommunityStack: UIStackView?
   var revampArenaCard: ArenaHomeCardView?
   var revampRouteSummaryLabel: UILabel?
@@ -243,10 +245,27 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
     case .health:
       syncHealthSteps()
     case .fitbit:
-      self.authenticationController = AuthenticationController(delegate: self)
-      self.authenticationController?.login(fromParentViewController: self)
+      // the Fitbit login no longer works (legacy API retired); offer Apple Health instead
+      showFitbitRetiredAlert(onUseAppleHealth: { [weak self] in self?.switchToAppleHealth() })
     case .device:
       break   // device mode auto-syncs; no manual sync needed
+    }
+  }
+
+  private func switchToAppleHealth() {
+    viewModel.trackingMode = .health
+    liveDistanceMeters = -1
+    liveCalories = -1
+    applyTrackingModeUI()
+    syncHealthSteps()
+  }
+
+  override func viewDidAppear(_ animated: Bool) {
+    super.viewDidAppear(animated)
+    if viewModel.trackingMode == .fitbit && !FitbitRetired.shownThisLaunch {
+      FitbitRetired.shownThisLaunch = showFitbitRetiredAlert(onUseAppleHealth: { [weak self] in
+        self?.switchToAppleHealth()
+      })
     }
   }
 
@@ -1085,6 +1104,12 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
     displayUserAndRank()
     everyDayChart()
     revampArenaCard?.refresh(user: arenaCurrentUser())
+    // "Use Apple Health" in Post & Earn or Settings changes the mode while the dashboard is hidden
+    if appliedTrackingMode != nil && appliedTrackingMode != viewModel.trackingMode && viewModel.trackingMode == .health {
+      switchToAppleHealth()
+    } else {
+      applyTrackingModeUI()
+    }
     DhfVotePrompt.onDashboardAppear(from: self) { [weak self] in self?.dhfVoteCard?.refresh() }
       if !self.viewModel.canPost {
           DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
@@ -2894,6 +2919,7 @@ extension ActivityTrackingVC {
     /// Reflects the active mode: cloud + source logo show only for Health/Fitbit.
     func applyTrackingModeUI() {
         let mode = viewModel.trackingMode
+        appliedTrackingMode = mode
         revampCloudBtn?.isHidden = (mode == .device)
         switch mode {
         case .device:
