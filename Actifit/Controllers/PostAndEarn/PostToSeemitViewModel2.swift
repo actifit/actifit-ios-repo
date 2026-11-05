@@ -8,7 +8,6 @@
 import Foundation
 import UIKit
 import SwiftUI
-import CryptoKit
 import HealthKit
 import Combine
 enum PostState {
@@ -26,13 +25,11 @@ class PostToSeemitViewModel2: ObservableObject {
     var activityDate = ""
     var activityDateToSave = Date()
     var detailedActivityStepsDataString = ""
-    var encyptedFitBit = ""
     var healthStore = HKHealthStore()
     var postPayout = ""
     @Published var postTitle: String = ""
     @Published var reportTags: String = ""
     @Published var isToday: Bool = true
-    @Published var isFitBit: Bool = false
     @Published var isHealthStore: Bool = false
     @Published var stepCount: String = "0"
     @Published var showActivityTypes = false
@@ -90,8 +87,6 @@ class PostToSeemitViewModel2: ObservableObject {
         return Int(stepCount) ?? 0
     }
 
-    var fitbitUserId: String? = nil
-    var measurmentKeys: [String: String] = [:]
     func updatePostContent(content: String) {
         UserDefaults.standard.postContent = content
         markDownContent = content
@@ -169,49 +164,18 @@ class PostToSeemitViewModel2: ObservableObject {
         return User.current()?.steemit_username ?? ""
     }
 
-    func authorizationDidFinish(authToken: String, fitbitId: String? = nil) {
-        self.fitbitUserId = fitbitId
-        FitbitAPI.sharedInstance.authorize(with: authToken)
-        let _ = StepStat.fetchTodaysStepStat(forDate: self.activityDateToSave) { [weak self] stepStat, error in
-            let steps = stepStat?.steps ?? 0
-            print(steps)
-            self?.isFitBit = true
-            self?.isHealthStore = false
-            self?.stepCount = String(steps)
-        }
-        var fetchMeasurments = false
-        if let settings = self.settings {
-            fetchMeasurments = settings.fitBitMeasurement
-        }
-
-        if fetchMeasurments {
-            // Pin the profile's unit system to the app's own metric/US setting (same as the
-            // sliders' labels), so Fitbit's height/weight come back in the units we display.
-            let isMetric = (self.settings?.measurementSystem ?? MeasurementSystem.metric.rawValue) == MeasurementSystem.metric.rawValue
-            let _ = StepStat.fetchUser(acceptLanguage: isMetric ? nil : "en_US") { [weak self] userStat, error in
-                guard let self = self, let userStat = userStat else { return }
-                if let height = userStat["height"] as? NSNumber {
-                    self.measurmentKeys.updateValue("\(height)", forKey: PostKeys.height)
-                }
-                if let weight = userStat["weight"] as? NSNumber {
-                    self.measurmentKeys.updateValue("\(weight)", forKey: PostKeys.weight)
-                }
-            }
-        }
-    }
-
     func btnTodayTapped() {
         isToday = true
         stepCount = "\(0)"
 
         // Get today's start date
         let todayStartDate = AppDelegate.todayStartDate()
+        self.activityDate = todayStartDate.dateString()   // undo a previous Yesterday tap
+        self.activityDateToSave = todayStartDate
 
         // Filter and find the activity for today
         if let activity = Activity.allWithoutCountZero().first(where: { resetTime(date: $0.date) == resetTime(date: todayStartDate) }) {
             stepCount = "\(activity.steps)"
-            isFitBit = false
-            self.activityDateToSave = todayStartDate
             self.makeTodayAllEnteriesAsDetailedActivityString()
         } else {
             self.getHealthKitPermission()
@@ -232,15 +196,15 @@ class PostToSeemitViewModel2: ObservableObject {
 
     func btnYesterdayTapped() {
         isToday = false
-        if !isFitBit {
-            retrieveStepCount { steps in
-                DispatchQueue.main.async {
-                    self.stepCount = "\(Int(steps))"
-                }
+        // the post must carry yesterday's date; the 15-minute breakdown is only kept for today
+        let yesterday = AppDelegate.todayStartDate().yesterday
+        activityDate = yesterday.dateString()
+        activityDateToSave = yesterday
+        detailedActivityStepsDataString = ""
+        retrieveStepCount { steps in
+            DispatchQueue.main.async {
+                self.stepCount = "\(Int(steps))"
             }
-        } else {
-            self.activityDate = AppDelegate.todayStartDate().yesterday.dateString()
-            self.activityDateToSave = AppDelegate.todayStartDate().yesterday
         }
     }
 
@@ -293,7 +257,6 @@ class PostToSeemitViewModel2: ObservableObject {
                     DispatchQueue.main.async{
                         self.isHealthStore = true
                         self.stepCount = String(Int(steps))
-                        self.isFitBit = false
                     }
                 }
             }
@@ -357,14 +320,6 @@ class PostToSeemitViewModel2: ObservableObject {
     }
 
 
-    func SHA512Conversion(fitbitId:String) {
-        guard let data = fitbitId.data(using: .utf8) else { return }
-        let digest = SHA512.hash(data: data)
-        print(digest.data) // 64 bytes
-        print(digest.hexStr) //
-        encyptedFitBit = digest.hexStr
-    }
-
     func postToSteemitBtnAction() {
         var charityDisplayName = ""
         var charityName = ""
@@ -421,15 +376,11 @@ class PostToSeemitViewModel2: ObservableObject {
         }
 
         var activityJson = json
-        if isFitBit {
-            activityJson[PostKeys.dataTrackingSource] = "Fitbit Tracking"
-        }
-        else if isHealthStore{
+        if isHealthStore {
             activityJson[PostKeys.dataTrackingSource] = "healthapp"
         }
         else if Activity.allWithoutCountZero().first(where: {resetTime(date: $0.date) == resetTime(date: AppDelegate.todayStartDate())}) != nil{//else if let activity =
             activityJson[PostKeys.dataTrackingSource] = "Device Tracking"
-            activityJson[PostKeys.fitbitUserId] = ""
         }
 
         let contentText = markDownContent.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -455,13 +406,7 @@ class PostToSeemitViewModel2: ObservableObject {
         activityJson[PostKeys.bodyfat] = bodyFat
         activityJson[PostKeys.activityDate] = self.activityDate.replacingOccurrences(of: "-", with: "")
         activityJson[PostKeys.detailedActivity] = self.detailedActivityStepsDataString
-        if fitbitUserId != nil {
-            SHA512Conversion(fitbitId: fitbitUserId!)
-            activityJson[PostKeys.fitbitUserId] = encyptedFitBit
-        }
-        else{
-            activityJson[PostKeys.fitbitUserId] = ""
-        }
+        activityJson[PostKeys.fitbitUserId] = ""   // Fitbit login is retired; the field stays for the API
 
         activityJson[PostKeys.reportSTEEMPayMode] = postPayout
         if let actifitUserId = UserDefaults.standard.string(forKey: "actifitUserID") {
@@ -617,12 +562,3 @@ extension Data {
     }
 }
 
-
-extension Digest {
-    var bytes: [UInt8] { Array(makeIterator()) }
-    var data: Data { Data(bytes) }
-
-    var hexStr: String {
-        bytes.map { String(format: "%02X", $0) }.joined()
-    }
-}

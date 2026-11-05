@@ -34,7 +34,6 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   @IBOutlet weak var stepsCountLabel : EFCountingLabel!
 
   @IBOutlet weak var topGuestHeader: UIView!
-  var authenticationController: AuthenticationController?
   @IBOutlet weak var switchBtn: UIButton!
   @IBOutlet weak var threeSpeakVideoBtn: UIButton!
   @IBOutlet weak var topUserHeaderView: UIStackView!
@@ -119,7 +118,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
   /// Throttles re-fetching the server AFIT estimate as steps change (avoids spamming the endpoint).
   private var lastEstRewardSteps: Int = -1
   /// Last step count pushed into the revamp hero, so every source (device /
-  /// HealthKit / Fitbit) refreshes it while we avoid re-animating on no-op repeats.
+  /// HealthKit) refreshes it while we avoid re-animating on no-op repeats.
   var lastRevampSteps = -1
   var auraView: AuraView?
   var streakDayCircles: [UIView] = []
@@ -216,27 +215,13 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
     }
   }
 
+  // Legacy storyboard buttons (hidden under the revamp overlay); they forward to the revamp actions.
   @IBAction func switchBtnTapped(_ sender: Any) {
-    toogleCloudAndWatchBtns()
-  }
-
-  private func toogleCloudAndWatchBtns() {
-    viewModel.switchSensor(isThirdParty: !viewModel.isThirdPartySensor)
-    if !viewModel.isThirdPartySensor {
-      cloudBtn.isHidden = true
-      appleWatchBtn.isHidden = true
-      queryAndUpdateDatafromMidnight()
-    } else {
-      cloudBtn.isHidden = false
-      appleWatchBtn.isHidden = false
-      pieChart(stepsCount: viewModel.lastFitbitSteps)
-    }
+    revampCycleTrackingMode()
   }
 
   @IBAction func appleWatchTapped(_ sender: Any) {
-    if let lastSyncDate = viewModel.lastSyncFitbitDate, lastSyncDate != "" {
-      showToast(message: "Last Synchronization at: \(lastSyncDate)")
-    }
+    revampSourceLogoTapped()
   }
   
   @IBAction func cloudBtnTapped(_ sender: Any) {
@@ -313,11 +298,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
                   print("Steps Retrieved:", steps)
                   DispatchQueue.main.async {
                     self.initialStepCount = Int(steps)
-                      if self.viewModel.isThirdPartySensor {
-                          self.showStepsCount(count: self.viewModel.lastFitbitSteps)
-                      } else {
-                          self.showStepsCount(count: Int(steps))
-                      }
+                    self.showStepsCount(count: Int(steps))
                   }
               }
           }
@@ -570,7 +551,7 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
 
   @IBAction func giftButtonTapped(_ sender: Any) {
     if viewModel.isLoggedIn {
-        present(AdsOptionsViewController.create(steps: viewModel.isThirdPartySensor ? viewModel.lastFitbitSteps : initialStepCount ,animateButton: viewModel.canSeeAd,  prizeSelection: { [weak self] prizeType in
+        present(AdsOptionsViewController.create(steps: initialStepCount,animateButton: viewModel.canSeeAd,  prizeSelection: { [weak self] prizeType in
           if(prizeType != .close) {
             self?.stopPrizeButtonScaling()
           }
@@ -1085,7 +1066,6 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
 
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
-    viewModel.clearFitBitSteps()
     DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute:  {
       self.scaleEarnButton()
       self.scaleWaveBtn()
@@ -1288,17 +1268,12 @@ class ActivityTrackingVC: UIViewController, UIImagePickerControllerDelegate,UINa
 
           let totalSteps = pedometerData.numberOfSteps.intValue
           switch self.viewModel.trackingMode {
-          case .fitbit:
-              // Fitbit: display the last synced Fitbit count (synced on demand via the cloud button).
-              self.viewModel.updateDateSync()
-              self.initialStepCount = self.viewModel.lastFitbitSteps
-              self.showStepsCount(count: self.viewModel.lastFitbitSteps)
           case .health:
               // Apple Health: display the last synced Health count (synced on demand via the cloud button).
               self.initialStepCount = self.viewModel.lastHealthSteps
               self.showStepsCount(count: self.viewModel.lastHealthSteps)
-          case .device:
-              // Device (CoreMotion): live, auto-synced. CMPedometer gives real distance
+          case .device, .fitbit:
+              // Device (CoreMotion): live, auto-synced; a legacy Fitbit user counts phone steps too. CMPedometer gives real distance
               // (but no calories, so those stay a step estimate).
               self.liveDistanceMeters = pedometerData.distance?.doubleValue ?? -1
               self.liveCalories = -1
@@ -1586,11 +1561,6 @@ extension ActivityTrackingVC {
 
   //ask pedometer to start updating the user data on regular basis
   private func startQueryingActivityEveryTwoSecond() {
-    if viewModel.isThirdPartySensor {
-      self.initialStepCount = UserDefaults.standard.lastSynchronizedSteps
-      self.pieChart(stepsCount: viewModel.lastFitbitSteps)
-    }
-
       self.queryAndUpdateDatafromMidnight(isFromThirdParty: viewModel.isThirdPartySensor)
       self.queryAndUpdateDatafromMidnightFifteenMinute()
   }
@@ -1599,12 +1569,8 @@ extension ActivityTrackingVC {
   private func showStepsCount(count : Int) {
     self.pieChart(stepsCount: count)
     // Keep the revamped hero (big number + activity rings) in sync for EVERY
-    // source — device sensors, Apple Health and Fitbit all funnel through here.
+    // source — device sensors and Apple Health both funnel through here.
     refreshRevampSteps(count)
-      if viewModel.isFitSystemSelected {
-      self.stepsCountLabel.text = "Fitbit Tracking Mode On"
-      return
-    }
 
     let formatter = NumberFormatter()
     formatter.numberStyle = .decimal
@@ -1723,27 +1689,6 @@ extension ActivityTrackingVC: UICollectionViewDelegate, UICollectionViewDataSour
       let pageWidth = collectionVIew.frame.width
       let currentPage = Int((scrollView.contentOffset.x + pageWidth / 1.5) / pageWidth)
       pageControl.currentPage = currentPage
-    }
-  }
-}
-
-extension ActivityTrackingVC: AuthenticationProtocol {
-  func authorizationDidFinish(_ success: Bool) {
-    guard let authToken = authenticationController?.authenticationToken else {
-        viewModel.switchSensor(isThirdParty: false)
-      return
-    }
-    FitbitAPI.sharedInstance.authorize(with: authToken)
-    let syncDate = self.activityDateToSave
-    let _ = StepStat.fetchTodaysStepStat(forDate: syncDate) { [weak self] stepStat, error in
-      guard let self = self else { return }
-      let steps = stepStat?.steps ?? 0
-      self.initialStepCount = Int(steps)
-      self.showStepsCount(count:  self.initialStepCount)
-      viewModel.switchSensor(isThirdParty: true)
-      self.viewModel.switchToFitbitSensor(steps: Int(stepStat?.steps ?? 0))
-      // Also pull Fitbit's real distance + calories for the multi-metric rings (Android PR #83).
-      self.fetchFitbitMetrics(forDate: syncDate)
     }
   }
 }
@@ -2197,7 +2142,7 @@ extension ActivityTrackingVC {
         let cloudTR = revampIconButton(system: "icloud.and.arrow.down.fill", action: #selector(cloudBtnTapped(_:)))
         revampCloudBtn = cloudTR
         let shareBL = revampIconButton(system: "square.and.arrow.up", action: #selector(revampShareTapped))
-        // Bottom-right: cycle device -> Apple Health -> Fitbit -> device.
+        // Bottom-right: switch between device and Apple Health.
         let swapBR = revampIconButton(system: "arrow.left.arrow.right", action: #selector(revampCycleTrackingMode))
         [sensorTL, cloudTR, shareBL, swapBR].forEach { auraContainer.addSubview($0) }
         NSLayoutConstraint.activate([
@@ -2727,7 +2672,7 @@ extension ActivityTrackingVC {
 
     /// Single, deduped entry point for pushing a step count into the revamp hero.
     /// Called from every step source (the CoreMotion notification and the
-    /// HealthKit/Fitbit display funnel `showStepsCount`); skips no-op repeats so
+    /// HealthKit display funnel `showStepsCount`); skips no-op repeats so
     /// the activity rings don't re-animate on identical values.
     func refreshRevampSteps(_ steps: Int) {
         // Cheap text refresh always runs (so real distance/calories surface even when the
@@ -2749,66 +2694,12 @@ extension ActivityTrackingVC {
 
     /// Effective distance (metres) + calories for display: the active source's real values
     /// when available, otherwise a step-derived estimate. The booleans say which is which.
-    /// Fitbit's real values live in the view model (fetched on sync); Device/Health set `live*`.
     private func effectiveMetrics(steps: Int) -> (dist: Double, cal: Double, distReal: Bool, calReal: Bool) {
-        let dMeters = (viewModel.trackingMode == .fitbit) ? viewModel.lastFitbitDistanceMeters : liveDistanceMeters
-        let cVal = (viewModel.trackingMode == .fitbit) ? viewModel.lastFitbitCalories : liveCalories
-        let distReal = dMeters >= 0
-        let calReal = cVal >= 0
-        return (distReal ? dMeters : Double(steps) * 0.762,
-                calReal ? cVal : Double(steps) * 0.04,
+        let distReal = liveDistanceMeters >= 0
+        let calReal = liveCalories >= 0
+        return (distReal ? liveDistanceMeters : Double(steps) * 0.762,
+                calReal ? liveCalories : Double(steps) * 0.04,
                 distReal, calReal)
-    }
-
-    /// Pulls Fitbit's own distance + calories (real values) after a sync and refreshes the rings
-    /// once, if we're currently showing Fitbit.
-    private func fetchFitbitMetrics(forDate date: Date) {
-        let isMetric = Route.isMetric
-        let group = DispatchGroup()
-
-        // Distance: pin the unit via Accept-Language to the app's own metric/US setting, so the
-        // fetched unit and the displayed unit can't disagree, then convert to metres.
-        group.enter()
-        _ = StepStat.fetchTodaysActivitySeries(
-            resource: "activities/tracker/distance",
-            responseKey: "activities-tracker-distance",
-            acceptLanguage: isMetric ? nil : "en_US",
-            forDate: date) { [weak self] value in
-            if let value, value >= 0 {
-                self?.viewModel.lastFitbitDistanceMeters = value * (isMetric ? 1000.0 : 1609.344)
-            } else {
-                self?.viewModel.lastFitbitDistanceMeters = -1
-            }
-            group.leave()
-        }
-
-        // Calories: activity-only kcal — comparable to Health's active energy and the step
-        // estimate. (tracker/calories returns BMR+activity total, which would peg the ring full
-        // and diverge ~5–6× from Health mode.)
-        group.enter()
-        _ = StepStat.fetchTodaysActivitySeries(
-            resource: "activities/activityCalories",
-            responseKey: "activities-activityCalories",
-            forDate: date) { [weak self] value in
-            if let value, value >= 0 {
-                self?.viewModel.lastFitbitCalories = value
-            } else {
-                self?.viewModel.lastFitbitCalories = -1
-            }
-            group.leave()
-        }
-
-        // Single refresh once both land — avoids a double ring animation and the brief
-        // estimate→real flash from refreshing per-metric.
-        group.notify(queue: .main) { [weak self] in
-            self?.refreshFitbitRingsIfActive()
-        }
-    }
-
-    private func refreshFitbitRingsIfActive() {
-        guard viewModel.trackingMode == .fitbit else { return }
-        lastRevampSteps = -1   // force the rings to re-animate with the new real values
-        refreshRevampSteps(viewModel.lastFitbitSteps)
     }
 
     func updateRevampGoal(steps: Int) {
@@ -2894,9 +2785,9 @@ extension ActivityTrackingVC {
         }
     }
 
-    // MARK: - Tracking mode (device / Apple Health / Fitbit)
+    // MARK: - Tracking mode (device / Apple Health; Fitbit is legacy)
 
-    /// Bottom-right swap button: cycle device -> Apple Health -> Fitbit -> device.
+    /// Bottom-right swap button: switch between device and Apple Health.
     @objc func revampCycleTrackingMode() {
         let mode = viewModel.cycleTrackingMode()
         // Clear the previous source's distance/calories so we don't show stale real data
@@ -2905,13 +2796,11 @@ extension ActivityTrackingVC {
         liveCalories = -1
         applyTrackingModeUI()
         switch mode {
-        case .device:
+        case .device, .fitbit:
             queryAndUpdateDatafromMidnight()
         case .health:
             if viewModel.lastHealthSteps > 0 { showStepsCount(count: viewModel.lastHealthSteps) }
             syncHealthSteps()
-        case .fitbit:
-            showStepsCount(count: viewModel.lastFitbitSteps)
         }
         showToast(message: "Tracking source: \(modeName(mode))")
     }
@@ -2937,8 +2826,7 @@ extension ActivityTrackingVC {
     @objc func revampSourceLogoTapped() {
         switch viewModel.trackingMode {
         case .fitbit:
-            let d = viewModel.lastSyncFitbitDate ?? ""
-            showToast(message: d.isEmpty ? "Fitbit — not synced yet" : "Last Fitbit sync: \(d)")
+            showFitbitRetiredAlert(onUseAppleHealth: { [weak self] in self?.switchToAppleHealth() })
         case .health:
             let d = viewModel.lastSyncHealthDate ?? ""
             showToast(message: d.isEmpty ? "Apple Health — not synced yet" : "Last Health sync: \(d)")

@@ -16,7 +16,7 @@ import Charts
 enum TrackingMode: Int {
     case device = 0   // CoreMotion (default, auto)
     case health = 1   // Apple Watch / Apple Health (manual sync)
-    case fitbit = 2   // Fitbit (manual sync)
+    case fitbit = 2   // legacy: Fitbit login is retired; counts phone steps and shows the move-to-Apple-Health reminder
 }
 
 class ActivityTrackingViewModel {
@@ -175,10 +175,6 @@ class ActivityTrackingViewModel {
         return UserDefaults.standard.getLatestAdDate != Date().currentDay() && isLoggedIn
     }
 
-    var isFitSystemSelected: Bool {
-        return UserDefaults.standard.bool(forKey: "isFitSystemSelected") == true
-    }
-
     func initializePrizesValues() {
         UserDefaults.standard.latestPrizeType = ""
         UserDefaults.standard.getLatestPrizeAmount = ""
@@ -204,16 +200,6 @@ class ActivityTrackingViewModel {
     }
 
 
-  func switchToFitbitSensor(steps: Int) {
-    UserDefaults.standard.isThirdPartySensor = true
-    updateDateSync()
-    UserDefaults.standard.lastSynchronizedSteps =  Int(steps)
-  }
-
-  func updateDateSync() {
-    UserDefaults.standard.lastDateStepSynchronization = Date().dateTimeString()
-  }
-
   var isThirdPartySensor: Bool {
     if let isThirdPartySensor = UserDefaults.standard.isThirdPartySensor {
         return isThirdPartySensor
@@ -221,26 +207,7 @@ class ActivityTrackingViewModel {
     return false
   }
 
-  var lastFitbitSteps: Int {
-    return UserDefaults.standard.lastSynchronizedSteps
-  }
-
-  /// Real Fitbit distance (metres) / calories (kcal) from the last sync; -1 = not synced yet,
-  /// so the dashboard falls back to a step-derived estimate.
-  var lastFitbitDistanceMeters: Double {
-    get { (UserDefaults.standard.object(forKey: "lastFitbitDistanceMeters") as? Double) ?? -1 }
-    set { UserDefaults.standard.set(newValue, forKey: "lastFitbitDistanceMeters") }
-  }
-  var lastFitbitCalories: Double {
-    get { (UserDefaults.standard.object(forKey: "lastFitbitCalories") as? Double) ?? -1 }
-    set { UserDefaults.standard.set(newValue, forKey: "lastFitbitCalories") }
-  }
-
-  func switchSensor(isThirdParty: Bool) {
-    UserDefaults.standard.isThirdPartySensor = isThirdParty
-  }
-
-  // MARK: - Tracking mode (3-way cycle: device -> Apple Health/Watch -> Fitbit)
+  // MARK: - Tracking mode (device / Apple Health; .fitbit is a legacy saved value)
 
   private static let trackingModeKey = "actifitTrackingMode"
 
@@ -287,19 +254,6 @@ class ActivityTrackingViewModel {
     UserDefaults.standard.set(Date().dateTimeString(), forKey: "lastHealthSyncDate")
   }
 
-  func clearFitBitSteps() {
-    let todaysDate = Date().dateTimeString()
-    if let lastSyncDate = UserDefaults.standard.lastDateStepSynchronization, let difference =  
-        Date().dateDifferenceByNumberOfDates(startDate: lastSyncDate, endDate: todaysDate, dateFormat: "yyyy-MM-dd HH:mm") {
-      if difference != 0 {
-        UserDefaults.standard.lastDateStepSynchronization = nil
-        UserDefaults.standard.lastSynchronizedSteps = 0
-        lastFitbitDistanceMeters = -1
-        lastFitbitCalories = -1
-      }
-    }
-
-  }
 
   private func callSurveyAPI() async {
      await self.getSurveyPolls()
@@ -711,10 +665,6 @@ class ActivityTrackingViewModel {
     } else {
       return false
     }
-  }
-
-  var lastSyncFitbitDate: String? {
-    return UserDefaults.standard.lastDateStepSynchronization
   }
 
 //  private func checkIfCanPost() -> Bool {
